@@ -1,0 +1,4795 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Hoppspelet</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0f1a'/%3E%3Crect x='7' y='7' width='18' height='18' rx='4' fill='%232563eb'/%3E%3Cpath d='M9 12 L15 14' stroke='%230b0f1a' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M23 12 L17 14' stroke='%230b0f1a' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='13' cy='17.5' r='1.7' fill='%230b0f1a'/%3E%3Ccircle cx='19' cy='17.5' r='1.7' fill='%230b0f1a'/%3E%3C/svg%3E">
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: #0a0710;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #wrap {
+    position: fixed;
+    inset: 0;
+  }
+  canvas {
+    background: radial-gradient(ellipse at 50% 100%, #7a2a12 0%, #431a2a 40%, #14081a 100%);
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
+  #hint {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #cfd3dc;
+    font-size: 14px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+    pointer-events: none;
+  }
+  #logo {
+    position: fixed;
+    left: 50%;
+    top: 6%;
+    transform: translateX(-50%);
+    z-index: 5;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 16px rgba(0,0,0,0.55));
+    transition: opacity 0.25s ease;
+  }
+  /* Bade bredd- och hojdgrans sa loggan aldrig tacker "starta"-texten (mitt pa
+     skarmen) pa laga/liggande skarmar som iPad. Aspektforhallandet bevaras. */
+  #logo svg {
+    display: block;
+    width: min(78vw, 540px);
+    height: auto;
+    max-height: 30vh;
+  }
+  #logo.hidden { opacity: 0; }
+  #musicMute, #debugThemeNav, #debugReload {
+    position: fixed;
+    right: 12px;
+    z-index: 10;
+  }
+  #musicMute {
+    top: 12px;
+  }
+  #debugThemeNav {
+    top: 76px;
+    display: flex;
+    gap: 8px;
+  }
+  #debugReload {
+    top: 140px;
+  }
+  #musicMute, #debugThemeNav button, #debugReload {
+    min-width: 56px;
+    min-height: 52px;
+    padding: 12px 16px;
+    background: rgba(0,0,0,0.6);
+    color: #ffe066;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-radius: 10px;
+    font-weight: bold;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  #musicMute {
+    font-size: 22px;
+  }
+  #debugThemeNav button {
+    font-size: 22px;
+  }
+  #debugReload {
+    font-size: 16px;
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game"></canvas>
+  <div id="hint">Tryck MELLANSLAG eller på skärmen för att hoppa / starta / starta om</div>
+  <div id="logo">
+    <svg viewBox="0 0 620 300" xmlns="http://www.w3.org/2000/svg" fill="none" aria-label="Hoppspelet">
+      <defs>
+        <mask id="heroMask">
+          <rect x="0" y="0" width="96" height="96" rx="16" fill="#fff"/>
+          <!-- arga ögonbryn (negativa slitsar) -->
+          <path d="M14 32 L46 44" stroke="#000" stroke-width="8" stroke-linecap="round"/>
+          <path d="M82 32 L50 44" stroke="#000" stroke-width="8" stroke-linecap="round"/>
+          <!-- ögon -->
+          <circle cx="34" cy="56" r="7" fill="#000"/>
+          <circle cx="62" cy="56" r="7" fill="#000"/>
+          <!-- sammanbitna tänder -->
+          <path d="M28 76 L36 71 L44 76 L52 71 L60 76 L68 71" stroke="#000" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+        </mask>
+      </defs>
+
+      <!-- strålande stjärnburst bakom figuren -->
+      <g stroke="#ffffff" stroke-width="2" opacity="0.14">
+        <g transform="translate(310,96)">
+          <line x1="0" y1="-92" x2="0" y2="-64"/>
+          <line x1="65" y1="-65" x2="45" y2="-45"/>
+          <line x1="92" y1="0" x2="64" y2="0"/>
+          <line x1="65" y1="65" x2="45" y2="45"/>
+          <line x1="0" y1="92" x2="0" y2="64"/>
+          <line x1="-65" y1="65" x2="-45" y2="45"/>
+          <line x1="-92" y1="0" x2="-64" y2="0"/>
+          <line x1="-65" y1="-65" x2="-45" y2="-45"/>
+          <line x1="34" y1="-85" x2="24" y2="-60"/>
+          <line x1="85" y1="-34" x2="60" y2="-24"/>
+          <line x1="85" y1="34" x2="60" y2="24"/>
+          <line x1="34" y1="85" x2="24" y2="60"/>
+          <line x1="-34" y1="85" x2="-24" y2="60"/>
+          <line x1="-85" y1="34" x2="-60" y2="24"/>
+          <line x1="-85" y1="-34" x2="-60" y2="-24"/>
+          <line x1="-34" y1="-85" x2="-24" y2="-60"/>
+        </g>
+      </g>
+
+      <!-- hoppbåge -->
+      <path d="M110 168 Q 310 30 510 168" stroke="#ffffff" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round" opacity="0.5"/>
+
+      <!-- fartlinjer bakom figuren -->
+      <g stroke="#ffffff" stroke-linecap="round" opacity="0.55">
+        <line x1="196" y1="66" x2="236" y2="60" stroke-width="4"/>
+        <line x1="188" y1="92" x2="230" y2="88" stroke-width="4"/>
+        <line x1="198" y1="118" x2="238" y2="116" stroke-width="4"/>
+      </g>
+
+      <!-- figuren (arg, blå fyrkant – men vit) mitt i hoppet -->
+      <g transform="translate(262,48) rotate(-13 48 48)">
+        <rect x="0" y="0" width="96" height="96" rx="16" fill="#ffffff" mask="url(#heroMask)"/>
+        <rect x="4" y="4" width="88" height="88" rx="13" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.45"/>
+        <!-- facett-glansstreck -->
+        <path d="M12 84 L84 12" stroke="#ffffff" stroke-width="2.5" opacity="0.25"/>
+        <path d="M26 90 L90 26" stroke="#ffffff" stroke-width="1.6" opacity="0.16"/>
+        <!-- liten glansprick uppe till vänster -->
+        <circle cx="20" cy="20" r="4" fill="#ffffff" opacity="0.6"/>
+      </g>
+
+      <!-- gnistor / stjärnor -->
+      <g fill="#ffffff">
+        <path d="M168 60 l5 14 14 5 -14 5 -5 14 -5 -14 -14 -5 14 -5 z" opacity="0.9"/>
+        <path d="M470 52 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4 z" opacity="0.75"/>
+        <path d="M436 118 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" opacity="0.6"/>
+        <circle cx="150" cy="128" r="3" opacity="0.5"/>
+        <circle cx="486" cy="120" r="3.5" opacity="0.55"/>
+      </g>
+
+      <!-- spikrad under bågen -->
+      <g fill="#ffffff" opacity="0.85">
+        <path d="M150 170 l11 -22 11 22 z"/>
+        <path d="M178 170 l11 -22 11 22 z"/>
+        <path d="M206 170 l11 -22 11 22 z"/>
+        <path d="M234 170 l11 -22 11 22 z"/>
+        <path d="M262 170 l11 -22 11 22 z"/>
+        <path d="M290 170 l11 -22 11 22 z"/>
+        <path d="M318 170 l11 -22 11 22 z"/>
+        <path d="M346 170 l11 -22 11 22 z"/>
+        <path d="M374 170 l11 -22 11 22 z"/>
+        <path d="M402 170 l11 -22 11 22 z"/>
+        <path d="M430 170 l11 -22 11 22 z"/>
+        <path d="M458 170 l11 -22 11 22 z"/>
+      </g>
+      <line x1="140" y1="170" x2="480" y2="170" stroke="#ffffff" stroke-width="3" opacity="0.7"/>
+
+      <!-- ordmärke -->
+      <g transform="translate(310,246)">
+        <g transform="skewX(-8)">
+          <text x="3" y="4" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-weight="900" font-size="60" letter-spacing="1" fill="#ffffff" opacity="0.22">HOPPSPELET</text>
+          <text x="0" y="0" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-weight="900" font-size="60" letter-spacing="1" fill="#ffffff" stroke="#ffffff" stroke-width="1" opacity="0.6">HOPPSPELET</text>
+          <text x="0" y="0" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-weight="900" font-size="60" letter-spacing="1" fill="#ffffff">HOPPSPELET</text>
+        </g>
+        <!-- understruken flourish -->
+        <path d="M-150 26 Q 0 40 150 26" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+        <path d="M150 26 l10 -5 -3 6 6 2 -11 3 z" fill="#ffffff" opacity="0.7"/>
+      </g>
+    </svg>
+  </div>
+  <button id="musicMute" type="button" tabindex="-1" aria-label="Ljud på/av">🔊</button>
+  <div id="debugThemeNav">
+    <button id="debugPrevTheme" type="button" tabindex="-1" aria-label="Föregående tema">◀</button>
+    <button id="debugNextTheme" type="button" tabindex="-1" aria-label="Nästa tema">▶</button>
+  </div>
+  <button id="debugReload" type="button" tabindex="-1">Ladda om</button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Litet minispel-ramverk ----------
+  // En enkel "engine" med game loop, entiteter och kollisionshjälp.
+  const Engine = {
+    canvas: null,
+    ctx: null,
+    keys: {},
+    entities: [],
+    onUpdate: null,
+    onDraw: null,
+    lastTime: 0,
+
+    init(canvas) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext("2d");
+      window.addEventListener("keydown", (e) => {
+        this.keys[e.code] = true;
+        if (e.code === "Space") e.preventDefault();
+        if (this.onKeyDown) this.onKeyDown(e.code);
+      });
+      window.addEventListener("keyup", (e) => {
+        this.keys[e.code] = false;
+      });
+    },
+
+    start(update, draw) {
+      this.onUpdate = update;
+      this.onDraw = draw;
+      requestAnimationFrame(this.loop.bind(this));
+    },
+
+    loop(time) {
+      this.onUpdate();
+      this.onDraw();
+      requestAnimationFrame(this.loop.bind(this));
+    }
+  };
+
+  function rectsOverlap(a, b) {
+    return a.x < b.x + b.w &&
+           a.x + a.w > b.x &&
+           a.y < b.y + b.h &&
+           a.y + a.h > b.y;
+  }
+
+  // ---------- Spelet ----------
+  const canvas = document.getElementById("game");
+  Engine.init(canvas);
+
+  const GRAVITY = 0.7;
+  const JUMP_FORCE = -13.5;
+  const PLAYER_X = 150;
+  const PLAYER_SIZE = 36;
+
+  let GROUND_Y = 0;
+  let state = "ready"; // ready | playing | gameover
+  let speed = 6;
+  let distance = 0;
+  let best = 0;
+  try { best = parseInt(localStorage.getItem("hoppspelet_best") || "0", 10) || 0; } catch (e) {}
+  let spawnTimer = 0;
+  let nextSpawnAt = 0;
+
+  const player = {
+    x: PLAYER_X,
+    y: 0,
+    w: PLAYER_SIZE,
+    h: PLAYER_SIZE,
+    vy: 0,
+    onGround: true,
+    rotation: 0
+  };
+
+  let obstacles = [];
+  let coins = [];
+  let coinScore = 0;
+  let coinSpawnTimer = 0;
+  let coinNextSpawnAt = 0;
+  let floatingTexts = [];
+
+  function getScore() {
+    return Math.floor(distance / 10) + coinScore;
+  }
+
+  // ---------- Teman ----------
+  // Var 1000:e poäng byts hela banans utseende. Fysiken/kollisionen är alltid densamma,
+  // bara färger, former och bakgrundspartiklar ändras.
+  const THEMES = [
+    {
+      name: "Lavagrottan",
+      key: "lava",
+      bg: "radial-gradient(ellipse at 50% 100%, #7a2a12 0%, #431a2a 40%, #14081a 100%)",
+      groundColor: "#4a2418",
+      crackColor: "rgba(20,0,0,0.4)",
+      hazard: { top: "rgba(255,210,80,0.9)", mid: "rgba(255,120,30,0.95)", bottom: "rgba(120,20,10,1)", glow: "rgba(255,140,40,0.6)", dot: "rgba(255,180,60,0.85)" },
+      spike: "#1a0e0a",
+      spikeStroke: "#ff6b35",
+      platform: "#7a3b2a",
+      platformTop: "#ff8c42",
+      ceiling: "#3a1f1a",
+      ceilingAccent: "#ff8c42",
+      particle: "embers",
+      particleColor: "rgba(255,150,70,0.85)"
+    },
+    {
+      name: "Havsdjupet",
+      key: "ocean",
+      bg: "radial-gradient(ellipse at 50% 0%, #1f5c78 0%, #0c3a52 40%, #031521 100%)",
+      groundColor: "#132a30",
+      crackColor: "rgba(0,0,0,0.25)",
+      hazard: { top: "rgba(120,255,230,0.9)", mid: "rgba(20,200,180,0.9)", bottom: "rgba(5,60,60,1)", glow: "rgba(60,220,200,0.5)", dot: "rgba(150,255,230,0.85)" },
+      spike: "#c81e3a",
+      platform: "#3d6b63",
+      platformTop: "#5fa89a",
+      ceiling: "#274a45",
+      particle: "bubbles",
+      particleColor: "rgba(200,240,255,0.6)"
+    },
+    {
+      name: "Bananriket",
+      key: "jungle",
+      bg: "radial-gradient(ellipse at 50% 100%, #fff3b0 0%, #7a9c3f 45%, #1f2b12 100%)",
+      groundColor: "#3b2a18",
+      crackColor: "rgba(0,0,0,0.2)",
+      hazard: { top: "rgba(255,240,150,0.9)", mid: "rgba(255,200,40,0.95)", bottom: "rgba(150,100,10,1)", glow: "rgba(255,210,60,0.6)", dot: "rgba(255,230,120,0.9)" },
+      spike: "#234d16",
+      platform: "#f4d03f",
+      platformTop: "#fff6b0",
+      ceiling: "#2e5c1e",
+      particle: "fireflies",
+      particleColor: "rgba(255,255,150,0.9)"
+    },
+    {
+      name: "Isriket",
+      key: "ice",
+      bg: "radial-gradient(ellipse at 50% 0%, #dff6ff 0%, #7fb8d9 40%, #0b1f33 100%)",
+      groundColor: "#c8e8f5",
+      crackColor: "rgba(0,60,90,0.2)",
+      hazard: { top: "rgba(210,245,255,0.95)", mid: "rgba(90,200,255,0.9)", bottom: "rgba(10,60,110,1)", glow: "rgba(120,220,255,0.6)", dot: "rgba(220,250,255,0.9)" },
+      spike: "#dff3ff",
+      spikeStroke: "#4a90b8",
+      platform: "#a9d8ee",
+      platformTop: "#e8f7ff",
+      ceiling: "#bfe6f5",
+      particle: "snow",
+      particleColor: "rgba(255,255,255,0.9)"
+    },
+    {
+      name: "Yttre rymden",
+      key: "space",
+      bg: "radial-gradient(ellipse at 50% 30%, #2a1a4a 0%, #12081f 45%, #000000 100%)",
+      groundColor: "#3a3a42",
+      crackColor: "rgba(0,0,0,0.3)",
+      hazard: { top: "rgba(190,120,255,0.9)", mid: "rgba(130,40,220,0.95)", bottom: "rgba(40,10,70,1)", glow: "rgba(160,80,255,0.6)", dot: "rgba(210,150,255,0.9)" },
+      spike: "#26262c",
+      platform: "#565b66",
+      platformTop: "#8a92a0",
+      ceiling: "#33333a",
+      particle: "stars",
+      particleColor: "rgba(255,255,255,0.9)"
+    },
+    {
+      name: "Öknen",
+      key: "desert",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffd98a 0%, #e8a648 45%, #6b3f1a 100%)",
+      groundColor: "#c9974f",
+      crackColor: "rgba(90,50,10,0.25)",
+      hazard: { top: "rgba(255,230,150,0.9)", mid: "rgba(230,170,60,0.9)", bottom: "rgba(120,70,20,1)", glow: "rgba(255,200,100,0.5)", dot: "rgba(255,220,150,0.85)" },
+      spike: "#3f7d32",
+      spikeStroke: "#2a5620",
+      platform: "#b5813a",
+      platformTop: "#ffdf9b",
+      ceiling: "#7a4a1f",
+      particle: "embers",
+      particleColor: "rgba(255,220,150,0.5)"
+    },
+    {
+      name: "Molnriket",
+      key: "sky",
+      bg: "radial-gradient(ellipse at 50% 30%, #ffffff 0%, #aee1ff 45%, #4a90d9 100%)",
+      groundColor: "#e8f4ff",
+      crackColor: "rgba(120,170,220,0.25)",
+      hazard: { top: "rgba(255,255,255,0.95)", mid: "rgba(150,210,255,0.9)", bottom: "rgba(60,110,190,1)", glow: "rgba(180,220,255,0.6)", dot: "rgba(255,255,255,0.9)" },
+      spike: "#f4d35e",
+      spikeStroke: "#c9a020",
+      platform: "#ffffff",
+      platformTop: "#eaf6ff",
+      ceiling: "#dceeff",
+      particle: "bubbles",
+      particleColor: "rgba(255,255,255,0.75)"
+    },
+    {
+      name: "Neonstaden",
+      key: "neon",
+      bg: "radial-gradient(ellipse at 50% 100%, #ff2fb0 0%, #23124a 40%, #05040a 100%)",
+      groundColor: "#1a1226",
+      crackColor: "rgba(255,0,150,0.2)",
+      hazard: { top: "rgba(0,255,255,0.9)", mid: "rgba(255,0,200,0.9)", bottom: "rgba(60,0,60,1)", glow: "rgba(0,255,255,0.6)", dot: "rgba(255,100,255,0.9)" },
+      spike: "#0ff0fc",
+      spikeStroke: "#ff2fb0",
+      platform: "#2a1a40",
+      platformTop: "#ff2fb0",
+      ceiling: "#1a1226",
+      ceilingAccent: "#0ff0fc",
+      particle: "stars",
+      particleColor: "rgba(0,255,255,0.9)"
+    },
+    {
+      name: "Spökslottet",
+      key: "haunted",
+      bg: "radial-gradient(ellipse at 50% 20%, #2a3a2a 0%, #1a1a2a 45%, #05050a 100%)",
+      groundColor: "#22261f",
+      crackColor: "rgba(0,0,0,0.35)",
+      hazard: { top: "rgba(150,255,180,0.8)", mid: "rgba(80,180,120,0.85)", bottom: "rgba(20,40,30,1)", glow: "rgba(120,255,160,0.5)", dot: "rgba(180,255,200,0.85)" },
+      spike: "#1a1a22",
+      spikeStroke: "#6fce8f",
+      platform: "#3a3540",
+      platformTop: "#6fce8f",
+      ceiling: "#25202a",
+      particle: "fireflies",
+      particleColor: "rgba(140,255,170,0.85)"
+    },
+    {
+      name: "Vikingariket",
+      key: "viking",
+      bg: "radial-gradient(ellipse at 50% 10%, #6fa8c9 0%, #2c5270 45%, #0a1a2a 100%)",
+      groundColor: "#3a4a3f",
+      crackColor: "rgba(0,20,10,0.3)",
+      hazard: { top: "rgba(180,230,255,0.9)", mid: "rgba(70,150,200,0.9)", bottom: "rgba(10,40,70,1)", glow: "rgba(120,200,255,0.5)", dot: "rgba(200,240,255,0.85)" },
+      spike: "#5a4a3a",
+      spikeStroke: "#8a7a5a",
+      platform: "#6a5a48",
+      platformTop: "#c9a86a",
+      ceiling: "#3a3428",
+      particle: "snow",
+      particleColor: "rgba(255,255,255,0.85)"
+    },
+    {
+      name: "Dinosauriedalen",
+      key: "dino",
+      bg: "radial-gradient(ellipse at 50% 100%, #8fae4a 0%, #3c5c28 45%, #14200c 100%)",
+      groundColor: "#4a3a20",
+      crackColor: "rgba(20,30,0,0.3)",
+      hazard: { top: "rgba(180,255,120,0.8)", mid: "rgba(100,160,40,0.9)", bottom: "rgba(30,20,5,1)", glow: "rgba(150,200,60,0.5)", dot: "rgba(200,255,140,0.85)" },
+      spike: "#5c4a2a",
+      spikeStroke: "#efe3c0",
+      platform: "#6b5a30",
+      platformTop: "#a99a4a",
+      ceiling: "#3a4a20",
+      particle: "fireflies",
+      particleColor: "rgba(200,255,120,0.85)"
+    },
+    {
+      name: "Godisriket",
+      key: "candy",
+      bg: "radial-gradient(ellipse at 50% 100%, #ffd6ec 0%, #ffb6d9 45%, #e685c2 100%)",
+      groundColor: "#f9e4c8",
+      crackColor: "rgba(200,100,150,0.2)",
+      hazard: { top: "rgba(255,220,240,0.9)", mid: "rgba(255,120,180,0.9)", bottom: "rgba(150,40,90,1)", glow: "rgba(255,150,210,0.6)", dot: "rgba(255,230,245,0.9)" },
+      spike: "#e0325c",
+      spikeStroke: "#ffffff",
+      platform: "#fff2f8",
+      platformTop: "#ffd6ec",
+      ceiling: "#ffd6ec",
+      particle: "stars",
+      particleColor: "rgba(255,255,255,0.95)"
+    },
+    {
+      name: "Robotfabriken",
+      key: "robot",
+      bg: "radial-gradient(ellipse at 50% 100%, #ffbf3f 0%, #4a4a55 45%, #101014 100%)",
+      groundColor: "#33363e",
+      crackColor: "rgba(0,0,0,0.3)",
+      hazard: { top: "rgba(255,220,100,0.9)", mid: "rgba(255,150,30,0.95)", bottom: "rgba(80,40,5,1)", glow: "rgba(255,180,60,0.6)", dot: "rgba(255,220,120,0.85)" },
+      spike: "#5a5a62",
+      spikeStroke: "#ffbf3f",
+      platform: "#6a6a75",
+      platformTop: "#ffbf3f",
+      ceiling: "#3a3a42",
+      ceilingAccent: "#ffbf3f",
+      particle: "embers",
+      particleColor: "rgba(255,190,60,0.9)"
+    },
+    {
+      name: "Piratseglatsen",
+      key: "pirate",
+      bg: "radial-gradient(ellipse at 50% 20%, #a9c9d9 0%, #3a6a7a 45%, #0a1a2a 100%)",
+      groundColor: "#5a4530",
+      crackColor: "rgba(30,15,0,0.3)",
+      hazard: { top: "rgba(150,255,230,0.9)", mid: "rgba(40,180,160,0.9)", bottom: "rgba(5,50,50,1)", glow: "rgba(100,230,210,0.5)", dot: "rgba(180,255,240,0.9)" },
+      spike: "#2a2a2a",
+      spikeStroke: "#8a8a8a",
+      platform: "#6a4a2a",
+      platformTop: "#a9825a",
+      ceiling: "#3a2a1a",
+      particle: "bubbles",
+      particleColor: "rgba(220,240,255,0.7)"
+    },
+    {
+      name: "Höstskogen",
+      key: "autumn",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffcf8a 0%, #d9863f 45%, #4a2a10 100%)",
+      groundColor: "#5a3a20",
+      crackColor: "rgba(30,15,0,0.25)",
+      hazard: { top: "rgba(255,200,120,0.9)", mid: "rgba(230,120,40,0.95)", bottom: "rgba(90,40,10,1)", glow: "rgba(255,160,60,0.5)", dot: "rgba(255,210,140,0.9)" },
+      spike: "#7a4a20",
+      spikeStroke: "#a97a3a",
+      platform: "#6a4a28",
+      platformTop: "#d9a05a",
+      ceiling: "#4a3018",
+      particle: "snow",
+      particleColor: "rgba(230,140,50,0.85)"
+    },
+    {
+      name: "Savannen", key: "savanna",
+      bg: "radial-gradient(ellipse at 50% 100%, #f4d060 0%, #c9922f 45%, #4a3212 100%)",
+      groundColor: "#a9832f", crackColor: "rgba(90,60,10,0.25)",
+      hazard: { top: "rgba(255,230,150,0.9)", mid: "rgba(230,160,40,0.9)", bottom: "rgba(120,70,10,1)", glow: "rgba(255,200,90,0.5)", dot: "rgba(255,220,140,0.85)" },
+      spike: "#5a4a1f", platform: "#8a6a30", platformTop: "#e8c86a", ceiling: "#4a3a18",
+      particle: "embers", particleColor: "rgba(230,200,140,0.5)"
+    },
+    {
+      name: "Kristallgrottan", key: "crystal",
+      bg: "radial-gradient(ellipse at 50% 100%, #6a2fae 0%, #2a1a52 40%, #0a0620 100%)",
+      groundColor: "#2a1f3a", crackColor: "rgba(0,0,0,0.3)", crystalColor: "#5ff2e0",
+      hazard: { top: "rgba(150,255,240,0.9)", mid: "rgba(120,80,255,0.9)", bottom: "rgba(40,10,80,1)", glow: "rgba(150,120,255,0.6)", dot: "rgba(200,255,250,0.9)" },
+      spike: "#3a1f5a", spikeStroke: "#5ff2e0", platform: "#4a2f6a", platformTop: "#8a5fce", ceiling: "#2a1a42", ceilingAccent: "#5ff2e0",
+      particle: "stars", particleColor: "rgba(150,220,255,0.9)"
+    },
+    {
+      name: "Myrmarken", key: "bog",
+      bg: "radial-gradient(ellipse at 50% 20%, #5a6a4a 0%, #2a3222 45%, #0a0d08 100%)",
+      groundColor: "#2f3a20", crackColor: "rgba(0,20,0,0.3)",
+      hazard: { top: "rgba(180,255,150,0.7)", mid: "rgba(90,140,50,0.85)", bottom: "rgba(20,30,10,1)", glow: "rgba(140,200,80,0.5)", dot: "rgba(200,255,170,0.85)" },
+      spike: "#3a4a20", spikeStroke: "#6a8a3a", platform: "#4a5a2a", platformTop: "#7a9a4a", ceiling: "#242a18",
+      particle: "fireflies", particleColor: "rgba(160,255,140,0.8)"
+    },
+    {
+      name: "Bambuskogen", key: "bamboo",
+      bg: "radial-gradient(ellipse at 50% 10%, #cfe8c0 0%, #7fae6a 45%, #1f3a18 100%)",
+      groundColor: "#3a4a2a", crackColor: "rgba(20,30,10,0.2)",
+      hazard: { top: "rgba(220,255,200,0.9)", mid: "rgba(140,200,100,0.9)", bottom: "rgba(40,70,20,1)", glow: "rgba(180,230,140,0.5)", dot: "rgba(220,255,210,0.9)" },
+      spike: "#3a5a28", spikeStroke: "#dff0c8", platform: "#5a7a3a", platformTop: "#a9d98a", ceiling: "#2a3a1a",
+      particle: "snow", particleColor: "rgba(200,240,170,0.75)"
+    },
+    {
+      name: "Korallrevet", key: "reef",
+      bg: "radial-gradient(ellipse at 50% 0%, #baf3ff 0%, #3fb8d9 45%, #0a4a6a 100%)",
+      groundColor: "#e8a94a", crackColor: "rgba(150,80,20,0.2)",
+      hazard: { top: "rgba(255,150,180,0.9)", mid: "rgba(255,90,140,0.9)", bottom: "rgba(120,10,50,1)", glow: "rgba(255,120,170,0.5)", dot: "rgba(255,200,220,0.9)" },
+      spike: "#ff6f91", spikeStroke: "#ffffff", platform: "#ffb84a", platformTop: "#fff2c8", ceiling: "#3fb8d9",
+      particle: "bubbles", particleColor: "rgba(255,255,255,0.7)"
+    },
+    {
+      name: "Mammutstäppen", key: "steppe",
+      bg: "radial-gradient(ellipse at 50% 20%, #d9e8e8 0%, #7a9a9a 45%, #2a3a3a 100%)",
+      groundColor: "#8a9a7a", crackColor: "rgba(40,50,40,0.25)",
+      hazard: { top: "rgba(220,240,240,0.9)", mid: "rgba(140,180,180,0.9)", bottom: "rgba(30,50,50,1)", glow: "rgba(180,220,220,0.5)", dot: "rgba(230,250,250,0.9)" },
+      spike: "#5a4a3a", spikeStroke: "#e8dcc0", platform: "#7a6a50", platformTop: "#d9c9a0", ceiling: "#4a5a5a",
+      particle: "snow", particleColor: "rgba(255,255,255,0.8)"
+    },
+    {
+      name: "Vulkanön", key: "volcanoisland",
+      bg: "radial-gradient(ellipse at 50% 100%, #ff9a5a 0%, #7a2a3a 45%, #1a0a1a 100%)",
+      groundColor: "#2a1a14", crackColor: "rgba(255,100,30,0.25)",
+      hazard: { top: "rgba(255,200,100,0.9)", mid: "rgba(255,110,30,0.95)", bottom: "rgba(100,20,10,1)", glow: "rgba(255,140,50,0.6)", dot: "rgba(255,200,130,0.9)" },
+      spike: "#1a0f0a", spikeStroke: "#ff8a4a", platform: "#4a2a1a", platformTop: "#ff8a4a", ceiling: "#2a1810",
+      particle: "embers", particleColor: "rgba(255,160,70,0.8)"
+    },
+    {
+      name: "Kronskogen", key: "canopy",
+      bg: "radial-gradient(ellipse at 50% 0%, #d0f0b0 0%, #5a9a4a 45%, #163a10 100%)",
+      groundColor: "#2a4a1a", crackColor: "rgba(10,30,0,0.25)",
+      hazard: { top: "rgba(210,255,160,0.9)", mid: "rgba(120,200,70,0.9)", bottom: "rgba(30,60,15,1)", glow: "rgba(160,230,110,0.5)", dot: "rgba(220,255,180,0.9)" },
+      spike: "#1f3a12", spikeStroke: "#cdeaa0", platform: "#3a5a20", platformTop: "#8aca5a", ceiling: "#1a3010",
+      particle: "fireflies", particleColor: "rgba(200,255,140,0.8)"
+    },
+    {
+      name: "Saltöknen", key: "saltflat",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffffff 0%, #cfe8f0 45%, #7a9aae 100%)",
+      groundColor: "#f2f2ea", crackColor: "rgba(180,190,180,0.4)",
+      hazard: { top: "rgba(255,255,255,0.95)", mid: "rgba(200,230,240,0.9)", bottom: "rgba(100,140,150,1)", glow: "rgba(220,240,250,0.6)", dot: "rgba(255,255,255,0.95)" },
+      spike: "#9aa8a0", spikeStroke: "#5a6a62", platform: "#d9e2dc", platformTop: "#ffffff", ceiling: "#aebcb6",
+      particle: "stars", particleColor: "rgba(255,255,255,0.6)"
+    },
+    {
+      name: "Mangroveträsket", key: "mangrove",
+      bg: "radial-gradient(ellipse at 50% 20%, #6a8a6a 0%, #2a4a34 45%, #0a1810 100%)",
+      groundColor: "#2a3a24", crackColor: "rgba(0,10,0,0.3)",
+      hazard: { top: "rgba(150,200,150,0.8)", mid: "rgba(70,120,70,0.9)", bottom: "rgba(15,30,15,1)", glow: "rgba(110,170,110,0.5)", dot: "rgba(180,220,180,0.85)" },
+      spike: "#1a2f18", spikeStroke: "#8aae7a", platform: "#3a4a2a", platformTop: "#6a8a4a", ceiling: "#1a2a14",
+      particle: "fireflies", particleColor: "rgba(170,220,150,0.75)"
+    },
+    {
+      name: "Drakriket", key: "dragon",
+      bg: "radial-gradient(ellipse at 50% 100%, #ff5a2a 0%, #6a1a1a 45%, #1a0505 100%)",
+      groundColor: "#3a1010", crackColor: "rgba(255,80,20,0.3)",
+      hazard: { top: "rgba(255,180,80,0.9)", mid: "rgba(255,90,20,0.95)", bottom: "rgba(90,10,10,1)", glow: "rgba(255,110,40,0.6)", dot: "rgba(255,180,100,0.9)" },
+      spike: "#2a0a0a", spikeStroke: "#ff5a2a", platform: "#5a1f1a", platformTop: "#ff8a4a", ceiling: "#3a1010", ceilingAccent: "#ff5a2a",
+      particle: "embers", particleColor: "rgba(255,140,60,0.9)"
+    },
+    {
+      name: "Älvskogen", key: "fairy",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffd0f0 0%, #b08aef 45%, #2a1a4a 100%)",
+      groundColor: "#3a2a5a", crackColor: "rgba(255,255,255,0.15)", crystalColor: "#ffe08a",
+      hazard: { top: "rgba(255,220,255,0.9)", mid: "rgba(200,140,255,0.9)", bottom: "rgba(60,20,90,1)", glow: "rgba(220,170,255,0.6)", dot: "rgba(255,230,255,0.9)" },
+      spike: "#4a2a6a", spikeStroke: "#ffd0f0", platform: "#6a4a8a", platformTop: "#ffd0f0", ceiling: "#3a2a5a",
+      particle: "fireflies", particleColor: "rgba(255,220,150,0.9)"
+    },
+    {
+      name: "Trollberget", key: "troll",
+      bg: "radial-gradient(ellipse at 50% 20%, #8a9aa0 0%, #4a5560 45%, #1a1f24 100%)",
+      groundColor: "#3a4248", crackColor: "rgba(0,0,0,0.35)",
+      hazard: { top: "rgba(180,220,220,0.8)", mid: "rgba(90,130,130,0.9)", bottom: "rgba(20,35,35,1)", glow: "rgba(130,180,180,0.5)", dot: "rgba(200,230,230,0.85)" },
+      spike: "#2a3238", spikeStroke: "#7a8a90", platform: "#4a5560", platformTop: "#8a9aa0", ceiling: "#242a2e",
+      particle: "snow", particleColor: "rgba(220,230,230,0.7)"
+    },
+    {
+      name: "Enhörningsdalen", key: "unicorn",
+      bg: "radial-gradient(ellipse at 50% 100%, #ffe0f5 0%, #c0e8ff 45%, #7ab0e0 100%)",
+      groundColor: "#bdf0d0", crackColor: "rgba(255,255,255,0.3)",
+      hazard: { top: "rgba(255,240,255,0.95)", mid: "rgba(255,190,230,0.9)", bottom: "rgba(200,120,190,1)", glow: "rgba(255,210,240,0.6)", dot: "rgba(255,255,255,0.95)" },
+      spike: "#e893c9", spikeStroke: "#ffffff", platform: "#fff0fa", platformTop: "#ffd6f0", ceiling: "#d8c8ff",
+      particle: "stars", particleColor: "rgba(255,255,255,0.95)"
+    },
+    {
+      name: "Atlantis", key: "atlantis",
+      bg: "radial-gradient(ellipse at 50% 0%, #2a6a8a 0%, #0f3a52 45%, #030f1a 100%)",
+      groundColor: "#1a3a42", crackColor: "rgba(0,0,0,0.3)", crystalColor: "#7de8ff",
+      hazard: { top: "rgba(120,230,255,0.9)", mid: "rgba(40,150,190,0.9)", bottom: "rgba(5,40,60,1)", glow: "rgba(80,200,230,0.5)", dot: "rgba(170,240,255,0.9)" },
+      spike: "#0f2a30", spikeStroke: "#7de8ff", platform: "#1f4a52", platformTop: "#7de8ff", ceiling: "#122a30",
+      particle: "bubbles", particleColor: "rgba(150,230,255,0.6)"
+    },
+    {
+      name: "Häxskogen", key: "witch",
+      bg: "radial-gradient(ellipse at 50% 20%, #4a2a5a 0%, #241a2a 45%, #0a060c 100%)",
+      groundColor: "#241a28", crackColor: "rgba(0,0,0,0.35)",
+      hazard: { top: "rgba(150,255,120,0.85)", mid: "rgba(90,190,60,0.9)", bottom: "rgba(20,50,15,1)", glow: "rgba(130,230,90,0.5)", dot: "rgba(180,255,150,0.9)" },
+      spike: "#1a1220", spikeStroke: "#8a4aae", platform: "#3a2a48", platformTop: "#8a4aae", ceiling: "#221a2a",
+      particle: "fireflies", particleColor: "rgba(140,230,90,0.85)"
+    },
+    {
+      name: "Jätteslottet", key: "giant",
+      bg: "radial-gradient(ellipse at 50% 20%, #d9b98a 0%, #8a6a48 45%, #2a1c10 100%)",
+      groundColor: "#6a4a2a", crackColor: "rgba(40,20,0,0.25)",
+      hazard: { top: "rgba(255,220,160,0.9)", mid: "rgba(220,160,80,0.9)", bottom: "rgba(90,50,10,1)", glow: "rgba(240,190,110,0.5)", dot: "rgba(255,230,180,0.9)" },
+      spike: "#4a3018", spikeStroke: "#d9b98a", platform: "#7a5a30", platformTop: "#d9b98a", ceiling: "#3a2410",
+      particle: "embers", particleColor: "rgba(255,220,160,0.5)"
+    },
+    {
+      name: "Fenixön", key: "phoenix",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffcf6a 0%, #ff6a3a 45%, #5a1a2a 100%)",
+      groundColor: "#5a2a18", crackColor: "rgba(255,120,20,0.3)",
+      hazard: { top: "rgba(255,220,140,0.9)", mid: "rgba(255,130,40,0.95)", bottom: "rgba(120,30,10,1)", glow: "rgba(255,150,60,0.6)", dot: "rgba(255,210,150,0.9)" },
+      spike: "#7a2a10", spikeStroke: "#ffcf6a", platform: "#8a4a20", platformTop: "#ffcf6a", ceiling: "#5a2a18", ceilingAccent: "#ff6a3a",
+      particle: "embers", particleColor: "rgba(255,180,90,0.9)"
+    },
+    {
+      name: "Månbasen", key: "moonbase",
+      bg: "radial-gradient(ellipse at 50% 20%, #cfd6e0 0%, #4a5560 45%, #05060a 100%)",
+      groundColor: "#8a8f96", crackColor: "rgba(0,0,0,0.3)",
+      hazard: { top: "rgba(200,220,255,0.85)", mid: "rgba(100,140,200,0.9)", bottom: "rgba(20,30,60,1)", glow: "rgba(140,180,240,0.5)", dot: "rgba(210,230,255,0.9)" },
+      spike: "#5a6068", spikeStroke: "#cfd6e0", platform: "#7a8088", platformTop: "#cfd6e0", ceiling: "#454b52",
+      particle: "stars", particleColor: "rgba(255,255,255,0.9)"
+    },
+    {
+      name: "Marsöknen", key: "mars",
+      bg: "radial-gradient(ellipse at 50% 20%, #ff9a6a 0%, #b8482a 45%, #3a1008 100%)",
+      groundColor: "#7a3018", crackColor: "rgba(60,10,0,0.3)",
+      hazard: { top: "rgba(255,180,130,0.85)", mid: "rgba(220,90,50,0.9)", bottom: "rgba(70,15,10,1)", glow: "rgba(230,120,70,0.5)", dot: "rgba(255,190,150,0.85)" },
+      spike: "#4a1c10", spikeStroke: "#ff9a6a", platform: "#6a2a18", platformTop: "#ff9a6a", ceiling: "#3a1810",
+      particle: "embers", particleColor: "rgba(230,140,90,0.5)"
+    },
+    {
+      name: "Cyberrymden", key: "cyber",
+      bg: "radial-gradient(ellipse at 50% 50%, #0a2a2a 0%, #050a14 45%, #000000 100%)",
+      groundColor: "#0a1a1a", crackColor: "rgba(0,255,200,0.15)",
+      hazard: { top: "rgba(0,255,180,0.9)", mid: "rgba(0,200,255,0.9)", bottom: "rgba(0,40,60,1)", glow: "rgba(0,255,220,0.6)", dot: "rgba(150,255,230,0.9)" },
+      spike: "#0a2a2a", spikeStroke: "#00ffcc", platform: "#0f2f2f", platformTop: "#00ffcc", ceiling: "#0a1f1f", ceilingAccent: "#00ffcc",
+      particle: "stars", particleColor: "rgba(0,255,200,0.9)"
+    },
+    {
+      name: "Tidsportalen", key: "time",
+      bg: "radial-gradient(ellipse at 50% 50%, #ffe0a0 0%, #8a6a3a 45%, #1a1208 100%)",
+      groundColor: "#4a3a20", crackColor: "rgba(60,40,0,0.3)",
+      hazard: { top: "rgba(255,230,180,0.9)", mid: "rgba(220,180,90,0.9)", bottom: "rgba(70,50,10,1)", glow: "rgba(240,200,120,0.5)", dot: "rgba(255,235,190,0.9)" },
+      spike: "#5a4520", spikeStroke: "#ffe0a0", platform: "#6a5228", platformTop: "#ffe0a0", ceiling: "#3a2c14",
+      particle: "stars", particleColor: "rgba(255,220,160,0.85)"
+    },
+    {
+      name: "Ufokraschen", key: "ufo",
+      bg: "radial-gradient(ellipse at 50% 20%, #7aff9a 0%, #1a3a1a 45%, #050a05 100%)",
+      groundColor: "#2a3a22", crackColor: "rgba(0,60,0,0.3)",
+      hazard: { top: "rgba(150,255,170,0.9)", mid: "rgba(70,220,110,0.95)", bottom: "rgba(15,50,20,1)", glow: "rgba(110,255,150,0.6)", dot: "rgba(190,255,200,0.9)" },
+      spike: "#1a2a18", spikeStroke: "#7aff9a", platform: "#2a4a28", platformTop: "#7aff9a", ceiling: "#1a2a18", ceilingAccent: "#7aff9a",
+      particle: "fireflies", particleColor: "rgba(140,255,160,0.9)"
+    },
+    {
+      name: "Rymdskrotfältet", key: "junk",
+      bg: "radial-gradient(ellipse at 50% 30%, #6a5a4a 0%, #2a2420 45%, #000000 100%)",
+      groundColor: "#4a423a", crackColor: "rgba(0,0,0,0.3)",
+      hazard: { top: "rgba(255,200,150,0.8)", mid: "rgba(200,140,80,0.9)", bottom: "rgba(50,30,15,1)", glow: "rgba(220,160,100,0.5)", dot: "rgba(240,210,170,0.85)" },
+      spike: "#3a342c", spikeStroke: "#8a7a60", platform: "#5a5044", platformTop: "#a99a80", ceiling: "#2a2620",
+      particle: "stars", particleColor: "rgba(255,255,255,0.7)"
+    },
+    {
+      name: "Valgraven", key: "whalegrave",
+      bg: "radial-gradient(ellipse at 50% 0%, #16324a 0%, #0a1a2a 45%, #020508 100%)",
+      groundColor: "#4a4a42", crackColor: "rgba(0,0,0,0.4)",
+      hazard: { top: "rgba(140,220,255,0.7)", mid: "rgba(40,110,160,0.85)", bottom: "rgba(5,20,35,1)", glow: "rgba(90,180,220,0.4)", dot: "rgba(160,220,255,0.8)" },
+      spike: "#3a3a34", spikeStroke: "#8a8a78", platform: "#4a4a3e", platformTop: "#8a8a78", ceiling: "#16222e",
+      particle: "bubbles", particleColor: "rgba(150,200,230,0.5)"
+    },
+    {
+      name: "Sjöjungfrupalatset", key: "mermaid",
+      bg: "radial-gradient(ellipse at 50% 0%, #7ff0e0 0%, #2a9ab0 45%, #0a3a52 100%)",
+      groundColor: "#1a5a6a", crackColor: "rgba(0,0,0,0.2)", crystalColor: "#ffb8e0",
+      hazard: { top: "rgba(255,200,240,0.9)", mid: "rgba(255,130,210,0.9)", bottom: "rgba(120,20,80,1)", glow: "rgba(255,160,225,0.5)", dot: "rgba(255,220,245,0.9)" },
+      spike: "#0a3a48", spikeStroke: "#ffb8e0", platform: "#1f6a7a", platformTop: "#ffb8e0", ceiling: "#0f4a58",
+      particle: "bubbles", particleColor: "rgba(255,200,240,0.6)"
+    },
+    {
+      name: "Faraos Pyramider", key: "egypt",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffe0a0 0%, #d9a24a 45%, #4a2e10 100%)",
+      groundColor: "#c9a25a", crackColor: "rgba(80,50,10,0.25)",
+      hazard: { top: "rgba(255,230,180,0.9)", mid: "rgba(230,180,90,0.9)", bottom: "rgba(100,60,10,1)", glow: "rgba(240,200,120,0.5)", dot: "rgba(255,235,190,0.9)" },
+      spike: "#5a3a18", spikeStroke: "#ffe0a0", platform: "#8a6a30", platformTop: "#ffe0a0", ceiling: "#4a2e10",
+      particle: "embers", particleColor: "rgba(255,220,160,0.4)"
+    },
+    {
+      name: "Körsbärsriket", key: "sakura",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffe0ec 0%, #ffb0c8 45%, #6a2a42 100%)",
+      groundColor: "#5a3a42", crackColor: "rgba(40,10,20,0.2)",
+      hazard: { top: "rgba(255,220,235,0.9)", mid: "rgba(255,150,190,0.9)", bottom: "rgba(120,30,60,1)", glow: "rgba(255,180,210,0.5)", dot: "rgba(255,230,240,0.9)" },
+      spike: "#3a2028", spikeStroke: "#ffb0c8", platform: "#6a4048", platformTop: "#ffb0c8", ceiling: "#4a2a32",
+      particle: "snow", particleColor: "rgba(255,190,215,0.9)"
+    },
+    {
+      name: "Colosseum", key: "rome",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffe4b8 0%, #d9a25a 45%, #5a3a1a 100%)",
+      groundColor: "#c9b088", crackColor: "rgba(90,60,20,0.25)",
+      hazard: { top: "rgba(255,225,180,0.9)", mid: "rgba(220,160,80,0.9)", bottom: "rgba(90,50,15,1)", glow: "rgba(235,190,110,0.5)", dot: "rgba(255,230,190,0.9)" },
+      spike: "#5a4020", spikeStroke: "#e8c898", platform: "#8a6a3a", platformTop: "#e8c898", ceiling: "#4a3018",
+      particle: "embers", particleColor: "rgba(230,190,140,0.4)"
+    },
+    {
+      name: "Medeltidsmarknaden", key: "medieval",
+      bg: "radial-gradient(ellipse at 50% 20%, #cfc0a0 0%, #8a7a5a 45%, #2a2418 100%)",
+      groundColor: "#6a5a40", crackColor: "rgba(30,20,10,0.3)",
+      hazard: { top: "rgba(230,220,190,0.85)", mid: "rgba(170,140,90,0.9)", bottom: "rgba(60,45,20,1)", glow: "rgba(200,180,130,0.5)", dot: "rgba(240,230,200,0.85)" },
+      spike: "#3a3020", spikeStroke: "#cfc0a0", platform: "#6a5a3a", platformTop: "#cfc0a0", ceiling: "#2a2416",
+      particle: "embers", particleColor: "rgba(200,190,160,0.4)"
+    },
+    {
+      name: "Aztektemplet", key: "aztec",
+      bg: "radial-gradient(ellipse at 50% 100%, #ffd85a 0%, #4a7a2a 45%, #142a10 100%)",
+      groundColor: "#3a5a1e", crackColor: "rgba(20,40,0,0.25)", crystalColor: "#ffd85a",
+      hazard: { top: "rgba(255,230,140,0.9)", mid: "rgba(220,180,50,0.9)", bottom: "rgba(70,50,10,1)", glow: "rgba(240,200,80,0.5)", dot: "rgba(255,235,160,0.9)" },
+      spike: "#2a4a14", spikeStroke: "#ffd85a", platform: "#4a6a20", platformTop: "#ffd85a", ceiling: "#1e3a10",
+      particle: "fireflies", particleColor: "rgba(255,220,110,0.8)"
+    },
+    {
+      name: "Vilda Västern", key: "westtown",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffb86a 0%, #b8622f 45%, #3a1a0a 100%)",
+      groundColor: "#9a6a3a", crackColor: "rgba(70,40,10,0.25)",
+      hazard: { top: "rgba(255,210,150,0.9)", mid: "rgba(220,130,60,0.9)", bottom: "rgba(90,40,10,1)", glow: "rgba(235,160,90,0.5)", dot: "rgba(255,220,170,0.9)" },
+      spike: "#4a2f18", spikeStroke: "#d9a25a", platform: "#6a4a28", platformTop: "#d9a25a", ceiling: "#3a2414",
+      particle: "embers", particleColor: "rgba(230,180,120,0.4)"
+    },
+    {
+      name: "Storstadsnatten", key: "citynight",
+      bg: "radial-gradient(ellipse at 50% 100%, #ffb84a 0%, #2a2a4a 45%, #05050f 100%)",
+      groundColor: "#26262e", crackColor: "rgba(0,0,0,0.3)",
+      hazard: { top: "rgba(255,210,120,0.9)", mid: "rgba(255,160,60,0.9)", bottom: "rgba(80,40,10,1)", glow: "rgba(255,180,90,0.5)", dot: "rgba(255,220,150,0.9)" },
+      spike: "#1a1a20", spikeStroke: "#ffb84a", platform: "#2e2e3a", platformTop: "#ffb84a", ceiling: "#1a1a22",
+      particle: "stars", particleColor: "rgba(255,210,120,0.8)"
+    },
+    {
+      name: "Tivolit", key: "carnival",
+      bg: "radial-gradient(ellipse at 50% 100%, #ff5ac0 0%, #5a2a8a 45%, #10051a 100%)",
+      groundColor: "#3a1e42", crackColor: "rgba(255,255,255,0.1)",
+      hazard: { top: "rgba(255,220,255,0.9)", mid: "rgba(255,120,220,0.9)", bottom: "rgba(90,20,80,1)", glow: "rgba(255,150,230,0.6)", dot: "rgba(255,230,255,0.9)" },
+      spike: "#4a1a4a", spikeStroke: "#ffe066", platform: "#6a2a6a", platformTop: "#ffe066", ceiling: "#3a1a3a",
+      particle: "stars", particleColor: "rgba(255,224,102,0.9)"
+    },
+    {
+      name: "Cirkusen", key: "circus",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffdca0 0%, #c9455a 45%, #3a0a14 100%)",
+      groundColor: "#8a2a3a", crackColor: "rgba(255,255,255,0.15)",
+      hazard: { top: "rgba(255,235,200,0.9)", mid: "rgba(255,190,70,0.9)", bottom: "rgba(120,30,20,1)", glow: "rgba(255,210,110,0.5)", dot: "rgba(255,240,210,0.9)" },
+      spike: "#5a1a24", spikeStroke: "#ffe066", platform: "#8a3a44", platformTop: "#ffe066", ceiling: "#4a141c",
+      particle: "stars", particleColor: "rgba(255,230,150,0.9)"
+    },
+    {
+      name: "Biblioteket", key: "library",
+      bg: "radial-gradient(ellipse at 50% 20%, #e8d0a0 0%, #8a6a3a 45%, #241a0a 100%)",
+      groundColor: "#6a4a28", crackColor: "rgba(30,15,0,0.25)",
+      hazard: { top: "rgba(255,235,200,0.85)", mid: "rgba(210,170,100,0.9)", bottom: "rgba(60,40,10,1)", glow: "rgba(230,195,130,0.5)", dot: "rgba(250,235,210,0.85)" },
+      spike: "#3a2814", spikeStroke: "#e8d0a0", platform: "#5a3e20", platformTop: "#e8d0a0", ceiling: "#2a1c0e",
+      particle: "stars", particleColor: "rgba(230,215,180,0.5)"
+    },
+    {
+      name: "Leksaksrummet", key: "toyroom",
+      bg: "radial-gradient(ellipse at 50% 20%, #fff0c0 0%, #ffb0d0 45%, #7a5aae 100%)",
+      groundColor: "#e0c8f0", crackColor: "rgba(150,120,180,0.2)",
+      hazard: { top: "rgba(255,240,220,0.9)", mid: "rgba(255,170,90,0.9)", bottom: "rgba(150,80,20,1)", glow: "rgba(255,190,120,0.5)", dot: "rgba(255,245,225,0.9)" },
+      spike: "#e0325c", spikeStroke: "#ffffff", platform: "#5ab4ff", platformTop: "#ffffff", ceiling: "#ffd93d",
+      particle: "stars", particleColor: "rgba(255,255,255,0.9)"
+    },
+    {
+      name: "Åskvädret", key: "storm",
+      bg: "radial-gradient(ellipse at 50% 20%, #8a9ab0 0%, #3a4258 45%, #0a0c14 100%)",
+      groundColor: "#2a3040", crackColor: "rgba(0,0,0,0.35)",
+      hazard: { top: "rgba(200,220,255,0.85)", mid: "rgba(110,140,200,0.9)", bottom: "rgba(20,25,50,1)", glow: "rgba(160,190,240,0.5)", dot: "rgba(220,235,255,0.9)" },
+      spike: "#1a1f2c", spikeStroke: "#ffe066", platform: "#3a4258", platformTop: "#c9d6ee", ceiling: "#20242e",
+      particle: "snow", particleColor: "rgba(200,220,255,0.6)"
+    },
+    {
+      name: "Tornadoalléen", key: "tornado",
+      bg: "radial-gradient(ellipse at 50% 20%, #d9d089 0%, #6a6a4a 45%, #1a1a10 100%)",
+      groundColor: "#5a5238", crackColor: "rgba(30,25,10,0.3)",
+      hazard: { top: "rgba(230,225,170,0.85)", mid: "rgba(160,150,90,0.9)", bottom: "rgba(50,45,20,1)", glow: "rgba(200,190,120,0.5)", dot: "rgba(240,235,190,0.85)" },
+      spike: "#3a3520", spikeStroke: "#d9d089", platform: "#6a6244", platformTop: "#d9d089", ceiling: "#2a2818",
+      particle: "embers", particleColor: "rgba(210,200,140,0.5)"
+    },
+    {
+      name: "Dimriket", key: "fog",
+      bg: "radial-gradient(ellipse at 50% 20%, #d8e0e0 0%, #8a9898 45%, #3a4444 100%)",
+      groundColor: "#5a6a62", crackColor: "rgba(20,30,25,0.25)",
+      hazard: { top: "rgba(220,230,225,0.8)", mid: "rgba(140,165,160,0.85)", bottom: "rgba(40,55,50,1)", glow: "rgba(180,200,195,0.4)", dot: "rgba(230,240,235,0.8)" },
+      spike: "#2a3a34", spikeStroke: "#b8c8c2", platform: "#4a5a52", platformTop: "#b8c8c2", ceiling: "#26362e",
+      particle: "snow", particleColor: "rgba(220,230,225,0.4)"
+    },
+    {
+      name: "Pizzerian", key: "pizzeria",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffdca0 0%, #d97a3a 45%, #4a1e0a 100%)",
+      groundColor: "#c9622a", crackColor: "rgba(80,30,0,0.25)",
+      hazard: { top: "rgba(255,230,180,0.9)", mid: "rgba(230,90,40,0.95)", bottom: "rgba(100,20,10,1)", glow: "rgba(240,120,60,0.5)", dot: "rgba(255,220,180,0.9)" },
+      spike: "#5a2010", spikeStroke: "#ffe0a0", platform: "#8a4a20", platformTop: "#ffe0a0", ceiling: "#4a1e0a",
+      particle: "embers", particleColor: "rgba(255,180,110,0.6)"
+    },
+    {
+      name: "Fruktträdgården", key: "orchard",
+      bg: "radial-gradient(ellipse at 50% 20%, #eaffb0 0%, #9ad96a 45%, #2a5a1a 100%)",
+      groundColor: "#5a8a2a", crackColor: "rgba(20,40,0,0.2)",
+      hazard: { top: "rgba(255,240,180,0.9)", mid: "rgba(255,190,60,0.9)", bottom: "rgba(120,70,10,1)", glow: "rgba(255,210,100,0.5)", dot: "rgba(255,245,200,0.9)" },
+      spike: "#7a1a1a", spikeStroke: "#ffb0b0", platform: "#8a6a2a", platformTop: "#e8d85a", ceiling: "#3a5a1a",
+      particle: "snow", particleColor: "rgba(255,220,230,0.8)"
+    },
+    {
+      name: "Glassfabriken", key: "icecream",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffe0f0 0%, #b0d8ff 45%, #5a7ab0 100%)",
+      groundColor: "#eaeaf5", crackColor: "rgba(150,150,180,0.2)",
+      hazard: { top: "rgba(255,230,245,0.9)", mid: "rgba(255,170,210,0.9)", bottom: "rgba(150,70,120,1)", glow: "rgba(255,190,225,0.5)", dot: "rgba(255,240,250,0.9)" },
+      spike: "#c9455a", spikeStroke: "#ffffff", platform: "#ffd6ec", platformTop: "#ffffff", ceiling: "#b0d8ff",
+      particle: "snow", particleColor: "rgba(255,255,255,0.85)"
+    },
+    {
+      name: "Vårängen", key: "spring",
+      bg: "radial-gradient(ellipse at 50% 20%, #eaffea 0%, #9adf9a 45%, #3a8a4a 100%)",
+      groundColor: "#6aae4a", crackColor: "rgba(20,50,10,0.2)",
+      hazard: { top: "rgba(240,255,220,0.9)", mid: "rgba(180,230,120,0.9)", bottom: "rgba(60,110,30,1)", glow: "rgba(210,245,160,0.5)", dot: "rgba(250,255,235,0.9)" },
+      spike: "#2a5a1e", spikeStroke: "#c9f0a0", platform: "#5a8a3a", platformTop: "#c9f0a0", ceiling: "#245a18",
+      particle: "fireflies", particleColor: "rgba(255,240,150,0.7)"
+    },
+    {
+      name: "Sommarstranden", key: "beach",
+      bg: "radial-gradient(ellipse at 50% 20%, #fff6cf 0%, #7fd4f0 45%, #1a6a9a 100%)",
+      groundColor: "#f0d9a0", crackColor: "rgba(150,110,40,0.2)",
+      hazard: { top: "rgba(255,250,220,0.9)", mid: "rgba(120,220,240,0.9)", bottom: "rgba(20,80,110,1)", glow: "rgba(160,235,250,0.5)", dot: "rgba(255,255,240,0.9)" },
+      spike: "#e8b04a", spikeStroke: "#ffffff", platform: "#ffe6a0", platformTop: "#ffffff", ceiling: "#7fd4f0",
+      particle: "bubbles", particleColor: "rgba(255,255,255,0.6)"
+    },
+    {
+      name: "Nyårsnatten", key: "newyear",
+      bg: "radial-gradient(ellipse at 50% 20%, #4a2a6a 0%, #1a0f3a 45%, #020210 100%)",
+      groundColor: "#1a1a2a", crackColor: "rgba(255,255,255,0.1)",
+      hazard: { top: "rgba(255,220,120,0.9)", mid: "rgba(255,90,150,0.9)", bottom: "rgba(60,10,50,1)", glow: "rgba(255,150,180,0.6)", dot: "rgba(255,230,200,0.9)" },
+      spike: "#241a3a", spikeStroke: "#ffe066", platform: "#3a2a5a", platformTop: "#ffe066", ceiling: "#1a1230",
+      particle: "stars", particleColor: "rgba(255,210,120,0.95)"
+    },
+    {
+      name: "Konstgalleriet", key: "artgallery",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffffff 0%, #e0e0e0 45%, #9a9aa5 100%)",
+      groundColor: "#f0f0ea", crackColor: "rgba(0,0,0,0.15)",
+      hazard: { top: "rgba(255,90,90,0.9)", mid: "rgba(90,150,255,0.9)", bottom: "rgba(255,210,40,1)", glow: "rgba(200,100,255,0.6)", dot: "rgba(255,255,255,0.9)" },
+      spike: "#ff5a5a", spikeStroke: "#222222", platform: "#5ab4ff", platformTop: "#ffe066", ceiling: "#222222",
+      particle: "stars", particleColor: "rgba(255,120,200,0.8)"
+    },
+    {
+      name: "Discot", key: "disco",
+      bg: "radial-gradient(ellipse at 50% 50%, #ff5ac0 0%, #5a2a8a 40%, #0a0514 100%)",
+      groundColor: "#1a1424", crackColor: "rgba(255,255,255,0.15)",
+      hazard: { top: "rgba(120,255,220,0.9)", mid: "rgba(255,90,200,0.9)", bottom: "rgba(60,10,60,1)", glow: "rgba(200,120,255,0.6)", dot: "rgba(255,230,255,0.9)" },
+      spike: "#2a1a3a", spikeStroke: "#00ffcc", platform: "#3a2a4a", platformTop: "#ffe066", ceiling: "#1a1030", ceilingAccent: "#ff2fb0",
+      particle: "stars", particleColor: "rgba(255,255,255,0.95)"
+    },
+    {
+      name: "Skuggvärlden", key: "shadow",
+      bg: "radial-gradient(ellipse at 50% 20%, #ffffff 0%, #888888 45%, #000000 100%)",
+      groundColor: "#1a1a1a", crackColor: "rgba(255,255,255,0.15)",
+      hazard: { top: "rgba(255,255,255,0.9)", mid: "rgba(180,180,180,0.9)", bottom: "rgba(0,0,0,1)", glow: "rgba(255,255,255,0.5)", dot: "rgba(255,255,255,0.9)" },
+      spike: "#000000", spikeStroke: "#ffffff", platform: "#2a2a2a", platformTop: "#ffffff", ceiling: "#0a0a0a",
+      particle: "stars", particleColor: "rgba(255,255,255,0.9)"
+    },
+    {
+      name: "Drömvärlden", key: "dream",
+      bg: "radial-gradient(ellipse at 50% 50%, #ffd0ff 0%, #a0c0ff 45%, #302a6a 100%)",
+      groundColor: "#4a3a7a", crackColor: "rgba(255,255,255,0.15)", crystalColor: "#ffe08a",
+      hazard: { top: "rgba(255,220,255,0.9)", mid: "rgba(160,180,255,0.9)", bottom: "rgba(50,30,90,1)", glow: "rgba(210,200,255,0.6)", dot: "rgba(255,240,255,0.9)" },
+      spike: "#5a4a9a", spikeStroke: "#ffd0ff", platform: "#6a5aae", platformTop: "#ffd0ff", ceiling: "#4a3a7a",
+      particle: "stars", particleColor: "rgba(255,255,255,0.85)"
+    }
+  ];
+
+  let debugThemeOverride = null; // satt av pil-knapparna for att bläddra fritt bland teman
+  let levelOffset = 0;           // vilken niva den aktuella omgangen startar pa
+  let pendingLevelOffset = 0;    // niva som nasta omgang ska starta pa (satts vid dod)
+
+  function currentThemeIndex() {
+    if (debugThemeOverride !== null) return debugThemeOverride;
+    return (levelOffset + Math.floor(getScore() / 1000)) % THEMES.length;
+  }
+
+  let appliedThemeIndex = -1;
+  let themeAnnounce = 0; // frames kvar att visa temats namn
+
+  let ambientParticles = [];
+  function initParticles() {
+    ambientParticles = [];
+    for (let i = 0; i < 45; i++) {
+      ambientParticles.push({
+        x: Math.random() * (canvas.width || window.innerWidth),
+        y: Math.random() * (canvas.height || window.innerHeight),
+        size: 1 + Math.random() * 2.5,
+        speed: 0.3 + Math.random() * 1.3,
+        drift: (Math.random() - 0.5) * 0.6,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    GROUND_Y = canvas.height - 80;
+    if (state !== "playing") {
+      player.y = GROUND_Y - player.h;
+    }
+    initParticles();
+  }
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  function resetGame() {
+    player.y = GROUND_Y - PLAYER_SIZE;
+    player.vy = 0;
+    player.onGround = true;
+    player.rotation = 0;
+    obstacles = [];
+    coins = [];
+    floatingTexts = [];
+    coinScore = 0;
+    coinSpawnTimer = 0;
+    coinNextSpawnAt = 40 + Math.random() * 40;
+    speed = 6;
+    distance = 0;
+    spawnTimer = 0;
+    nextSpawnAt = 60 + Math.random() * 40;
+    appliedThemeIndex = -1;
+    themeAnnounce = 0;
+    debugThemeOverride = null; // sa att en ny omgang alltid byter niva efter poang (1000, 2000, ...)
+    levelOffset = pendingLevelOffset; // starta pa den niva man senast dog pa
+  }
+
+  // ---------- Ljud ----------
+  let audioCtx = null;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  // ---------- Bakgrundsmusik (procedurell, upbeat, laag volym) ----------
+  let musicOn = true;
+  try { musicOn = localStorage.getItem("hoppspelet_music") !== "off"; } catch (e) {}
+  let musicGain = null;
+  let musicStarted = false;
+  let musicStep = 0;
+  let musicTimer = null;
+  const MUSIC_VOL = 0.05;
+  const STEP_MS = 145;
+
+  // Halvtonssteg fran C5 (523.25 Hz). En lang loop (16 takter / 64 steg) med fyra
+  // olika fraser sa den inte later sa enformig.
+  const C5 = 523.25;
+  const semi = (n) => C5 * Math.pow(2, n / 12);
+
+  // 64 steg = 16 takter a 4 steg. Melodin arpeggierar med varierande kontur och rester (null).
+  const MELODY = [
+    // Fras 1: C  G  Am F
+    0, 4, 7, 12,   11, 7, 11, 14,   12, 9, 12, 16,   14, 12, 9, 5,
+    // Fras 2: F  G  C  Am
+    5, 9, 12, 9,   7, 11, 14, 11,   12, 7, 4, 7,     9, 12, 9, 4,
+    // Fras 3: Am F  C  G
+    16, 12, 9, 12, 12, 9, 5, 9,     7, 12, 16, 12,   14, 11, 7, 2,
+    // Fras 4: C  G  F  G  (avslut/vandning)
+    0, 4, 7, 12,   11, 7, 2, null,  5, 9, 5, 9,      7, 11, 14, null
+  ];
+
+  // En basrot per takt (16 takter), en oktav ner. Kvinten laggs till pa halvtakten.
+  const CHORD_ROOTS = [
+    -12, -17, -15, -19,   // C  G  Am F
+    -19, -17, -12, -15,   // F  G  C  Am
+    -15, -19, -12, -17,   // Am F  C  G
+    -12, -17, -19, -17    // C  G  F  G
+  ];
+
+  function playMusicNote(freq, dur, type, vol) {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(vol, now + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    osc.connect(g).connect(musicGain);
+    osc.start(now);
+    osc.stop(now + dur + 0.02);
+  }
+
+  function musicTick() {
+    if (!audioCtx || !musicGain) return;
+    const s = musicStep % MELODY.length;
+    const bar = Math.floor(s / 4);
+    const beat = s % 4;
+
+    if (MELODY[s] !== null) {
+      playMusicNote(semi(MELODY[s]), 0.18, "triangle", 0.5);
+    }
+    // Bas: rot pa taktslag 0, kvint pa taktslag 2 for studsig kanslo
+    if (beat === 0) {
+      playMusicNote(semi(CHORD_ROOTS[bar]), 0.42, "sine", 0.9);
+    } else if (beat === 2) {
+      playMusicNote(semi(CHORD_ROOTS[bar] + 7), 0.3, "sine", 0.7);
+    }
+    // Latt "hi-hat"-blip pa offbeats for driv
+    if (s % 2 === 1) {
+      playMusicNote(semi(24 + (s % 3)), 0.04, "square", 0.12);
+    }
+    musicStep++;
+  }
+
+  function startMusic() {
+    if (musicStarted) return;
+    // Ljud far ALDRIG kunna blockera spelet - svalj alla fel (t.ex. om AudioContext
+    // saknas eller blockeras av webblasaren).
+    try {
+      ensureAudio();
+      musicGain = audioCtx.createGain();
+      musicGain.gain.value = musicOn ? MUSIC_VOL : 0;
+      musicGain.connect(audioCtx.destination);
+      musicStarted = true;
+      musicTick();
+      musicTimer = setInterval(musicTick, STEP_MS);
+    } catch (e) {
+      musicStarted = true; // forsok inte igen varje bildruta
+    }
+  }
+
+  function setMusicOn(on) {
+    musicOn = on;
+    try { localStorage.setItem("hoppspelet_music", on ? "on" : "off"); } catch (e) {}
+    if (musicGain) {
+      const now = audioCtx.currentTime;
+      musicGain.gain.cancelScheduledValues(now);
+      musicGain.gain.setTargetAtTime(on ? MUSIC_VOL : 0, now, 0.05);
+    }
+    const btn = document.getElementById("musicMute");
+    if (btn) btn.textContent = on ? "🔊" : "🔇";
+  }
+
+  function playJumpSound() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "square";
+    // Liten slumpvariation sa hoppet inte later exakt likadant varje gang
+    const detune = 0.94 + Math.random() * 0.12;      // ±6 % tonhojd
+    const dur = 0.16 + Math.random() * 0.05;
+    osc.frequency.setValueAtTime(280 * detune, now);
+    osc.frequency.exponentialRampToValueAtTime(620 * detune, now + dur * 0.7);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + dur + 0.02);
+  }
+
+  function playDeathSound() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(50, now + 0.4);
+    gain.gain.setValueAtTime(0.22, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.45);
+  }
+
+  function jump() {
+    if (player.onGround) {
+      player.vy = JUMP_FORCE;
+      player.onGround = false;
+      playJumpSound();
+    }
+  }
+
+  function die() {
+    if (state === "gameover") return;
+    // Kom ihag vilken niva man dog pa sa nasta omgang startar dar (fast med 0 poang).
+    // Appliceras forst vid omstart (resetGame) sa gameover-skarmen visar ratt tema.
+    pendingLevelOffset = currentThemeIndex();
+    state = "gameover";
+    best = Math.max(best, getScore());
+    try { localStorage.setItem("hoppspelet_best", String(best)); } catch (e) {}
+    playDeathSound();
+  }
+
+  function playCoinSound() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(660, now);
+    osc.frequency.setValueAtTime(990, now + 0.07);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.18);
+  }
+
+  function spawnObstacle() {
+    // Slumpa typ: spik (hoppa över), plattform (hoppa upp på) eller takblock (måste gå under)
+    const r = Math.random();
+    if (r < 0.55) {
+      // Faror (spik / kottatande vaxt) har alltid samma storlek
+      const w = 34;
+      const h = 44;
+      obstacles.push({ type: "spike", x: canvas.width + 20, y: GROUND_Y - h, w: w, h: h });
+    } else if (r < 0.8) {
+      // Plattformar far fortfarande variera (de ar inte faror)
+      const w = 90 + Math.random() * 90;
+      const platformHeight = 55 + Math.random() * 55;
+      const topY = GROUND_Y - platformHeight;
+      obstacles.push({ type: "platform", x: canvas.width + 20, y: topY, w: w, h: GROUND_Y - topY });
+    } else {
+      // Takblock (fara) har alltid samma storlek och hojd over marken
+      const w = 100;
+      const bottomY = GROUND_Y - PLAYER_SIZE - 38;
+      obstacles.push({ type: "ceiling", x: canvas.width + 20, y: 0, w: w, h: bottomY });
+    }
+  }
+
+  function hasObstacleNear(x1, x2) {
+    for (const obs of obstacles) {
+      if (obs.x < x2 + 30 && obs.x + obs.w > x1 - 30) return true;
+    }
+    return false;
+  }
+
+  function spawnCoins() {
+    const arcCount = 5;
+    const spacing = 60;
+    const startX = canvas.width + 40;
+    const endX = startX + spacing * (arcCount - 1);
+    if (hasObstacleNear(startX, endX)) return;
+
+    const baseY = GROUND_Y - PLAYER_SIZE - 20 - Math.random() * 30;
+    const arcHeight = 50;
+    for (let i = 0; i < arcCount; i++) {
+      const x = startX + i * spacing;
+      const y = baseY - Math.sin((Math.PI * i) / (arcCount - 1)) * arcHeight;
+      coins.push({ x: x, y: y, r: 17, phase: Math.random() * Math.PI * 2, collected: false });
+    }
+  }
+
+  function handleAction() {
+    startMusic(); // startar musiken vid forsta anvandarinteraktion (browsers kraver en gest)
+    if (state === "ready") {
+      state = "playing";
+      resetGame();
+    } else if (state === "playing") {
+      jump();
+    } else if (state === "gameover") {
+      state = "playing";
+      resetGame();
+    }
+  }
+
+  Engine.onKeyDown = function (code) {
+    if (code === "Space") handleAction();
+  };
+
+  canvas.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    handleAction();
+  }, { passive: false });
+
+  // ---------- Felsökningsknapp (+1000 poäng) ----------
+  // mousedown med preventDefault hindrar knapparna fran att ta emot fokus, sa att
+  // MELLANSLAG for att hoppa fortsatter fungera som vanligt efter ett klick.
+  // Touch hanteras separat och direkt i touchstart eftersom preventDefault dar
+  // stoppar webblasaren fran att nagonsin skicka den efterföljande click-handelsen
+  // (annars gjorde knapparna ingenting pa iPad).
+  function debugGoToTheme(delta) {
+    const cur = currentThemeIndex();
+    debugThemeOverride = ((cur + delta) % THEMES.length + THEMES.length) % THEMES.length;
+  }
+
+  const prevThemeBtn = document.getElementById("debugPrevTheme");
+  prevThemeBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+  prevThemeBtn.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    debugGoToTheme(-1);
+  }, { passive: false });
+  prevThemeBtn.addEventListener("click", function () {
+    debugGoToTheme(-1);
+    prevThemeBtn.blur();
+  });
+
+  const nextThemeBtn = document.getElementById("debugNextTheme");
+  nextThemeBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+  nextThemeBtn.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    debugGoToTheme(1);
+  }, { passive: false });
+  nextThemeBtn.addEventListener("click", function () {
+    debugGoToTheme(1);
+    nextThemeBtn.blur();
+  });
+
+  const reloadBtn = document.getElementById("debugReload");
+  reloadBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+  reloadBtn.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    window.location.reload();
+  }, { passive: false });
+  reloadBtn.addEventListener("click", function () {
+    window.location.reload();
+  });
+
+  // ---------- Mute-knapp for musiken ----------
+  const muteBtn = document.getElementById("musicMute");
+  muteBtn.textContent = musicOn ? "🔊" : "🔇";
+  function toggleMusic() {
+    startMusic();       // sakerstall att musiken ar igang (och ljudet upplast av gesten)
+    setMusicOn(!musicOn);
+  }
+  muteBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+  muteBtn.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    toggleMusic();
+  }, { passive: false });
+  muteBtn.addEventListener("click", function () {
+    toggleMusic();
+    muteBtn.blur();
+  });
+
+  function update() {
+    if (state !== "playing") return;
+
+    // Öka svårighetsgrad sakta med tiden
+    speed += 0.0015;
+    distance += speed;
+
+    // Gravitation + kollision mot plattformar (kan hoppas upp på, är annars solida)
+    const prevBottom = player.y + player.h;
+    player.vy += GRAVITY;
+    const tentativeY = player.y + player.vy;
+    const tentativeBottom = tentativeY + player.h;
+
+    let floor = GROUND_Y;
+    let crashed = false;
+
+    for (const obs of obstacles) {
+      if (obs.type !== "platform") continue;
+      const overlapsX = player.x + player.w > obs.x && player.x < obs.x + obs.w;
+      if (!overlapsX) continue;
+      if (prevBottom <= obs.y + 1 && tentativeBottom >= obs.y) {
+        // Landar ovanpå plattformen
+        if (obs.y < floor) floor = obs.y;
+      } else if (tentativeBottom > obs.y && player.y < obs.y + obs.h) {
+        // Sprang in i plattformens sida/undersida
+        crashed = true;
+      }
+    }
+
+    if (crashed) {
+      die();
+      return;
+    }
+
+    player.y = tentativeY;
+    if (player.y + player.h >= floor) {
+      player.y = floor - player.h;
+      player.vy = 0;
+      player.onGround = true;
+    } else {
+      player.onGround = false;
+    }
+
+    // Rotera figuren lite i hoppet för känsla
+    if (!player.onGround) {
+      player.rotation += 0.12;
+    } else {
+      player.rotation = 0;
+    }
+
+    // Flytta hinder
+    for (const obs of obstacles) {
+      obs.x -= speed;
+    }
+    obstacles = obstacles.filter(o => o.x + o.w > -10);
+
+    // Spawna nya hinder
+    spawnTimer++;
+    if (spawnTimer >= nextSpawnAt) {
+      spawnObstacle();
+      spawnTimer = 0;
+      nextSpawnAt = 55 + Math.random() * 50 - Math.min(speed, 20);
+      if (nextSpawnAt < 35) nextSpawnAt = 35;
+    }
+
+    // Flytta och samla in mynt (ger extrapoäng, är aldrig farliga)
+    for (const c of coins) {
+      c.x -= speed;
+    }
+    for (const c of coins) {
+      if (c.collected) continue;
+      const dx = (player.x + player.w / 2) - c.x;
+      const dy = (player.y + player.h / 2) - c.y;
+      if (Math.sqrt(dx * dx + dy * dy) < c.r + player.w * 0.4) {
+        c.collected = true;
+        coinScore += 10;
+        playCoinSound();
+        floatingTexts.push({
+          x: player.x + player.w / 2,
+          y: player.y - 6,
+          text: "+10",
+          life: 45,
+          maxLife: 45
+        });
+      }
+    }
+    coins = coins.filter(c => !c.collected && c.x > -30);
+
+    // Poängtext som flyter uppåt vid figuren och tonar bort
+    for (const ft of floatingTexts) {
+      ft.y -= 1.3;
+      ft.x -= speed * 0.3;
+      ft.life--;
+    }
+    floatingTexts = floatingTexts.filter(ft => ft.life > 0);
+
+    coinSpawnTimer++;
+    if (coinSpawnTimer >= coinNextSpawnAt) {
+      spawnCoins();
+      coinSpawnTimer = 0;
+      coinNextSpawnAt = 70 + Math.random() * 80;
+    }
+
+    // Kollisionskoll mot dödliga hinder (spikar och takblock). Lite marginal för rättvis känsla.
+    const margin = 6;
+    const playerBox = {
+      x: player.x + margin,
+      y: player.y + margin,
+      w: player.w - margin * 2,
+      h: player.h - margin * 2
+    };
+    for (const obs of obstacles) {
+      if (obs.type === "platform") continue;
+      if (rectsOverlap(playerBox, obs)) {
+        die();
+      }
+    }
+  }
+
+  function drawGround(ctx, theme) {
+    // Marken (sten/sand/is beroende på tema)
+    ctx.fillStyle = theme.groundColor;
+    ctx.fillRect(0, GROUND_Y, canvas.width, canvas.height - GROUND_Y);
+
+    // Textur i marken, rör sig med spelet för känsla av fart
+    ctx.fillStyle = theme.crackColor;
+    const stripeWidth = 46;
+    const offset = Math.floor(distance) % stripeWidth;
+    for (let x = -offset; x < canvas.width; x += stripeWidth) {
+      ctx.fillRect(x, GROUND_Y + 14, stripeWidth * 0.4, canvas.height - GROUND_Y - 14);
+    }
+
+    // Glödande "hazard-remsa" rakt under markytan - rent visuellt, påverkar inte spelet.
+    // Lava, bioluminescent rev, gyllene nektar, sprickande is eller alien-energi beroende på tema.
+    const hazardH = 12;
+    const t = performance.now() / 250;
+    const glow = 0.5 + Math.sin(t) * 0.5;
+    const grad = ctx.createLinearGradient(0, GROUND_Y - hazardH, 0, GROUND_Y + hazardH);
+    grad.addColorStop(0, theme.hazard.top);
+    grad.addColorStop(0.4, theme.hazard.mid);
+    grad.addColorStop(1, theme.hazard.bottom);
+    ctx.save();
+    ctx.shadowColor = theme.hazard.glow;
+    ctx.shadowBlur = 20 * (0.7 + glow * 0.3);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, GROUND_Y - 2, canvas.width, hazardH);
+    ctx.restore();
+
+    // Glödande partiklar i remsan
+    ctx.fillStyle = theme.hazard.dot;
+    const dotSpacing = 90;
+    const dOffset = Math.floor(distance * 1.4) % dotSpacing;
+    for (let x = -dOffset; x < canvas.width; x += dotSpacing) {
+      const bob = Math.sin(t + x) * 2;
+      ctx.beginPath();
+      ctx.arc(x, GROUND_Y + 2 + bob, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Glödande kristaller inbäddade i berget, för lite färgpop mot stenen
+    if (theme.crystalColor) {
+      const crystalSpacing = 150;
+      const crOffset = Math.floor(distance * 0.7) % crystalSpacing;
+      ctx.save();
+      ctx.shadowColor = theme.crystalColor;
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = theme.crystalColor;
+      for (let x = -crOffset; x < canvas.width; x += crystalSpacing) {
+        const cy = GROUND_Y + 34 + Math.sin(x * 0.04) * 8;
+        ctx.beginPath();
+        ctx.moveTo(x, cy - 8);
+        ctx.lineTo(x + 5, cy);
+        ctx.lineTo(x, cy + 8);
+        ctx.lineTo(x - 5, cy);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawAmbientParticles(ctx, theme, t) {
+    for (const p of ambientParticles) {
+      switch (theme.particle) {
+        case "bubbles":
+          p.y -= p.speed;
+          if (p.y < -10) p.y = canvas.height + 10;
+          break;
+        case "snow":
+          p.y += p.speed * 0.6;
+          p.x += Math.sin(t + p.phase) * 0.4;
+          if (p.y > canvas.height + 10) p.y = -10;
+          break;
+        case "embers":
+          p.y -= p.speed * 0.8;
+          p.x += p.drift;
+          if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+          break;
+        case "fireflies":
+          p.x += Math.sin(t * 0.6 + p.phase) * 0.6;
+          p.y += Math.cos(t * 0.5 + p.phase) * 0.4;
+          break;
+        case "stars":
+          // Stjärnorna står stilla och blinkar bara
+          break;
+      }
+      if (p.x < -10) p.x = canvas.width + 10;
+      if (p.x > canvas.width + 10) p.x = -10;
+
+      const twinkle = theme.particle === "stars" || theme.particle === "fireflies"
+        ? 0.4 + 0.6 * (0.5 + Math.sin(t * 2 + p.phase) * 0.5)
+        : 1;
+      ctx.globalAlpha = twinkle;
+      ctx.fillStyle = theme.particleColor;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function drawJaggedSilhouette(ctx, baseY, peakMin, peakMax, spacing, color, offsetFactor) {
+    const offset = (distance * offsetFactor) % spacing;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(-spacing * 2, GROUND_Y);
+    ctx.lineTo(-spacing * 2, baseY);
+    for (let bx = -spacing * 2; bx < canvas.width + spacing * 2; bx += spacing) {
+      const x = bx - offset;
+      const peak = baseY - (peakMin + Math.abs(Math.sin(bx * 0.013)) * (peakMax - peakMin));
+      ctx.lineTo(x + spacing / 2, peak);
+      ctx.lineTo(x + spacing, baseY);
+    }
+    ctx.lineTo(canvas.width + spacing * 2, baseY);
+    ctx.lineTo(canvas.width + spacing * 2, GROUND_Y);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawShootingStar(ctx, t, cycle, seedOffset, color, y0, y1) {
+    const phase = ((t + seedOffset) % cycle) / cycle;
+    if (phase > 0.15) return;
+    const p = phase / 0.15;
+    const startX = canvas.width * 1.05;
+    const endX = -canvas.width * 0.1;
+    const x = startX + (endX - startX) * p;
+    const y = y0 + (y1 - y0) * p;
+    const len = 90;
+    ctx.save();
+    ctx.globalAlpha = 1 - p;
+    const grad = ctx.createLinearGradient(x, y, x + len, y - len * 0.35);
+    grad.addColorStop(0, color);
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + len, y - len * 0.35);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawFish(ctx, x, y, size, color, t, phase) {
+    const wob = Math.sin(t * 3 + phase) * 3;
+    ctx.save();
+    ctx.translate(x, y + wob);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size, size * 0.45, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Stjart pekar bakat (at hoger) eftersom fisken simmar at vanster, som allt annat i banan
+    ctx.beginPath();
+    ctx.moveTo(size, 0);
+    ctx.lineTo(size * 1.7, -size * 0.55);
+    ctx.lineTo(size * 1.7, size * 0.55);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBird(ctx, x, y, size, t, phase, color) {
+    const flap = Math.sin(t * 6 + phase) * 0.5;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.strokeStyle = color || "rgba(20,15,5,0.65)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-size, flap * size * 0.7);
+    ctx.quadraticCurveTo(0, -size * 0.7, size, flap * size * 0.7);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawFlutterfly(ctx, x, y, size, t, phase, color) {
+    const wingOpen = 0.3 + Math.abs(Math.sin(t * 8 + phase)) * 0.7;
+    ctx.save();
+    ctx.translate(x, y + Math.sin(t * 2 + phase) * 4);
+    ctx.fillStyle = color;
+    ctx.save();
+    ctx.scale(wingOpen, 1);
+    ctx.beginPath();
+    ctx.ellipse(-size * 0.6, 0, size * 0.6, size * 0.4, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    ctx.save();
+    ctx.scale(wingOpen, 1);
+    ctx.beginPath();
+    ctx.ellipse(size * 0.6, 0, size * 0.6, size * 0.4, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = "rgba(30,20,10,0.7)";
+    ctx.fillRect(-1, -size * 0.35, 2, size * 0.7);
+    ctx.restore();
+  }
+
+  function drawHangingVine(ctx, x, topY, len, t, phase, color) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    for (let i = 0; i <= len; i += 6) {
+      const yy = topY + i;
+      const xx = x + Math.sin(t * 0.8 + phase + i * 0.05) * 6;
+      if (i === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawIceberg(ctx, x, y, w, h, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2, y);
+    ctx.lineTo(x - w * 0.2, y - h);
+    ctx.lineTo(x + w * 0.1, y - h * 0.6);
+    ctx.lineTo(x + w / 2, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRainbow(ctx, cx, baseY, radius) {
+    const colors = ["#ff5a5a", "#ffb84a", "#ffe24a", "#6fce7a", "#5ab4ff", "#a06fff"];
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.lineWidth = 8;
+    ctx.lineCap = "round";
+    for (let i = 0; i < colors.length; i++) {
+      ctx.strokeStyle = colors[i];
+      ctx.beginPath();
+      ctx.arc(cx, baseY, radius - i * 8, Math.PI, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawFallingStreaks(ctx, t, canvasW, canvasH, count, color, speed, streakLen) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < count; i++) {
+      const seed = i * 137.5;
+      const x = (seed * 3.1) % canvasW;
+      const y = ((t * speed + seed) * 4) % (canvasH + 40) - 20;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - streakLen * 0.3, y + streakLen);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawGroundProp(ctx, x, groundY, type, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    switch (type) {
+      case "mushroom":
+        ctx.fillRect(x - 3, groundY - 14, 6, 14);
+        ctx.beginPath();
+        ctx.ellipse(x, groundY - 16, 12, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      case "pumpkin":
+        ctx.beginPath();
+        ctx.ellipse(x, groundY - 10, 13, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#3a5a20";
+        ctx.fillRect(x - 2, groundY - 22, 4, 6);
+        break;
+      case "tombstone":
+        ctx.beginPath();
+        ctx.moveTo(x - 10, groundY);
+        ctx.lineTo(x - 10, groundY - 20);
+        ctx.arc(x, groundY - 20, 10, Math.PI, 0);
+        ctx.lineTo(x + 10, groundY);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      case "flower":
+        ctx.fillRect(x - 1.5, groundY - 14, 3, 14);
+        for (let i = 0; i < 5; i++) {
+          const a = (Math.PI * 2 * i) / 5;
+          ctx.beginPath();
+          ctx.arc(x + Math.cos(a) * 6, groundY - 16 + Math.sin(a) * 6, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      case "chest":
+        ctx.fillRect(x - 14, groundY - 14, 28, 14);
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.fillRect(x - 14, groundY - 15, 28, 3);
+        ctx.fillStyle = "#e8c24a";
+        ctx.fillRect(x - 3, groundY - 11, 6, 6);
+        break;
+      case "gumdrop":
+        ctx.beginPath();
+        ctx.moveTo(x - 12, groundY);
+        ctx.quadraticCurveTo(x - 12, groundY - 20, x, groundY - 20);
+        ctx.quadraticCurveTo(x + 12, groundY - 20, x + 12, groundY);
+        ctx.closePath();
+        ctx.fill();
+        break;
+    }
+    ctx.restore();
+  }
+
+  // ---------- Storslagna dekorations-hjalpare ----------
+  function drawCloud(ctx, x, y, scale, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 34 * scale, 16 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 24 * scale, y - 6 * scale, 22 * scale, 13 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(x - 24 * scale, y - 4 * scale, 20 * scale, 12 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Parallax-lager av moln som glider forbi langsamt
+  function drawDriftingClouds(ctx, t, color, count, yBase, scale, speed) {
+    for (let i = 0; i < count; i++) {
+      const span = canvas.width + 300;
+      const x = ((i * span) / count + t * speed) % span - 150;
+      const y = yBase + (i % 2) * 40 * scale;
+      drawCloud(ctx, x, y, scale * (0.7 + (i % 3) * 0.2), color);
+    }
+  }
+
+  function drawPillar(ctx, x, groundY, w, h, color, capColor) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.fillRect(x - w / 2, groundY - h, w, h);
+    // rafflor
+    ctx.strokeStyle = "rgba(0,0,0,0.15)";
+    ctx.lineWidth = 2;
+    for (let i = 1; i < 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(x - w / 2 + (w / 4) * i, groundY - h);
+      ctx.lineTo(x - w / 2 + (w / 4) * i, groundY);
+      ctx.stroke();
+    }
+    ctx.fillStyle = capColor || color;
+    ctx.fillRect(x - w / 2 - 5, groundY - h - 8, w + 10, 8);
+    ctx.fillRect(x - w / 2 - 5, groundY - 6, w + 10, 6);
+    ctx.restore();
+  }
+
+  function drawFloatingIsland(ctx, x, y, w, topColor, rockColor, t) {
+    const bob = Math.sin(t * 0.6 + x) * 4;
+    ctx.save();
+    ctx.translate(0, bob);
+    ctx.fillStyle = rockColor;
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2, y);
+    ctx.lineTo(x + w / 2, y);
+    ctx.lineTo(x + w * 0.15, y + w * 0.6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = topColor;
+    ctx.beginPath();
+    ctx.ellipse(x, y, w / 2, w * 0.16, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBalloon(ctx, x, y, r, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r, r * 1.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.25)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, y + r * 1.2);
+    ctx.lineTo(x, y + r * 1.9);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawSwayingTree(ctx, x, groundY, trunkH, crownR, trunkColor, crownColor, t, seed) {
+    ctx.save();
+    ctx.translate(x, groundY);
+    ctx.rotate(Math.sin(t * 0.4 + seed) * 0.02);
+    ctx.strokeStyle = trunkColor;
+    ctx.lineWidth = trunkH * 0.12;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -trunkH);
+    ctx.stroke();
+    ctx.fillStyle = crownColor;
+    ctx.beginPath();
+    ctx.arc(0, -trunkH - crownR * 0.4, crownR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawWavingBanner(ctx, x, topY, w, h, color, t, seed) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(0,0,0,0.5)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, topY);
+    ctx.lineTo(x, topY + h + 20);
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x, topY);
+    for (let i = 0; i <= w; i += 6) {
+      ctx.lineTo(x + i, topY + Math.sin(t * 3 + i * 0.2 + seed) * 3);
+    }
+    for (let i = w; i >= 0; i -= 6) {
+      ctx.lineTo(x + i, topY + h + Math.sin(t * 3 + i * 0.2 + seed) * 3);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFirework(ctx, cx, cy, t, cycle, seed, color) {
+    const phase = ((t + seed) % cycle) / cycle;
+    if (phase > 0.4) return;
+    const p = phase / 0.4;
+    ctx.save();
+    ctx.globalAlpha = 1 - p;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2;
+    const rays = 12;
+    for (let i = 0; i < rays; i++) {
+      const a = (Math.PI * 2 * i) / rays;
+      const r1 = p * 8;
+      const r2 = p * 45;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+      ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawLantern(ctx, x, y, color, t, seed) {
+    ctx.save();
+    ctx.globalAlpha = 0.5 + 0.3 * (0.5 + Math.sin(t * 2 + seed) * 0.5);
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 6, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Silhuett av flera byggnader/torn som en stad langt bort
+  function drawTowerRow(ctx, baseY, color, offsetFactor, seed) {
+    const spacing = 90;
+    const offset = (distance * offsetFactor) % spacing;
+    ctx.save();
+    ctx.fillStyle = color;
+    for (let bx = -spacing; bx < canvas.width + spacing; bx += spacing) {
+      const x = bx - offset;
+      const h = 60 + Math.abs(Math.sin((bx + seed) * 0.03)) * 120;
+      const w = spacing * (0.4 + Math.abs(Math.sin((bx + seed) * 0.07)) * 0.25);
+      ctx.fillRect(x, baseY - h, w, h);
+      // spira ibland
+      if (Math.sin((bx + seed) * 0.05) > 0.5) {
+        ctx.beginPath();
+        ctx.moveTo(x, baseY - h);
+        ctx.lineTo(x + w / 2, baseY - h - 20);
+        ctx.lineTo(x + w, baseY - h);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawScenery(ctx, theme, t) {
+    switch (theme.key) {
+      case "lava": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 30, 50, 140, 220, "rgba(20,6,8,0.9)", 0.05);
+        const craterX = canvas.width * 0.75;
+        const craterY = GROUND_Y - 175;
+
+        // Rök som stiger fran vulkanen
+        for (let i = 0; i < 4; i++) {
+          const cycle = 10;
+          const localT = (t * 0.6 + i * 2.5) % cycle;
+          const p = localT / cycle;
+          ctx.save();
+          ctx.globalAlpha = (1 - p) * 0.3;
+          ctx.fillStyle = "rgba(90,80,80,0.8)";
+          ctx.beginPath();
+          ctx.arc(craterX + Math.sin(i * 2) * 8, craterY - p * 150, 8 + p * 20, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Glödande krater, med periodiskt utbrott
+        const eruptCycle = 24;
+        const eruptPhase = (t % eruptCycle) / eruptCycle;
+        const eruptBurst = eruptPhase < 0.08 ? 1 - eruptPhase / 0.08 : 0;
+        ctx.save();
+        ctx.shadowColor = "rgba(255,140,40,0.9)";
+        ctx.shadowBlur = 25 + eruptBurst * 30;
+        ctx.fillStyle = "rgba(255,150,60,0.6)";
+        ctx.beginPath();
+        ctx.arc(craterX, craterY, 9 + eruptBurst * 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Mindre avlagsen vulkan i bakgrunden
+        const smallVolcX = canvas.width * 0.4;
+        ctx.fillStyle = "rgba(15,5,8,0.7)";
+        ctx.beginPath();
+        ctx.moveTo(smallVolcX - 35, GROUND_Y - 30);
+        ctx.lineTo(smallVolcX, GROUND_Y - 100);
+        ctx.lineTo(smallVolcX + 35, GROUND_Y - 30);
+        ctx.closePath();
+        ctx.fill();
+
+        // Glodande aska/stendebris som driver nedat
+        for (let i = 0; i < 5; i++) {
+          const cycle = 12;
+          const localT = (t * 0.4 + i * 2.2) % cycle;
+          const p = localT / cycle;
+          const ax = (i * 240 + 60) % canvas.width;
+          ctx.save();
+          ctx.globalAlpha = (1 - p) * 0.5;
+          ctx.fillStyle = "rgba(255,120,50,0.7)";
+          ctx.fillRect(ax, canvas.height * 0.1 + p * canvas.height * 0.4, 4, 4);
+          ctx.restore();
+        }
+        break;
+      }
+      case "ocean": {
+        ctx.save();
+        ctx.globalAlpha = 0.1;
+        ctx.fillStyle = "#bfe9ff";
+        for (let i = 0; i < 4; i++) {
+          const bx = ((canvas.width / 4) * i + (t * 6)) % (canvas.width + 200) - 100;
+          ctx.beginPath();
+          ctx.moveTo(bx, 0);
+          ctx.lineTo(bx + 60, 0);
+          ctx.lineTo(bx - 40, GROUND_Y);
+          ctx.lineTo(bx - 100, GROUND_Y);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Simmande fiskstim i olika djup
+        for (let i = 0; i < 4; i++) {
+          const spd = 12 + i * 5;
+          const x = canvas.width + 80 - ((t * spd + i * 260) % (canvas.width + 300));
+          const y = canvas.height * 0.2 + i * 60;
+          drawFish(ctx, x, y, 9 + (i % 2) * 3, "rgba(8,25,35,0.5)", t, i * 2);
+        }
+
+        drawJaggedSilhouette(ctx, GROUND_Y - 10, 20, 55, 150, "rgba(6,40,45,0.85)", 0.06);
+
+        // Manetflockar som svavar
+        for (let i = 0; i < 2; i++) {
+          const jx = canvas.width * (0.35 + i * 0.4);
+          const jy = canvas.height * 0.3 + Math.sin(t * 0.7 + i) * 30;
+          ctx.save();
+          ctx.globalAlpha = 0.5;
+          ctx.fillStyle = "rgba(220,180,255,0.6)";
+          ctx.beginPath();
+          ctx.arc(jx, jy, 16, Math.PI, 0);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(220,180,255,0.5)";
+          ctx.lineWidth = 2;
+          for (let k = -2; k <= 2; k++) {
+            ctx.beginPath();
+            ctx.moveTo(jx + k * 6, jy);
+            ctx.lineTo(jx + k * 6 + Math.sin(t * 2 + k) * 4, jy + 18);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        // Sjögräs som vaggar fran havsbotten
+        for (let i = 0; i < 4; i++) {
+          const gx = 100 + i * ((canvas.width - 200) / 4);
+          ctx.save();
+          ctx.strokeStyle = "rgba(20,80,60,0.6)";
+          ctx.lineWidth = 4;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          for (let s = 0; s <= 40; s += 8) {
+            const yy = GROUND_Y - s;
+            const xx = gx + Math.sin(t * 0.9 + i + s * 0.08) * 8;
+            if (s === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy);
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+        break;
+      }
+      case "jungle": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 20, 60, 170, 240, "rgba(10,30,8,0.85)", 0.045);
+
+        // Flygande faglar
+        for (let i = 0; i < 3; i++) {
+          const spd = 20 + i * 8;
+          const x = (t * spd + i * 300) % (canvas.width + 200) - 100;
+          const y = canvas.height * 0.12 + i * 30;
+          drawBird(ctx, x, y, 8, t, i * 3);
+        }
+
+        // Svajande tempeltrad (placerad langt fran figurens fasta position)
+        ctx.save();
+        const tx = Math.max(320, canvas.width * 0.3);
+        const ty = GROUND_Y - 90;
+        ctx.translate(tx, GROUND_Y);
+        ctx.rotate(Math.sin(t * 0.4) * 0.02);
+        ctx.fillStyle = "rgba(30,25,10,0.7)";
+        ctx.beginPath();
+        ctx.moveTo(-45, 0);
+        ctx.lineTo(-30, ty - GROUND_Y);
+        ctx.lineTo(30, ty - GROUND_Y);
+        ctx.lineTo(45, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // Fjarilar
+        const butterflyColors = ["rgba(255,140,60,0.8)", "rgba(140,200,255,0.8)", "rgba(255,220,80,0.8)"];
+        for (let i = 0; i < 3; i++) {
+          const bx2 = (t * (8 + i * 3) + i * 400) % (canvas.width + 100) - 50;
+          const by2 = canvas.height * 0.4 + i * 40 + Math.sin(t + i) * 20;
+          drawFlutterfly(ctx, bx2, by2, 7, t, i * 4, butterflyColors[i]);
+        }
+
+        // Hangande rankor fran overkanten
+        for (let i = 0; i < 3; i++) {
+          const vx = canvas.width * (0.45 + i * 0.18);
+          drawHangingVine(ctx, vx, 0, 70 + i * 20, t, i * 2, "rgba(30,60,15,0.6)");
+        }
+
+        // Blommor pa marken
+        drawGroundProp(ctx, Math.max(380, canvas.width * 0.5), GROUND_Y, "flower", "rgba(255,120,160,0.7)");
+        drawGroundProp(ctx, Math.max(460, canvas.width * 0.58), GROUND_Y, "flower", "rgba(255,220,80,0.7)");
+        break;
+      }
+      case "ice": {
+        ctx.save();
+        ctx.globalAlpha = 0.25;
+        const auroraColors = ["#8affc1", "#8ad9ff", "#c58aff"];
+        for (let i = 0; i < 3; i++) {
+          ctx.strokeStyle = auroraColors[i];
+          ctx.lineWidth = 18;
+          ctx.beginPath();
+          for (let x = 0; x <= canvas.width; x += 20) {
+            const y = 60 + i * 30 + Math.sin(x * 0.01 + t + i) * 25;
+            if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+        ctx.restore();
+        drawShootingStar(ctx, t, 26, 4, "rgba(255,255,255,0.95)", canvas.height * 0.1, canvas.height * 0.35);
+        drawJaggedSilhouette(ctx, GROUND_Y - 10, 70, 190, 210, "rgba(180,220,240,0.5)", 0.05);
+
+        // Isberg som flyter forbi i fjarran
+        for (let i = 0; i < 2; i++) {
+          const ibx = canvas.width * (0.4 + i * 0.35);
+          drawIceberg(ctx, ibx, GROUND_Y - 5, 90 + i * 30, 55 + i * 15, "rgba(210,235,245,0.55)");
+        }
+
+        // Pingviner som vaggar pa marken
+        for (let i = 0; i < 2; i++) {
+          const pgx = Math.max(400, canvas.width * (0.5 + i * 0.1));
+          const bob = Math.sin(t * 4 + i) * 2;
+          ctx.save();
+          ctx.translate(pgx, GROUND_Y + bob);
+          ctx.fillStyle = "#1a2a30";
+          ctx.beginPath();
+          ctx.ellipse(0, -14, 9, 14, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#f2f8fa";
+          ctx.beginPath();
+          ctx.ellipse(0, -12, 5, 10, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Ogon
+          ctx.fillStyle = "#0a1418";
+          ctx.beginPath();
+          ctx.arc(-2.5, -22, 1.2, 0, Math.PI * 2);
+          ctx.arc(2.5, -22, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+          // Orange nabb
+          ctx.fillStyle = "#f5a623";
+          ctx.beginPath();
+          ctx.moveTo(0, -20);
+          ctx.lineTo(7, -18);
+          ctx.lineTo(0, -16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+        break;
+      }
+      case "space": {
+        ctx.save();
+        const ringAngle = -0.3 + Math.sin(t * 0.08) * 0.12;
+        ctx.fillStyle = "#5b3a9e";
+        ctx.beginPath();
+        ctx.arc(canvas.width * 0.8, canvas.height * 0.22, 34, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(200,180,255,0.6)";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.ellipse(canvas.width * 0.8, canvas.height * 0.22, 52, 14, ringAngle, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = "#2e6f9e";
+        ctx.beginPath();
+        ctx.arc(canvas.width * 0.25, canvas.height * 0.15, 16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        drawShootingStar(ctx, t, 20, 0, "rgba(220,200,255,0.95)", canvas.height * 0.05, canvas.height * 0.4);
+
+        // Avlagsen rymdstation
+        ctx.save();
+        const stX = canvas.width * 0.45;
+        const stY = canvas.height * 0.12;
+        ctx.fillStyle = "rgba(180,190,210,0.6)";
+        ctx.fillRect(stX - 16, stY - 6, 32, 12);
+        ctx.fillStyle = "rgba(120,180,255,0.5)";
+        ctx.fillRect(stX - 30, stY - 3, 12, 6);
+        ctx.fillRect(stX + 18, stY - 3, 12, 6);
+        ctx.restore();
+
+        // Asteroidbalte som driver forbi
+        for (let i = 0; i < 5; i++) {
+          const spd = 6 + (i % 3) * 3;
+          const ax = canvas.width + 40 - ((t * spd + i * 180) % (canvas.width + 200));
+          const ay = canvas.height * (0.15 + (i % 4) * 0.08);
+          ctx.save();
+          ctx.fillStyle = "rgba(90,80,100,0.6)";
+          ctx.beginPath();
+          ctx.arc(ax, ay, 4 + (i % 3) * 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        break;
+      }
+      case "desert": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 15, 40, 100, 260, "rgba(150,90,30,0.5)", 0.04);
+        ctx.save();
+        ctx.shadowColor = "rgba(255,230,150,0.9)";
+        ctx.shadowBlur = 30;
+        ctx.fillStyle = "rgba(255,240,190,0.9)";
+        ctx.beginPath();
+        ctx.arc(canvas.width * 0.82, canvas.height * 0.18, 30, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        const px = Math.max(340, canvas.width * 0.65);
+        ctx.fillStyle = "rgba(120,70,25,0.7)";
+        ctx.beginPath();
+        ctx.moveTo(px - 55, GROUND_Y);
+        ctx.lineTo(px, GROUND_Y - 95);
+        ctx.lineTo(px + 55, GROUND_Y);
+        ctx.closePath();
+        ctx.fill();
+
+        // Kamelkaravan som vandrar i fjarran
+        ctx.save();
+        ctx.fillStyle = "rgba(90,55,20,0.6)";
+        for (let i = 0; i < 3; i++) {
+          const cx2 = canvas.width * 0.42 + i * 30;
+          const bob = Math.sin(t * 3 + i) * 2;
+          ctx.beginPath();
+          ctx.ellipse(cx2, GROUND_Y - 12 + bob, 12, 8, 0, 0, Math.PI * 2);
+          ctx.ellipse(cx2 + 8, GROUND_Y - 20 + bob, 6, 7, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Rullande ökentumlare
+        const tumbleX = (canvas.width - (t * 40) % (canvas.width + 60)) - 30;
+        ctx.save();
+        ctx.translate(tumbleX, GROUND_Y - 8);
+        ctx.rotate(t * 4);
+        ctx.strokeStyle = "rgba(100,70,30,0.7)";
+        ctx.lineWidth = 2;
+        for (let a = 0; a < 6; a++) {
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos((Math.PI / 3) * a) * 8, Math.sin((Math.PI / 3) * a) * 8);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Oas med palmer langt bort
+        const oasisX = canvas.width * 0.2;
+        ctx.fillStyle = "rgba(80,50,15,0.6)";
+        ctx.fillRect(oasisX - 2, GROUND_Y - 45, 4, 45);
+        ctx.fillStyle = "rgba(60,110,40,0.6)";
+        ctx.beginPath();
+        ctx.ellipse(oasisX - 10, GROUND_Y - 48, 12, 6, 0.3, 0, Math.PI * 2);
+        ctx.ellipse(oasisX + 10, GROUND_Y - 48, 12, 6, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "sky": {
+        for (let i = 0; i < 3; i++) {
+          const ix = ((canvas.width * 0.4) * i + t * 4) % (canvas.width + 300) - 100;
+          const iy = canvas.height * (0.28 + i * 0.12);
+          ctx.save();
+          ctx.globalAlpha = 0.55;
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.ellipse(ix, iy, 55, 18, 0, 0, Math.PI * 2);
+          ctx.ellipse(ix + 30, iy - 8, 30, 14, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        drawJaggedSilhouette(ctx, GROUND_Y - 5, 15, 40, 180, "rgba(255,255,255,0.4)", 0.07);
+
+        drawRainbow(ctx, canvas.width * 0.72, canvas.height * 0.55, 90);
+
+        // Avlagset luftskepp
+        const airX = canvas.width * 0.3 + Math.sin(t * 0.3) * 20;
+        const airY = canvas.height * 0.2;
+        ctx.save();
+        ctx.fillStyle = "rgba(200,60,60,0.6)";
+        ctx.beginPath();
+        ctx.ellipse(airX, airY, 30, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(80,60,40,0.6)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(airX - 10, airY + 10);
+        ctx.lineTo(airX - 10, airY + 18);
+        ctx.moveTo(airX + 10, airY + 10);
+        ctx.lineTo(airX + 10, airY + 18);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(140,90,40,0.6)";
+        ctx.fillRect(airX - 12, airY + 18, 24, 6);
+        ctx.restore();
+        break;
+      }
+      case "neon": {
+        const spacing = 130;
+        const offset = (distance * 0.06) % spacing;
+        for (let bx = -spacing; bx < canvas.width + spacing; bx += spacing) {
+          const x = bx - offset;
+          const h = 90 + Math.abs(Math.sin(bx * 0.02)) * 140;
+          ctx.fillStyle = "rgba(10,5,20,0.85)";
+          ctx.fillRect(x, GROUND_Y - h, spacing * 0.6, h);
+          // Vilka fonster som lyser bestams av byggnadens FASTA position (bx) och lokalt
+          // rad/kolumn-index - inte skarmpositionen (x) - annars "blinkar" fonstren nar
+          // huset glider forbi eftersom bx-offset andras varje bildruta.
+          let row = 0;
+          for (let wy = GROUND_Y - h + 10; wy < GROUND_Y - 10; wy += 16) {
+            let col = 0;
+            for (let wx = x + 6; wx < x + spacing * 0.6 - 6; wx += 14) {
+              if (Math.sin(bx * 0.7 + row * 2.1 + col * 1.3) > 0.3) {
+                ctx.fillStyle = "rgba(0,255,255,0.5)";
+              } else {
+                ctx.fillStyle = "rgba(255,60,200,0.35)";
+              }
+              ctx.fillRect(wx, wy, 6, 8);
+              col++;
+            }
+            row++;
+          }
+        }
+
+        // Flygande bilar
+        for (let i = 0; i < 3; i++) {
+          const spd2 = 25 + i * 10;
+          const cx3 = (t * spd2 + i * 260) % (canvas.width + 100) - 50;
+          const cy3 = canvas.height * (0.15 + i * 0.1);
+          ctx.save();
+          ctx.shadowColor = i % 2 === 0 ? "rgba(0,255,255,0.9)" : "rgba(255,0,200,0.9)";
+          ctx.shadowBlur = 8;
+          ctx.fillStyle = i % 2 === 0 ? "#0ff0fc" : "#ff2fb0";
+          ctx.beginPath();
+          ctx.ellipse(cx3, cy3, 14, 4, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        break;
+      }
+      case "haunted": {
+        ctx.save();
+        ctx.fillStyle = "rgba(230,230,220,0.5)";
+        ctx.beginPath();
+        ctx.arc(canvas.width * 0.78, canvas.height * 0.18, 26, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        const cx = Math.max(340, canvas.width * 0.62);
+        ctx.fillStyle = "rgba(20,18,25,0.85)";
+        ctx.fillRect(cx - 60, GROUND_Y - 110, 120, 110);
+        ctx.fillRect(cx - 80, GROUND_Y - 80, 20, 80);
+        ctx.fillRect(cx + 60, GROUND_Y - 80, 20, 80);
+        ctx.beginPath();
+        ctx.moveTo(cx - 80, GROUND_Y - 80);
+        ctx.lineTo(cx - 70, GROUND_Y - 105);
+        ctx.lineTo(cx - 60, GROUND_Y - 80);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 60, GROUND_Y - 80);
+        ctx.lineTo(cx + 70, GROUND_Y - 105);
+        ctx.lineTo(cx + 80, GROUND_Y - 80);
+        ctx.closePath();
+        ctx.fill();
+
+        // Fladdermoss
+        for (let i = 0; i < 4; i++) {
+          const spd = 15 + i * 6;
+          const bx3 = (t * spd + i * 220) % (canvas.width + 100) - 50;
+          const by3 = canvas.height * 0.2 + Math.sin(t * 2 + i) * 20 + i * 15;
+          drawBird(ctx, bx3, by3, 7, t, i * 5, "rgba(10,10,15,0.8)");
+        }
+
+        // Gravstenar
+        drawGroundProp(ctx, Math.max(400, canvas.width * 0.48), GROUND_Y, "tombstone", "rgba(60,60,65,0.7)");
+        drawGroundProp(ctx, Math.max(460, canvas.width * 0.55), GROUND_Y, "tombstone", "rgba(60,60,65,0.7)");
+
+        // Dimma langs marken
+        ctx.save();
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = "#a8c9a8";
+        const fogOffset = (t * 5) % 200;
+        for (let x = -fogOffset; x < canvas.width; x += 200) {
+          ctx.beginPath();
+          ctx.ellipse(x, GROUND_Y - 5, 110, 14, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+        break;
+      }
+      case "viking": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 20, 80, 200, 240, "rgba(20,40,50,0.7)", 0.045);
+        const shipX = Math.max(340, canvas.width * 0.68);
+        const shipY = GROUND_Y - 40;
+        ctx.fillStyle = "rgba(15,12,10,0.75)";
+        ctx.beginPath();
+        ctx.moveTo(shipX - 40, shipY);
+        ctx.quadraticCurveTo(shipX, shipY + 14, shipX + 40, shipY);
+        ctx.lineTo(shipX + 30, shipY - 10);
+        ctx.lineTo(shipX - 30, shipY - 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "rgba(15,12,10,0.75)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(shipX, shipY - 10);
+        ctx.lineTo(shipX, shipY - 55);
+        ctx.stroke();
+
+        // Ett andra, mindre skepp langre bort
+        const ship2X = canvas.width * 0.4;
+        const ship2Y = GROUND_Y - 25;
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = "rgba(15,12,10,0.75)";
+        ctx.beginPath();
+        ctx.moveTo(ship2X - 25, ship2Y);
+        ctx.quadraticCurveTo(ship2X, ship2Y + 8, ship2X + 25, ship2Y);
+        ctx.lineTo(ship2X + 18, ship2Y - 6);
+        ctx.lineTo(ship2X - 18, ship2Y - 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // Korpar som flyger
+        for (let i = 0; i < 2; i++) {
+          const spd = 18 + i * 6;
+          const rx = (t * spd + i * 300) % (canvas.width + 100) - 50;
+          const ry = canvas.height * 0.15 + i * 20;
+          drawBird(ctx, rx, ry, 7, t, i * 4, "rgba(10,10,10,0.7)");
+        }
+
+        // Byhus vid fjorden
+        const villageX = canvas.width * 0.2;
+        ctx.fillStyle = "rgba(40,30,20,0.6)";
+        ctx.fillRect(villageX - 20, GROUND_Y - 30, 40, 30);
+        ctx.beginPath();
+        ctx.moveTo(villageX - 25, GROUND_Y - 30);
+        ctx.lineTo(villageX, GROUND_Y - 50);
+        ctx.lineTo(villageX + 25, GROUND_Y - 30);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+      case "dino": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 25, 70, 190, 230, "rgba(20,35,10,0.8)", 0.045);
+        const dx = Math.max(360, canvas.width * 0.66);
+        ctx.fillStyle = "rgba(20,30,10,0.7)";
+        ctx.beginPath();
+        ctx.ellipse(dx, GROUND_Y - 30, 45, 25, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(dx + 30, GROUND_Y - 45);
+        ctx.quadraticCurveTo(dx + 70, GROUND_Y - 110, dx + 60, GROUND_Y - 140);
+        ctx.lineTo(dx + 50, GROUND_Y - 135);
+        ctx.quadraticCurveTo(dx + 60, GROUND_Y - 100, dx + 25, GROUND_Y - 55);
+        ctx.closePath();
+        ctx.fill();
+
+        // Pterodaktyler som flyger over dalen
+        for (let i = 0; i < 2; i++) {
+          const spd = 22 + i * 8;
+          const px2 = (t * spd + i * 320) % (canvas.width + 100) - 50;
+          const py2 = canvas.height * 0.18 + i * 25;
+          drawBird(ctx, px2, py2, 13, t, i * 3, "rgba(30,25,10,0.7)");
+        }
+
+        // Ormbunkar i forgrunden
+        for (let i = 0; i < 3; i++) {
+          const fx2 = Math.max(360, canvas.width * (0.4 + i * 0.08));
+          ctx.save();
+          ctx.strokeStyle = "rgba(30,60,15,0.6)";
+          ctx.lineWidth = 3;
+          for (let leaf = -2; leaf <= 2; leaf++) {
+            ctx.beginPath();
+            ctx.moveTo(fx2, GROUND_Y);
+            ctx.quadraticCurveTo(fx2 + leaf * 8, GROUND_Y - 20, fx2 + leaf * 16, GROUND_Y - 5);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+        break;
+      }
+      case "candy": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 15, 50, 130, 200, "rgba(255,180,210,0.5)", 0.05);
+        const lx = Math.max(340, canvas.width * 0.65);
+        ctx.save();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(lx, GROUND_Y);
+        ctx.lineTo(lx, GROUND_Y - 70);
+        ctx.stroke();
+        for (let i = 0; i < 3; i++) {
+          ctx.strokeStyle = i % 2 === 0 ? "#ff5c8a" : "#ffffff";
+          ctx.lineWidth = 8;
+          ctx.beginPath();
+          ctx.arc(lx, GROUND_Y - 70, 26 - i * 7, 0, Math.PI * 1.4);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        drawRainbow(ctx, canvas.width * 0.25, canvas.height * 0.6, 80);
+
+        // Gumdrop-kullar
+        drawGroundProp(ctx, Math.max(400, canvas.width * 0.46), GROUND_Y, "gumdrop", "rgba(120,220,180,0.7)");
+        drawGroundProp(ctx, Math.max(450, canvas.width * 0.52), GROUND_Y, "gumdrop", "rgba(255,150,200,0.7)");
+        drawGroundProp(ctx, Math.max(500, canvas.width * 0.58), GROUND_Y, "gumdrop", "rgba(150,180,255,0.7)");
+
+        // Fallande godisstrossel
+        drawFallingStreaks(ctx, t, canvas.width, canvas.height, 20, "rgba(255,255,255,0.4)", 25, 6);
+        break;
+      }
+      case "robot": {
+        const fx = Math.max(340, canvas.width * 0.65);
+        ctx.fillStyle = "rgba(20,20,25,0.85)";
+        ctx.fillRect(fx - 70, GROUND_Y - 90, 140, 90);
+        ctx.fillRect(fx - 50, GROUND_Y - 140, 18, 60);
+        ctx.fillRect(fx + 30, GROUND_Y - 160, 18, 80);
+        for (let i = 0; i < 3; i++) {
+          const cycle = 8;
+          const p = ((t * 0.5 + i * 2) % cycle) / cycle;
+          ctx.save();
+          ctx.globalAlpha = (1 - p) * 0.3;
+          ctx.fillStyle = "rgba(120,120,120,0.7)";
+          ctx.beginPath();
+          ctx.arc(fx + 39, GROUND_Y - 160 - p * 90, 8 + p * 16, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.save();
+        ctx.translate(fx, GROUND_Y - 45);
+        ctx.rotate(t * 0.3);
+        ctx.fillStyle = "rgba(255,191,63,0.5)";
+        drawGearSpike(ctx, { x: -22, y: -22, w: 44, h: 44 });
+        ctx.restore();
+
+        // Flygande dronare med blinkande ljus
+        for (let i = 0; i < 2; i++) {
+          const spd = 20 + i * 10;
+          const dx2 = (t * spd + i * 300) % (canvas.width + 100) - 50;
+          const dy2 = canvas.height * (0.2 + i * 0.12);
+          ctx.save();
+          ctx.fillStyle = "rgba(80,80,90,0.8)";
+          ctx.fillRect(dx2 - 8, dy2 - 3, 16, 6);
+          const blink = Math.sin(t * 5 + i * 3) > 0;
+          ctx.fillStyle = blink ? "rgba(255,60,60,0.9)" : "rgba(60,20,20,0.5)";
+          ctx.beginPath();
+          ctx.arc(dx2, dy2, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Elektriska gnistbagar pa fasaden
+        const arcCycle = 3;
+        const arcPhase = (t % arcCycle) / arcCycle;
+        if (arcPhase < 0.15) {
+          ctx.save();
+          ctx.strokeStyle = "rgba(150,220,255,0.9)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(fx - 70, GROUND_Y - 70);
+          ctx.lineTo(fx - 55, GROUND_Y - 60);
+          ctx.lineTo(fx - 62, GROUND_Y - 50);
+          ctx.lineTo(fx - 45, GROUND_Y - 40);
+          ctx.stroke();
+          ctx.restore();
+        }
+        break;
+      }
+      case "pirate": {
+        ctx.save();
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = "#dff4ff";
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 3; i++) {
+          const wy = GROUND_Y - 20 - i * 14;
+          const wOffset = (t * (6 + i * 2)) % 60;
+          ctx.beginPath();
+          for (let x = -wOffset; x <= canvas.width; x += 60) {
+            ctx.moveTo(x, wy);
+            ctx.quadraticCurveTo(x + 30, wy - 8, x + 60, wy);
+          }
+          ctx.stroke();
+        }
+        ctx.restore();
+        const sx = Math.max(340, canvas.width * 0.68);
+        const sy = GROUND_Y - 35;
+        ctx.fillStyle = "rgba(10,10,10,0.7)";
+        ctx.beginPath();
+        ctx.moveTo(sx - 40, sy);
+        ctx.quadraticCurveTo(sx, sy + 12, sx + 40, sy);
+        ctx.lineTo(sx + 30, sy - 12);
+        ctx.lineTo(sx - 30, sy - 12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(sx, sy - 12);
+        ctx.lineTo(sx, sy - 60);
+        ctx.lineTo(sx + 25, sy - 30);
+        ctx.closePath();
+        ctx.fill();
+
+        // Masar som flyger
+        for (let i = 0; i < 3; i++) {
+          const spd = 18 + i * 7;
+          const gx2 = (t * spd + i * 260) % (canvas.width + 100) - 50;
+          const gy2 = canvas.height * 0.15 + i * 20;
+          drawBird(ctx, gx2, gy2, 7, t, i * 4, "rgba(255,255,255,0.75)");
+        }
+
+        // Skattkista pa stranden
+        drawGroundProp(ctx, Math.max(400, canvas.width * 0.45), GROUND_Y, "chest", "rgba(90,55,20,0.7)");
+
+        // Avlagsen o med palm
+        const islandX = canvas.width * 0.22;
+        ctx.fillStyle = "rgba(180,160,100,0.5)";
+        ctx.beginPath();
+        ctx.ellipse(islandX, GROUND_Y - 3, 40, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(80,50,15,0.6)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(islandX, GROUND_Y - 5);
+        ctx.lineTo(islandX + 5, GROUND_Y - 35);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(50,110,40,0.6)";
+        ctx.beginPath();
+        ctx.ellipse(islandX - 8, GROUND_Y - 38, 10, 5, 0.3, 0, Math.PI * 2);
+        ctx.ellipse(islandX + 14, GROUND_Y - 38, 10, 5, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "autumn": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 20, 70, 180, 220, "rgba(60,30,10,0.6)", 0.045);
+        const ax = Math.max(340, canvas.width * 0.66);
+        ctx.save();
+        ctx.translate(ax, GROUND_Y);
+        ctx.rotate(Math.sin(t * 0.35) * 0.03);
+        ctx.strokeStyle = "rgba(50,30,15,0.8)";
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -90);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(200,110,40,0.75)";
+        ctx.beginPath();
+        ctx.arc(0, -110, 50, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Ytterligare tva svajande trad i olika storlekar
+        const extraTrees = [
+          { x: Math.max(420, canvas.width * 0.5), h: 70, r: 38, color: "rgba(220,140,50,0.7)" },
+          { x: Math.max(500, canvas.width * 0.58), h: 55, r: 30, color: "rgba(180,90,40,0.7)" }
+        ];
+        for (const tr of extraTrees) {
+          ctx.save();
+          ctx.translate(tr.x, GROUND_Y);
+          ctx.rotate(Math.sin(t * 0.4 + tr.x) * 0.025);
+          ctx.strokeStyle = "rgba(50,30,15,0.8)";
+          ctx.lineWidth = 7;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, -tr.h);
+          ctx.stroke();
+          ctx.fillStyle = tr.color;
+          ctx.beginPath();
+          ctx.arc(0, -tr.h - tr.r * 0.4, tr.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Pumpor och svampar pa marken
+        drawGroundProp(ctx, Math.max(400, canvas.width * 0.46), GROUND_Y, "pumpkin", "#d9720f");
+        drawGroundProp(ctx, Math.max(460, canvas.width * 0.53), GROUND_Y, "mushroom", "#c94a3a");
+        drawGroundProp(ctx, Math.max(520, canvas.width * 0.6), GROUND_Y, "mushroom", "#e8dcc0");
+        break;
+      }
+      case "savanna": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 10, 30, 70, 200, "rgba(60,45,15,0.5)", 0.05);
+        // Stor lagt staende sol med varmedis
+        ctx.save();
+        ctx.shadowColor = "rgba(255,220,140,0.8)";
+        ctx.shadowBlur = 30;
+        ctx.fillStyle = "rgba(255,225,150,0.85)";
+        ctx.beginPath();
+        ctx.arc(canvas.width * 0.78, canvas.height * 0.22, 34, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // Faglar i V-formation
+        for (let i = 0; i < 5; i++) {
+          const spd = 14;
+          const lead = (t * spd) % (canvas.width + 200) - 100;
+          const bx2 = lead - Math.abs(i - 2) * 22;
+          const by2 = canvas.height * 0.16 + Math.abs(i - 2) * 12;
+          drawBird(ctx, bx2, by2, 8, t, i, "rgba(40,30,15,0.7)");
+        }
+        // Akaciatrad med platt krona
+        for (let k = 0; k < 2; k++) {
+          const ax = Math.max(340, canvas.width * (0.55 + k * 0.2));
+          ctx.save();
+          ctx.strokeStyle = "rgba(50,35,15,0.7)";
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.moveTo(ax, GROUND_Y);
+          ctx.lineTo(ax, GROUND_Y - 55);
+          ctx.stroke();
+          ctx.fillStyle = "rgba(70,90,40,0.7)";
+          ctx.beginPath();
+          ctx.ellipse(ax, GROUND_Y - 62, 46, 14, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        // Giraffsilhuett
+        const gx = canvas.width * 0.35;
+        ctx.fillStyle = "rgba(50,35,15,0.55)";
+        ctx.fillRect(gx, GROUND_Y - 70, 8, 70);
+        ctx.beginPath();
+        ctx.ellipse(gx + 12, GROUND_Y - 35, 20, 11, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(gx + 26, GROUND_Y - 45, 6, 45);
+        ctx.fillRect(gx + 2, GROUND_Y - 78, 5, 14);
+        break;
+      }
+      case "crystal": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 15, 50, 140, 200, "rgba(30,10,60,0.6)", 0.045);
+        // Jattekristaller som reser sig ur marken, glodande
+        const cCols = ["#5ff2e0", "#a06fff", "#ff6fd0"];
+        for (let i = 0; i < 5; i++) {
+          const cx = (i * 160 + 80 - (distance * 0.06) % 160);
+          if (cx < -60 || cx > canvas.width + 60) continue;
+          const h = 70 + (i % 3) * 55;
+          const w = 16 + (i % 2) * 10;
+          ctx.save();
+          ctx.globalAlpha = 0.7;
+          ctx.shadowColor = cCols[i % 3];
+          ctx.shadowBlur = 18;
+          ctx.fillStyle = cCols[i % 3];
+          ctx.beginPath();
+          ctx.moveTo(cx, GROUND_Y);
+          ctx.lineTo(cx - w, GROUND_Y - h * 0.6);
+          ctx.lineTo(cx, GROUND_Y - h);
+          ctx.lineTo(cx + w, GROUND_Y - h * 0.6);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+        drawShootingStar(ctx, t, 18, 2, "rgba(150,255,240,0.9)", canvas.height * 0.1, canvas.height * 0.4);
+        break;
+      }
+      case "bog": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 10, 40, 90, 220, "rgba(15,25,10,0.6)", 0.04);
+        // Doda knotiga trad
+        for (let k = 0; k < 3; k++) {
+          const tx = Math.max(320, canvas.width * (0.3 + k * 0.25));
+          ctx.save();
+          ctx.strokeStyle = "rgba(20,30,15,0.7)";
+          ctx.lineWidth = 6 - k;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(tx, GROUND_Y);
+          ctx.lineTo(tx + 8, GROUND_Y - 90);
+          ctx.moveTo(tx + 8, GROUND_Y - 60);
+          ctx.lineTo(tx + 30, GROUND_Y - 75);
+          ctx.moveTo(tx + 8, GROUND_Y - 70);
+          ctx.lineTo(tx - 16, GROUND_Y - 88);
+          ctx.stroke();
+          ctx.restore();
+        }
+        for (let i = 0; i < 2; i++) {
+          drawHangingVine(ctx, Math.max(380, canvas.width * (0.4 + i * 0.15)), 0, 60, t, i * 3, "rgba(20,40,10,0.5)");
+        }
+        // Glodande irrblossmoln
+        for (let i = 0; i < 4; i++) {
+          drawLantern(ctx, (i * 220 + 60 - (t * 10) % 220), GROUND_Y - 30 - (i % 3) * 20, "rgba(150,255,120,0.9)", t, i * 2);
+        }
+        ctx.save();
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = "#7a9a6a";
+        const fo = (t * 4) % 220;
+        for (let x = -fo; x < canvas.width; x += 220) {
+          ctx.beginPath();
+          ctx.ellipse(x, GROUND_Y - 5, 100, 12, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+        break;
+      }
+      case "bamboo": {
+        // Tata bamburor i flera parallax-lager
+        for (let layer = 0; layer < 2; layer++) {
+          const col = layer === 0 ? "rgba(40,70,25,0.4)" : "rgba(60,100,35,0.6)";
+          const spacing = 34 + layer * 8;
+          const off = (distance * (0.03 + layer * 0.03)) % spacing;
+          ctx.save();
+          ctx.strokeStyle = col;
+          ctx.lineWidth = 7 - layer * 2;
+          for (let bx = -spacing; bx < canvas.width + spacing; bx += spacing) {
+            const x = bx - off + Math.sin(bx) * 4;
+            ctx.beginPath();
+            ctx.moveTo(x, GROUND_Y);
+            ctx.lineTo(x + Math.sin(t * 0.5 + bx) * 6, GROUND_Y - 150 - (bx % 3) * 20);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+        for (let i = 0; i < 3; i++) {
+          drawFlutterfly(ctx, (t * (6 + i * 2) + i * 350) % (canvas.width + 100) - 50, canvas.height * 0.4 + i * 30, 6, t, i * 4, "rgba(255,255,255,0.7)");
+        }
+        // Pandasilhuett vid en bambustam
+        const px = canvas.width * 0.4;
+        ctx.fillStyle = "rgba(240,240,240,0.5)";
+        ctx.beginPath();
+        ctx.arc(px, GROUND_Y - 18, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(20,20,20,0.5)";
+        ctx.beginPath();
+        ctx.arc(px - 10, GROUND_Y - 28, 5, 0, Math.PI * 2);
+        ctx.arc(px + 10, GROUND_Y - 28, 5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "reef": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 5, 15, 45, 130, "rgba(255,150,180,0.4)", 0.06);
+        // Korallformationer pa botten
+        const coralCols = ["rgba(255,110,150,0.6)", "rgba(255,180,90,0.6)", "rgba(180,120,255,0.6)"];
+        for (let i = 0; i < 5; i++) {
+          const cx = (i * 150 + 50 - (distance * 0.05) % 150);
+          ctx.save();
+          ctx.strokeStyle = coralCols[i % 3];
+          ctx.lineWidth = 6;
+          ctx.lineCap = "round";
+          for (let b = -1; b <= 1; b++) {
+            ctx.beginPath();
+            ctx.moveTo(cx, GROUND_Y);
+            ctx.quadraticCurveTo(cx + b * 18, GROUND_Y - 30, cx + b * 26, GROUND_Y - 55);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+        for (let i = 0; i < 4; i++) {
+          const spd = 14 + i * 5;
+          const x = canvas.width + 70 - ((t * spd + i * 240) % (canvas.width + 280));
+          drawFish(ctx, x, canvas.height * 0.28 + i * 45, 8 + (i % 2) * 3, ["rgba(255,140,60,0.75)", "rgba(120,200,255,0.75)", "rgba(255,220,80,0.75)", "rgba(255,120,200,0.75)"][i], t, i * 2);
+        }
+        break;
+      }
+      case "steppe": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 15, 40, 110, 240, "rgba(80,90,90,0.45)", 0.03);
+        drawJaggedSilhouette(ctx, GROUND_Y - 15, 30, 70, 200, "rgba(60,70,70,0.5)", 0.05);
+        // Ullig mammut
+        const mx = Math.max(360, canvas.width * 0.62);
+        ctx.fillStyle = "rgba(70,55,40,0.65)";
+        ctx.beginPath();
+        ctx.ellipse(mx, GROUND_Y - 30, 40, 26, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(mx - 34, GROUND_Y - 34, 18, 20, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(mx - 20, GROUND_Y - 20, 8, 20);
+        ctx.fillRect(mx + 12, GROUND_Y - 20, 8, 20);
+        // Snabel + bete
+        ctx.strokeStyle = "rgba(70,55,40,0.65)";
+        ctx.lineWidth = 7;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(mx - 48, GROUND_Y - 28);
+        ctx.quadraticCurveTo(mx - 60, GROUND_Y - 12, mx - 52, GROUND_Y - 4);
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(230,220,200,0.7)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(mx - 46, GROUND_Y - 22);
+        ctx.quadraticCurveTo(mx - 58, GROUND_Y - 6, mx - 40, GROUND_Y - 2);
+        ctx.stroke();
+        break;
+      }
+      case "volcanoisland": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 10, 20, 50, 200, "rgba(20,10,10,0.5)", 0.05);
+        const vx = canvas.width * 0.7;
+        ctx.fillStyle = "rgba(40,15,10,0.7)";
+        ctx.beginPath();
+        ctx.moveTo(vx - 60, GROUND_Y);
+        ctx.lineTo(vx, GROUND_Y - 130);
+        ctx.lineTo(vx + 60, GROUND_Y);
+        ctx.closePath();
+        ctx.fill();
+        // Rok + lavafontan
+        for (let i = 0; i < 4; i++) {
+          const cyc = 12; const p = ((t * 0.5 + i * 3) % cyc) / cyc;
+          ctx.save();
+          ctx.globalAlpha = (1 - p) * 0.3;
+          ctx.fillStyle = "rgba(80,70,70,0.8)";
+          ctx.beginPath();
+          ctx.arc(vx + Math.sin(i) * 10, GROUND_Y - 130 - p * 120, 10 + p * 24, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.save();
+        ctx.shadowColor = "rgba(255,140,50,0.9)";
+        ctx.shadowBlur = 24;
+        ctx.fillStyle = "rgba(255,150,60,0.8)";
+        ctx.beginPath();
+        ctx.arc(vx, GROUND_Y - 128, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // Palmer pa stranden
+        for (let k = 0; k < 2; k++) {
+          const px2 = canvas.width * (0.2 + k * 0.12);
+          ctx.strokeStyle = "rgba(40,25,10,0.6)";
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(px2, GROUND_Y);
+          ctx.quadraticCurveTo(px2 + 8, GROUND_Y - 40, px2 + 4, GROUND_Y - 60);
+          ctx.stroke();
+          ctx.fillStyle = "rgba(40,90,40,0.6)";
+          for (let f = -2; f <= 2; f++) {
+            ctx.beginPath();
+            ctx.ellipse(px2 + 4 + f * 8, GROUND_Y - 62, 16, 5, f * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        break;
+      }
+      case "canopy": {
+        // Tak av lovverk upptill + solstralar
+        ctx.save();
+        ctx.fillStyle = "rgba(10,40,10,0.6)";
+        ctx.fillRect(0, 0, canvas.width, 60);
+        for (let x = 0; x < canvas.width; x += 50) {
+          ctx.beginPath();
+          ctx.arc(x, 60, 30, 0, Math.PI);
+          ctx.fill();
+        }
+        ctx.restore();
+        // Solstralar ner genom lovverket
+        ctx.save();
+        ctx.globalAlpha = 0.12;
+        ctx.fillStyle = "#fff6c0";
+        for (let i = 0; i < 4; i++) {
+          const sx = ((canvas.width / 4) * i + 60);
+          ctx.beginPath();
+          ctx.moveTo(sx, 40);
+          ctx.lineTo(sx + 40, 40);
+          ctx.lineTo(sx - 20, GROUND_Y);
+          ctx.lineTo(sx - 80, GROUND_Y);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+        for (let i = 0; i < 3; i++) {
+          drawHangingVine(ctx, canvas.width * (0.2 + i * 0.3), 55, 90, t, i * 2, "rgba(30,70,20,0.6)");
+        }
+        for (let i = 0; i < 3; i++) {
+          drawFlutterfly(ctx, (t * (7 + i * 2) + i * 320) % (canvas.width + 100) - 50, canvas.height * 0.4 + i * 35, 7, t, i * 3, ["rgba(255,200,80,0.75)", "rgba(255,120,180,0.75)", "rgba(140,220,255,0.75)"][i]);
+        }
+        break;
+      }
+      case "saltflat": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 5, 10, 25, 260, "rgba(150,170,170,0.35)", 0.03);
+        // Spegelblank yta med reflekterad sol
+        ctx.save();
+        ctx.shadowColor = "rgba(255,240,220,0.6)";
+        ctx.shadowBlur = 25;
+        ctx.fillStyle = "rgba(255,245,225,0.8)";
+        ctx.beginPath();
+        ctx.arc(canvas.width * 0.7, canvas.height * 0.22, 24, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        ctx.save();
+        ctx.globalAlpha = 0.25;
+        ctx.fillStyle = "rgba(255,245,225,0.8)";
+        ctx.beginPath();
+        ctx.ellipse(canvas.width * 0.7, GROUND_Y + 10, 18, 30, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // Salt-polygonmonster pa marken
+        ctx.save();
+        ctx.strokeStyle = "rgba(180,190,190,0.3)";
+        ctx.lineWidth = 1;
+        const po = (distance * 0.5) % 60;
+        for (let x = -po; x < canvas.width; x += 60) {
+          ctx.beginPath();
+          ctx.moveTo(x, GROUND_Y + 20);
+          ctx.lineTo(x + 30, GROUND_Y + 8);
+          ctx.lineTo(x + 60, GROUND_Y + 20);
+          ctx.stroke();
+        }
+        ctx.restore();
+        drawDriftingClouds(ctx, t, "rgba(255,255,255,0.4)", 3, canvas.height * 0.18, 0.9, 6);
+        break;
+      }
+      case "mangrove": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 15, 50, 150, 200, "rgba(10,25,15,0.6)", 0.045);
+        // Mangrovetrad med rotben ovan vattenlinjen
+        for (let k = 0; k < 2; k++) {
+          const mx = Math.max(340, canvas.width * (0.4 + k * 0.25));
+          ctx.save();
+          ctx.strokeStyle = "rgba(25,45,20,0.7)";
+          ctx.lineWidth = 7;
+          ctx.beginPath();
+          ctx.moveTo(mx, GROUND_Y - 70);
+          ctx.lineTo(mx, GROUND_Y);
+          ctx.stroke();
+          ctx.lineWidth = 3;
+          for (let r = -2; r <= 2; r++) {
+            if (r === 0) continue;
+            ctx.beginPath();
+            ctx.moveTo(mx, GROUND_Y - 40);
+            ctx.quadraticCurveTo(mx + r * 14, GROUND_Y - 15, mx + r * 22, GROUND_Y);
+            ctx.stroke();
+          }
+          ctx.fillStyle = "rgba(30,70,25,0.6)";
+          ctx.beginPath();
+          ctx.arc(mx, GROUND_Y - 82, 30, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        for (let i = 0; i < 3; i++) {
+          drawHangingVine(ctx, canvas.width * (0.2 + i * 0.3), 0, 70, t, i * 2, "rgba(20,40,15,0.6)");
+        }
+        break;
+      }
+      case "dragon": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 20, 60, 170, 210, "rgba(20,5,5,0.7)", 0.045);
+        // Flygande drake med slagande vingar och eldstrale
+        const dgx = (t * 30) % (canvas.width + 300) - 150;
+        const dgy = canvas.height * 0.25 + Math.sin(t) * 20;
+        ctx.save();
+        ctx.fillStyle = "rgba(20,5,5,0.8)";
+        ctx.beginPath();
+        ctx.ellipse(dgx, dgy, 26, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+        const wf = Math.sin(t * 5) * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(dgx, dgy);
+        ctx.quadraticCurveTo(dgx - 20, dgy - 30 - wf * 20, dgx - 40, dgy);
+        ctx.quadraticCurveTo(dgx - 20, dgy + 6, dgx, dgy);
+        ctx.fill();
+        // Lang hals + huvud
+        ctx.strokeStyle = "rgba(20,5,5,0.8)";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(dgx + 22, dgy - 2);
+        ctx.lineTo(dgx + 42, dgy - 10);
+        ctx.stroke();
+        // Eldstrale
+        if (Math.sin(t * 2) > 0.6) {
+          ctx.save();
+          ctx.globalAlpha = 0.7;
+          ctx.fillStyle = "rgba(255,140,40,0.8)";
+          ctx.beginPath();
+          ctx.moveTo(dgx + 44, dgy - 10);
+          ctx.lineTo(dgx + 80, dgy - 16);
+          ctx.lineTo(dgx + 80, dgy - 4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.restore();
+        drawShootingStar(ctx, t, 16, 1, "rgba(255,120,40,0.9)", canvas.height * 0.15, canvas.height * 0.4);
+        break;
+      }
+      case "fairy": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 15, 50, 140, 200, "rgba(40,20,60,0.5)", 0.045);
+        drawRainbow(ctx, canvas.width * 0.7, canvas.height * 0.6, 70);
+        // Lysande svampar och stora glodande sporer
+        for (let k = 0; k < 3; k++) {
+          const mx = canvas.width * (0.2 + k * 0.28);
+          ctx.save();
+          ctx.shadowColor = "rgba(255,180,255,0.8)";
+          ctx.shadowBlur = 12;
+          ctx.fillStyle = "rgba(200,120,255,0.7)";
+          ctx.fillRect(mx - 3, GROUND_Y - 18, 6, 18);
+          ctx.beginPath();
+          ctx.ellipse(mx, GROUND_Y - 20, 14, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        // Svavande alvor (lysande prickar med sla)
+        for (let i = 0; i < 6; i++) {
+          const fx = (t * 8 + i * 130) % (canvas.width + 60) - 30;
+          const fy = canvas.height * 0.4 + Math.sin(t * 2 + i) * 40;
+          drawLantern(ctx, fx, fy, "rgba(255,230,150,0.9)", t, i * 3);
+        }
+        break;
+      }
+      case "troll": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 25, 110, 240, 260, "rgba(15,20,24,0.55)", 0.03);
+        drawJaggedSilhouette(ctx, GROUND_Y - 25, 90, 220, 230, "rgba(20,25,28,0.7)", 0.045);
+        // Stenbro over en klyfta
+        const bx = canvas.width * 0.6;
+        ctx.save();
+        ctx.strokeStyle = "rgba(30,38,42,0.8)";
+        ctx.lineWidth = 14;
+        ctx.beginPath();
+        ctx.arc(bx, GROUND_Y + 30, 70, Math.PI * 1.15, Math.PI * 1.85);
+        ctx.stroke();
+        ctx.restore();
+        // Sovande troll (rund sten med ogon)
+        const trx = canvas.width * 0.3;
+        ctx.fillStyle = "rgba(45,55,60,0.7)";
+        ctx.beginPath();
+        ctx.arc(trx, GROUND_Y - 20, 24, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(180,200,80,0.6)";
+        ctx.beginPath();
+        ctx.arc(trx - 8, GROUND_Y - 26, 3, 0, Math.PI * 2);
+        ctx.arc(trx + 8, GROUND_Y - 26, 3, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "unicorn": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 10, 20, 55, 220, "rgba(255,255,255,0.35)", 0.05);
+        drawRainbow(ctx, canvas.width * 0.3, canvas.height * 0.55, 85);
+        drawDriftingClouds(ctx, t, "rgba(255,245,255,0.5)", 3, canvas.height * 0.2, 1, 5);
+        // Enhorning pa en kulle
+        const ux = canvas.width * 0.68;
+        ctx.save();
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.beginPath();
+        ctx.ellipse(ux, GROUND_Y - 26, 22, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(ux - 20, GROUND_Y - 34, 8, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(ux - 14, GROUND_Y - 18, 5, 18);
+        ctx.fillRect(ux + 12, GROUND_Y - 18, 5, 18);
+        // Horn
+        ctx.strokeStyle = "rgba(255,210,120,0.9)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(ux - 24, GROUND_Y - 42);
+        ctx.lineTo(ux - 28, GROUND_Y - 56);
+        ctx.stroke();
+        // Man i regnbagsfarg
+        ctx.strokeStyle = "rgba(255,150,220,0.7)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(ux - 16, GROUND_Y - 38);
+        ctx.quadraticCurveTo(ux - 4, GROUND_Y - 30, ux - 2, GROUND_Y - 20);
+        ctx.stroke();
+        ctx.restore();
+        for (let i = 0; i < 2; i++) {
+          drawFlutterfly(ctx, (t * (6 + i * 2) + i * 300) % (canvas.width + 100) - 50, canvas.height * 0.4 + i * 30, 6, t, i * 3, "rgba(255,200,230,0.8)");
+        }
+        break;
+      }
+      case "atlantis": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 15, 60, 160, 210, "rgba(5,20,30,0.7)", 0.045);
+        // Sjunkna ruiner: pelare i olika hojd
+        for (let k = 0; k < 4; k++) {
+          const cx = (k * 150 + 60 - (distance * 0.05) % 150);
+          drawPillar(ctx, cx, GROUND_Y, 20, 60 + (k % 3) * 40, "rgba(30,80,90,0.55)", "rgba(40,100,110,0.6)");
+        }
+        // Ljusstralar uppifran vattenytan
+        ctx.save();
+        ctx.globalAlpha = 0.08;
+        ctx.fillStyle = "#aef0ff";
+        for (let i = 0; i < 3; i++) {
+          const sx = ((canvas.width / 3) * i + (t * 8) % (canvas.width));
+          ctx.beginPath();
+          ctx.moveTo(sx, 0);
+          ctx.lineTo(sx + 50, 0);
+          ctx.lineTo(sx - 30, GROUND_Y);
+          ctx.lineTo(sx - 90, GROUND_Y);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+        for (let i = 0; i < 3; i++) {
+          const spd = 10 + i * 4;
+          const x = canvas.width + 70 - ((t * spd + i * 260) % (canvas.width + 300));
+          drawFish(ctx, x, canvas.height * 0.25 + i * 55, 8, "rgba(100,220,255,0.5)", t, i * 2);
+        }
+        break;
+      }
+      case "witch": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 20, 70, 190, 210, "rgba(20,10,25,0.7)", 0.045);
+        // Full gron mane
+        ctx.save();
+        ctx.shadowColor = "rgba(150,255,120,0.7)";
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = "rgba(200,255,170,0.6)";
+        ctx.beginPath();
+        ctx.arc(canvas.width * 0.78, canvas.height * 0.2, 24, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // Flygande haxa pa kvast over manen
+        const hx = (t * 24) % (canvas.width + 200) - 100;
+        const hy = canvas.height * 0.22 + Math.sin(t * 1.5) * 12;
+        ctx.save();
+        ctx.strokeStyle = "rgba(20,10,25,0.85)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(hx - 18, hy);
+        ctx.lineTo(hx + 18, hy - 4);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(20,10,25,0.85)";
+        ctx.beginPath();
+        ctx.arc(hx, hy - 6, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(hx - 6, hy - 12);
+        ctx.lineTo(hx + 6, hy - 12);
+        ctx.lineTo(hx, hy - 24);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        for (let i = 0; i < 2; i++) {
+          drawHangingVine(ctx, Math.max(380, canvas.width * (0.42 + i * 0.18)), 0, 65, t, i * 2, "rgba(30,15,35,0.6)");
+        }
+        break;
+      }
+      case "giant": {
+        // Gigantiska stovel- och bordsben som forsvinner uppat
+        for (let k = 0; k < 2; k++) {
+          const lx = canvas.width * (0.35 + k * 0.4);
+          ctx.fillStyle = "rgba(60,40,20,0.6)";
+          ctx.fillRect(lx - 30, 0, 60, GROUND_Y);
+          ctx.fillStyle = "rgba(75,52,28,0.6)";
+          ctx.fillRect(lx - 30, 0, 12, GROUND_Y);
+        }
+        // Enormt bordsben mitt bak
+        const gx = Math.max(360, canvas.width * 0.62);
+        ctx.fillStyle = "rgba(50,34,16,0.5)";
+        ctx.fillRect(gx - 10, 0, 20, GROUND_Y);
+        // Jatteklot/leksak pa marken
+        ctx.fillStyle = "rgba(200,60,60,0.5)";
+        ctx.beginPath();
+        ctx.arc(canvas.width * 0.2, GROUND_Y - 40, 40, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "phoenix": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 20, 60, 160, 220, "rgba(60,15,10,0.6)", 0.045);
+        // Stor fenix mitt i bild med glodande vingar
+        const fx = canvas.width * 0.72;
+        const fy = canvas.height * 0.28;
+        const wf = Math.sin(t * 3) * 0.5;
+        ctx.save();
+        ctx.shadowColor = "rgba(255,140,50,0.9)";
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = "rgba(255,160,60,0.7)";
+        ctx.beginPath();
+        ctx.ellipse(fx, fy, 12, 20, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(fx, fy);
+        ctx.quadraticCurveTo(fx - 50, fy - 30 - wf * 30, fx - 70, fy + 20);
+        ctx.quadraticCurveTo(fx - 30, fy + 10, fx, fy);
+        ctx.moveTo(fx, fy);
+        ctx.quadraticCurveTo(fx + 50, fy - 30 - wf * 30, fx + 70, fy + 20);
+        ctx.quadraticCurveTo(fx + 30, fy + 10, fx, fy);
+        ctx.fill();
+        // Stjart av eld
+        ctx.beginPath();
+        ctx.moveTo(fx, fy + 18);
+        ctx.quadraticCurveTo(fx - 10, fy + 55, fx, fy + 75);
+        ctx.quadraticCurveTo(fx + 10, fy + 55, fx, fy + 18);
+        ctx.fill();
+        ctx.restore();
+        // Fallande glodande fjadrar
+        drawFallingStreaks(ctx, t, canvas.width, canvas.height, 12, "rgba(255,160,70,0.5)", 20, 10);
+        break;
+      }
+      case "moonbase": {
+        // Stor jord som stiger over horisonten
+        ctx.save();
+        ctx.shadowColor = "rgba(80,140,220,0.5)";
+        ctx.shadowBlur = 24;
+        ctx.fillStyle = "rgba(60,110,180,0.7)";
+        ctx.beginPath();
+        ctx.arc(canvas.width * 0.75, canvas.height * 0.2, 34, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(80,160,110,0.6)";
+        ctx.beginPath();
+        ctx.arc(canvas.width * 0.75 - 10, canvas.height * 0.2 - 6, 10, 0, Math.PI * 2);
+        ctx.arc(canvas.width * 0.75 + 12, canvas.height * 0.2 + 8, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // Kupolbaser med antenner
+        for (let k = 0; k < 2; k++) {
+          const bx = canvas.width * (0.3 + k * 0.35);
+          ctx.fillStyle = "rgba(150,160,175,0.6)";
+          ctx.beginPath();
+          ctx.arc(bx, GROUND_Y, 34, Math.PI, 0);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(180,190,200,0.6)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(bx + 20, GROUND_Y - 22);
+          ctx.lineTo(bx + 30, GROUND_Y - 45);
+          ctx.stroke();
+          ctx.fillStyle = "rgba(255,120,120,0.8)";
+          ctx.beginPath();
+          ctx.arc(bx + 30, GROUND_Y - 47, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Sma kratrar
+        for (let i = 0; i < 4; i++) {
+          ctx.fillStyle = "rgba(120,125,135,0.4)";
+          ctx.beginPath();
+          ctx.arc(canvas.width * (0.15 + i * 0.22), GROUND_Y - 6, 8 + i * 2, 0, Math.PI, false);
+          ctx.fill();
+        }
+        break;
+      }
+      case "mars": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 10, 25, 60, 230, "rgba(80,25,15,0.5)", 0.04);
+        // Tva manar
+        ctx.save();
+        ctx.fillStyle = "rgba(180,140,120,0.6)";
+        ctx.beginPath();
+        ctx.arc(canvas.width * 0.7, canvas.height * 0.16, 12, 0, Math.PI * 2);
+        ctx.arc(canvas.width * 0.82, canvas.height * 0.24, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // Landad rover
+        const rx = canvas.width * 0.35;
+        ctx.fillStyle = "rgba(200,190,180,0.6)";
+        ctx.fillRect(rx - 16, GROUND_Y - 16, 32, 10);
+        ctx.fillStyle = "rgba(60,50,45,0.7)";
+        ctx.beginPath();
+        ctx.arc(rx - 10, GROUND_Y - 4, 5, 0, Math.PI * 2);
+        ctx.arc(rx + 10, GROUND_Y - 4, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(200,190,180,0.6)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(rx, GROUND_Y - 16);
+        ctx.lineTo(rx + 8, GROUND_Y - 30);
+        ctx.stroke();
+        // Dammvirvel
+        ctx.save();
+        ctx.globalAlpha = 0.15;
+        ctx.fillStyle = "#c86a4a";
+        const dwx = (t * 20) % (canvas.width + 100) - 50;
+        ctx.beginPath();
+        ctx.ellipse(dwx, GROUND_Y - 30, 14, 40, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case "cyber": {
+        // Rutnat + neonstadssilhuett + regnande datastrommar
+        ctx.save();
+        ctx.strokeStyle = "rgba(0,255,200,0.12)";
+        ctx.lineWidth = 1;
+        const go = (distance * 0.3) % 40;
+        for (let x = -go; x < canvas.width; x += 40) {
+          ctx.beginPath(); ctx.moveTo(x, GROUND_Y * 0.5); ctx.lineTo(x, GROUND_Y); ctx.stroke();
+        }
+        for (let y = GROUND_Y * 0.5; y < GROUND_Y; y += 20) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        }
+        ctx.restore();
+        drawTowerRow(ctx, GROUND_Y, "rgba(5,25,25,0.85)", 0.05, 40);
+        // Neonkonturer pa nagra torn
+        ctx.save();
+        ctx.strokeStyle = "rgba(0,255,204,0.4)";
+        ctx.lineWidth = 1.5;
+        const so = (distance * 0.05) % 90;
+        for (let bx = -90; bx < canvas.width; bx += 90) {
+          const x = bx - so;
+          const h = 60 + Math.abs(Math.sin(bx * 0.03)) * 120;
+          ctx.strokeRect(x, GROUND_Y - h, 40, h);
+        }
+        ctx.restore();
+        drawFallingStreaks(ctx, t, canvas.width, canvas.height, 28, "rgba(0,255,200,0.25)", 45, 20);
+        drawShootingStar(ctx, t, 14, 0, "rgba(0,255,200,0.9)", canvas.height * 0.1, canvas.height * 0.5);
+        break;
+      }
+      case "time": {
+        // Flera svavande urverk i olika storlek + drivande romerska siffror
+        const clocks = [{ x: 0.75, y: 0.25, r: 44 }, { x: 0.35, y: 0.18, r: 26 }, { x: 0.55, y: 0.4, r: 18 }];
+        for (const c of clocks) {
+          const cx = canvas.width * c.x, cy = canvas.height * c.y, r = c.r;
+          ctx.save();
+          ctx.globalAlpha = 0.5;
+          ctx.strokeStyle = "rgba(255,224,160,0.9)";
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+          for (let m = 0; m < 12; m++) {
+            const a = (Math.PI * 2 * m) / 12;
+            ctx.beginPath();
+            ctx.moveTo(cx + Math.cos(a) * r * 0.85, cy + Math.sin(a) * r * 0.85);
+            ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+            ctx.stroke();
+          }
+          ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(t * 2) * r * 0.6, cy + Math.sin(t * 2) * r * 0.6); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(t * 0.3) * r * 0.85, cy + Math.sin(t * 0.3) * r * 0.85); ctx.stroke();
+          ctx.restore();
+        }
+        // Drivande kugghjul pa marken
+        ctx.save();
+        ctx.translate(canvas.width * 0.2, GROUND_Y - 30);
+        ctx.rotate(t * 0.4);
+        ctx.fillStyle = "rgba(200,170,110,0.4)";
+        drawGearSpike(ctx, { x: -26, y: -26, w: 52, h: 52 });
+        ctx.restore();
+        break;
+      }
+      case "ufo": {
+        // Flera ufon, ett med dragande ljusstrale mot marken
+        for (let k = 0; k < 2; k++) {
+          const ux = k === 0 ? canvas.width * 0.3 + Math.sin(t) * 30 : (t * 30) % (canvas.width + 200) - 100;
+          const uy = canvas.height * (0.3 + k * 0.15);
+          if (k === 0) {
+            ctx.save();
+            ctx.globalAlpha = 0.12;
+            ctx.fillStyle = "#7aff9a";
+            ctx.beginPath();
+            ctx.moveTo(ux - 12, uy);
+            ctx.lineTo(ux + 12, uy);
+            ctx.lineTo(ux + 40, GROUND_Y);
+            ctx.lineTo(ux - 40, GROUND_Y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+          ctx.save();
+          ctx.fillStyle = "rgba(120,130,100,0.7)";
+          ctx.beginPath(); ctx.ellipse(ux, uy, 40, 12, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "rgba(150,255,170,0.6)";
+          ctx.beginPath(); ctx.arc(ux, uy - 7, 14, Math.PI, 0); ctx.fill();
+          // Blinkande lampor under
+          for (let i = -2; i <= 2; i++) {
+            ctx.globalAlpha = 0.4 + 0.4 * (0.5 + Math.sin(t * 4 + i) * 0.5);
+            ctx.fillStyle = "rgba(180,255,120,0.9)";
+            ctx.beginPath(); ctx.arc(ux + i * 12, uy + 4, 2.5, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.restore();
+        }
+        // Sadescirkel-monster pa marken
+        ctx.save();
+        ctx.strokeStyle = "rgba(120,255,150,0.3)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(canvas.width * 0.5, GROUND_Y - 4, 60, 12, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        break;
+      }
+      case "junk": {
+        // Drivande vrakdelar + ett stort trasigt rymdskepp
+        const sx = canvas.width * 0.65;
+        ctx.save();
+        ctx.fillStyle = "rgba(80,75,65,0.6)";
+        ctx.beginPath();
+        ctx.ellipse(sx, canvas.height * 0.28, 60, 20, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(50,46,40,0.6)";
+        ctx.fillRect(sx + 30, canvas.height * 0.28 - 6, 40, 12);
+        ctx.restore();
+        for (let i = 0; i < 6; i++) {
+          const spd = 8 + i * 3;
+          const ax = canvas.width + 40 - ((t * spd + i * 160) % (canvas.width + 220));
+          const ay = canvas.height * (0.12 + (i % 4) * 0.1);
+          ctx.save();
+          ctx.translate(ax, ay);
+          ctx.rotate(t * (0.5 + i * 0.2));
+          ctx.fillStyle = "rgba(120,110,95,0.6)";
+          ctx.fillRect(-5 - i, -3, 10 + i * 2, 6);
+          ctx.restore();
+        }
+        break;
+      }
+      case "whalegrave": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 10, 30, 70, 220, "rgba(10,20,30,0.6)", 0.04);
+        // Stort valskelett: ryggrad + revben som en katedral
+        const wx = Math.max(360, canvas.width * 0.55);
+        ctx.save();
+        ctx.strokeStyle = "rgba(170,170,155,0.5)";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(wx - 90, GROUND_Y - 10);
+        ctx.quadraticCurveTo(wx, GROUND_Y - 70, wx + 110, GROUND_Y - 20);
+        ctx.stroke();
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 8; i++) {
+          const rx = wx - 80 + i * 24;
+          const rh = 30 + Math.sin(i * 0.5) * 30;
+          ctx.beginPath();
+          ctx.moveTo(rx, GROUND_Y);
+          ctx.quadraticCurveTo(rx + 6, GROUND_Y - rh, rx + 14, GROUND_Y);
+          ctx.stroke();
+        }
+        // Skalle
+        ctx.fillStyle = "rgba(170,170,155,0.45)";
+        ctx.beginPath();
+        ctx.ellipse(wx - 95, GROUND_Y - 14, 24, 14, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // Enstaka bubblor uppat
+        for (let i = 0; i < 3; i++) {
+          const bx = (i * 200 + 60 - (t * 6) % 200);
+          const by = GROUND_Y - ((t * 20 + i * 80) % GROUND_Y);
+          ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = "#9ac8e6";
+          ctx.beginPath(); ctx.arc(bx, by, 3, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        }
+        break;
+      }
+      case "mermaid": {
+        // Snackskalspalats med torn
+        const px = canvas.width * 0.62;
+        ctx.save();
+        ctx.fillStyle = "rgba(255,200,235,0.5)";
+        for (let k = -1; k <= 1; k++) {
+          const tx = px + k * 55;
+          const th = 90 - Math.abs(k) * 25;
+          ctx.beginPath();
+          ctx.moveTo(tx - 18, GROUND_Y);
+          ctx.quadraticCurveTo(tx - 12, GROUND_Y - th, tx, GROUND_Y - th - 14);
+          ctx.quadraticCurveTo(tx + 12, GROUND_Y - th, tx + 18, GROUND_Y);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+        // Ljusstralar
+        ctx.save(); ctx.globalAlpha = 0.08; ctx.fillStyle = "#bff0ff";
+        for (let i = 0; i < 3; i++) {
+          const sx = ((canvas.width / 3) * i + (t * 6) % canvas.width);
+          ctx.beginPath();
+          ctx.moveTo(sx, 0); ctx.lineTo(sx + 40, 0); ctx.lineTo(sx - 30, GROUND_Y); ctx.lineTo(sx - 80, GROUND_Y);
+          ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+        for (let i = 0; i < 3; i++) {
+          const spd = 12 + i * 4;
+          const x = canvas.width + 60 - ((t * spd + i * 250) % (canvas.width + 280));
+          drawFish(ctx, x, canvas.height * 0.3 + i * 50, 8, "rgba(255,190,230,0.6)", t, i * 2);
+        }
+        break;
+      }
+      case "egypt": {
+        // Tre pyramider i djup + sfinx + het sol
+        ctx.save();
+        ctx.shadowColor = "rgba(255,230,160,0.8)"; ctx.shadowBlur = 24;
+        ctx.fillStyle = "rgba(255,235,180,0.85)";
+        ctx.beginPath(); ctx.arc(canvas.width * 0.5, canvas.height * 0.2, 30, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        const pyrs = [{ x: 0.65, s: 90, c: "rgba(90,55,20,0.7)" }, { x: 0.78, s: 60, c: "rgba(75,45,15,0.6)" }, { x: 0.4, s: 70, c: "rgba(80,50,18,0.65)" }];
+        for (const p of pyrs) {
+          const px = canvas.width * p.x;
+          ctx.fillStyle = p.c;
+          ctx.beginPath();
+          ctx.moveTo(px - p.s * 0.7, GROUND_Y);
+          ctx.lineTo(px, GROUND_Y - p.s);
+          ctx.lineTo(px + p.s * 0.7, GROUND_Y);
+          ctx.closePath();
+          ctx.fill();
+          // solbelyst sida
+          ctx.fillStyle = "rgba(255,230,170,0.15)";
+          ctx.beginPath();
+          ctx.moveTo(px, GROUND_Y - p.s); ctx.lineTo(px + p.s * 0.7, GROUND_Y); ctx.lineTo(px, GROUND_Y);
+          ctx.closePath(); ctx.fill();
+        }
+        // Sfinx
+        const sfx = canvas.width * 0.2;
+        ctx.fillStyle = "rgba(90,60,25,0.6)";
+        ctx.fillRect(sfx - 30, GROUND_Y - 24, 60, 24);
+        ctx.fillRect(sfx + 20, GROUND_Y - 44, 20, 24);
+        break;
+      }
+      case "sakura": {
+        // Flera korsbarstrad + pagod + fallande kronblad
+        for (let k = 0; k < 2; k++) {
+          const tx2 = canvas.width * (0.45 + k * 0.28);
+          ctx.save();
+          ctx.translate(tx2, GROUND_Y);
+          ctx.rotate(Math.sin(t * 0.3 + k) * 0.02);
+          ctx.strokeStyle = "rgba(60,35,30,0.8)"; ctx.lineWidth = 8 - k * 2;
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -80 + k * 15); ctx.stroke();
+          ctx.fillStyle = "rgba(255,190,215,0.75)";
+          ctx.beginPath(); ctx.arc(0, -100 + k * 15, 45 - k * 10, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        }
+        // Pagod
+        const pgx = canvas.width * 0.2;
+        ctx.fillStyle = "rgba(140,40,50,0.5)";
+        for (let r = 0; r < 3; r++) {
+          const w = 46 - r * 12;
+          ctx.fillRect(pgx - w / 2, GROUND_Y - 30 - r * 26, w, 16);
+          ctx.beginPath();
+          ctx.moveTo(pgx - w / 2 - 6, GROUND_Y - 30 - r * 26);
+          ctx.lineTo(pgx, GROUND_Y - 40 - r * 26);
+          ctx.lineTo(pgx + w / 2 + 6, GROUND_Y - 30 - r * 26);
+          ctx.closePath(); ctx.fill();
+        }
+        // Fallande kronblad
+        for (let i = 0; i < 14; i++) {
+          const seed = i * 90;
+          const x = (seed * 2.3) % canvas.width + Math.sin(t + i) * 20;
+          const y = ((t * 15 + seed) % (canvas.height + 40)) - 20;
+          ctx.save(); ctx.globalAlpha = 0.6; ctx.fillStyle = "rgba(255,190,215,0.9)";
+          ctx.beginPath(); ctx.ellipse(x, y, 4, 2.5, i, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        }
+        break;
+      }
+      case "rome": {
+        // Colosseum-bage + pelarrad
+        const rx = Math.max(360, canvas.width * 0.62);
+        ctx.fillStyle = "rgba(200,170,120,0.6)";
+        ctx.fillRect(rx - 80, GROUND_Y - 90, 160, 90);
+        ctx.fillStyle = "rgba(90,50,15,0.55)";
+        for (let row = 0; row < 2; row++) {
+          for (let i = 0; i < 5; i++) {
+            ctx.beginPath();
+            ctx.arc(rx - 64 + i * 32, GROUND_Y - 30 - row * 34, 12, Math.PI, 0);
+            ctx.fill();
+            ctx.fillRect(rx - 76 + i * 32, GROUND_Y - 30 - row * 34, 4, 30);
+          }
+        }
+        // Fristaende pelare framfor
+        drawPillar(ctx, canvas.width * 0.25, GROUND_Y, 18, 80, "rgba(220,200,160,0.6)", "rgba(230,210,170,0.6)");
+        drawPillar(ctx, canvas.width * 0.33, GROUND_Y, 18, 64, "rgba(215,195,155,0.55)", "rgba(225,205,165,0.55)");
+        break;
+      }
+      case "medieval": {
+        // Borg med flera torn + vajande flaggor
+        const cx2 = canvas.width * 0.6;
+        ctx.fillStyle = "rgba(90,80,60,0.65)";
+        ctx.fillRect(cx2 - 60, GROUND_Y - 90, 120, 90);
+        for (let k = -1; k <= 1; k += 2) {
+          ctx.fillRect(cx2 + k * 60 - 10, GROUND_Y - 120, 20, 120);
+          // tinnar
+          for (let i = 0; i < 3; i++) ctx.fillRect(cx2 + k * 60 - 10 + i * 8, GROUND_Y - 128, 5, 8);
+        }
+        // tinnar pa mittdelen
+        for (let i = 0; i < 7; i++) ctx.fillRect(cx2 - 56 + i * 16, GROUND_Y - 98, 8, 8);
+        drawWavingBanner(ctx, cx2 - 60, GROUND_Y - 120, 22, 14, "rgba(200,60,60,0.6)", t, 0);
+        drawWavingBanner(ctx, cx2 + 60, GROUND_Y - 120, 22, 14, "rgba(60,90,200,0.6)", t, 2);
+        // Marknadstalt framfor
+        ctx.fillStyle = "rgba(180,80,60,0.5)";
+        ctx.beginPath();
+        ctx.moveTo(canvas.width * 0.22 - 30, GROUND_Y);
+        ctx.lineTo(canvas.width * 0.22, GROUND_Y - 34);
+        ctx.lineTo(canvas.width * 0.22 + 30, GROUND_Y);
+        ctx.closePath(); ctx.fill();
+        break;
+      }
+      case "aztec": {
+        // Stegpyramid + djungel runt + eldskal
+        const ax = canvas.width * 0.62;
+        ctx.fillStyle = "rgba(60,80,35,0.7)";
+        for (let i = 0; i < 5; i++) {
+          const w = 130 - i * 22;
+          ctx.fillRect(ax - w / 2, GROUND_Y - 22 - i * 24, w, 24);
+        }
+        // trappa
+        ctx.fillStyle = "rgba(40,55,20,0.6)";
+        ctx.fillRect(ax - 8, GROUND_Y - 120, 16, 120);
+        // eldskalar overst
+        ctx.save();
+        ctx.shadowColor = "rgba(255,140,40,0.9)"; ctx.shadowBlur = 12;
+        ctx.fillStyle = "rgba(255,150,50,0.8)";
+        ctx.beginPath(); ctx.arc(ax - 30, GROUND_Y - 124, 4 + Math.sin(t * 4) * 2, 0, Math.PI * 2);
+        ctx.arc(ax + 30, GROUND_Y - 124, 4 + Math.cos(t * 4) * 2, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        drawSwayingTree(ctx, canvas.width * 0.2, GROUND_Y, 50, 30, "rgba(40,30,15,0.6)", "rgba(30,70,25,0.6)", t, 1);
+        break;
+      }
+      case "westtown": {
+        // Rad av saloon-fasader + kaktusar + tumbleweed
+        const facades = [{ x: 0.55, w: 90, h: 70 }, { x: 0.7, w: 70, h: 90 }, { x: 0.82, w: 60, h: 60 }];
+        for (const f of facades) {
+          const fx = canvas.width * f.x;
+          ctx.fillStyle = "rgba(80,50,25,0.65)";
+          ctx.fillRect(fx - f.w / 2, GROUND_Y - f.h, f.w, f.h);
+          // falskt hogt tak
+          ctx.beginPath();
+          ctx.moveTo(fx - f.w / 2 - 6, GROUND_Y - f.h);
+          ctx.lineTo(fx, GROUND_Y - f.h - 16);
+          ctx.lineTo(fx + f.w / 2 + 6, GROUND_Y - f.h);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "rgba(120,90,50,0.5)";
+          ctx.fillRect(fx - f.w / 2, GROUND_Y - f.h * 0.4, f.w, 4);
+        }
+        // Kaktus
+        ctx.fillStyle = "rgba(50,90,40,0.6)";
+        const kx = canvas.width * 0.22;
+        ctx.fillRect(kx - 4, GROUND_Y - 40, 8, 40);
+        ctx.fillRect(kx - 16, GROUND_Y - 30, 8, 16);
+        ctx.fillRect(kx + 8, GROUND_Y - 36, 8, 18);
+        // Tumbleweed
+        const twx = (canvas.width - (t * 45) % (canvas.width + 60)) - 30;
+        ctx.save(); ctx.translate(twx, GROUND_Y - 10); ctx.rotate(t * 5);
+        ctx.strokeStyle = "rgba(120,90,40,0.6)"; ctx.lineWidth = 2;
+        for (let a = 0; a < 6; a++) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a) * 9, Math.sin(a) * 9); ctx.stroke(); }
+        ctx.restore();
+        break;
+      }
+      case "citynight": {
+        // Tva parallax-lager av skyskrapor med lysande fonster + fullmane
+        ctx.save();
+        ctx.fillStyle = "rgba(220,220,210,0.5)";
+        ctx.beginPath(); ctx.arc(canvas.width * 0.8, canvas.height * 0.18, 26, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        drawTowerRow(ctx, GROUND_Y, "rgba(15,12,20,0.7)", 0.025, 100);
+        const spacing2 = 140;
+        const offset2 = (distance * 0.05) % spacing2;
+        for (let bx3 = -spacing2; bx3 < canvas.width + spacing2; bx3 += spacing2) {
+          const x = bx3 - offset2;
+          const h = 80 + Math.abs(Math.sin(bx3 * 0.02)) * 130;
+          ctx.fillStyle = "rgba(20,15,10,0.85)";
+          ctx.fillRect(x, GROUND_Y - h, spacing2 * 0.6, h);
+          ctx.fillStyle = "rgba(255,200,110,0.6)";
+          let row = 0;
+          for (let wy = GROUND_Y - h + 10; wy < GROUND_Y - 10; wy += 16) {
+            let col = 0;
+            for (let wx2 = x + 6; wx2 < x + spacing2 * 0.6 - 6; wx2 += 14) {
+              if (Math.sin(bx3 * 0.7 + row * 2.1 + col * 1.3) > 0.3) ctx.fillRect(wx2, wy, 6, 8);
+              col++;
+            }
+            row++;
+          }
+        }
+        break;
+      }
+      case "carnival": {
+        // Pariserhjul + tivolital + lyktslingor
+        const fx2 = canvas.width * 0.68, fy2 = canvas.height * 0.38, fr = 50;
+        ctx.save();
+        ctx.translate(fx2, fy2);
+        ctx.strokeStyle = "rgba(255,224,102,0.7)"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(0, 0, fr, 0, Math.PI * 2); ctx.stroke();
+        ctx.save();
+        ctx.rotate(t * 0.15);
+        for (let i = 0; i < 8; i++) {
+          const a = (Math.PI * 2 / 8) * i;
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a) * fr, Math.sin(a) * fr); ctx.stroke();
+          // gondoler
+          ctx.fillStyle = ["#ff5a5a", "#5ab4ff", "#ffe066", "#6fce7a"][i % 4];
+          ctx.beginPath(); ctx.arc(Math.cos(a) * fr, Math.sin(a) * fr, 5, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+        ctx.restore();
+        // Stod
+        ctx.strokeStyle = "rgba(120,110,90,0.5)"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(fx2 - 20, GROUND_Y); ctx.lineTo(fx2, fy2); ctx.lineTo(fx2 + 20, GROUND_Y); ctx.stroke();
+        // Tivolital
+        const tx = canvas.width * 0.25;
+        for (let k = -1; k <= 1; k += 2) {
+          ctx.fillStyle = k < 0 ? "rgba(230,80,90,0.55)" : "rgba(240,240,240,0.5)";
+          ctx.beginPath();
+          ctx.moveTo(tx - 40, GROUND_Y);
+          ctx.lineTo(tx, GROUND_Y - 40);
+          ctx.lineTo(tx + 40, GROUND_Y);
+          ctx.closePath();
+          if (k < 0) { ctx.save(); ctx.clip(); for (let s = -40; s < 40; s += 16) { ctx.fillRect(tx + s, GROUND_Y - 40, 8, 40); } ctx.restore(); }
+          else ctx.fill();
+        }
+        // Lyktslingor upptill
+        ctx.save();
+        for (let i = 0; i < 12; i++) {
+          const lx = (i * 110 + 40 - (distance * 0.03) % 110);
+          drawLantern(ctx, lx, 30 + Math.sin(i) * 8, ["rgba(255,90,90,0.9)", "rgba(90,180,255,0.9)", "rgba(255,224,102,0.9)"][i % 3], t, i);
+        }
+        ctx.restore();
+        break;
+      }
+      case "circus": {
+        // Stort randigt cirkustalt med flaggor + akrobat pa lina
+        const cx3 = canvas.width * 0.6;
+        ctx.save();
+        ctx.fillStyle = "rgba(220,220,220,0.6)";
+        ctx.beginPath();
+        ctx.moveTo(cx3 - 90, GROUND_Y);
+        ctx.quadraticCurveTo(cx3, GROUND_Y - 120, cx3 + 90, GROUND_Y);
+        ctx.closePath();
+        ctx.clip();
+        for (let s = -90; s < 90; s += 24) {
+          ctx.fillStyle = (Math.floor((s + 90) / 24) % 2 === 0) ? "rgba(200,60,70,0.6)" : "rgba(240,240,240,0.6)";
+          ctx.fillRect(cx3 + s, GROUND_Y - 130, 24, 130);
+        }
+        ctx.restore();
+        drawWavingBanner(ctx, cx3, GROUND_Y - 122, 18, 10, "rgba(255,224,102,0.8)", t, 0);
+        // Sidotorn
+        for (let k = -1; k <= 1; k += 2) {
+          ctx.fillStyle = "rgba(200,60,70,0.5)";
+          ctx.beginPath();
+          ctx.moveTo(cx3 + k * 90 - 20, GROUND_Y);
+          ctx.lineTo(cx3 + k * 90, GROUND_Y - 60);
+          ctx.lineTo(cx3 + k * 90 + 20, GROUND_Y);
+          ctx.closePath(); ctx.fill();
+        }
+        // Lindansare langt fram
+        ctx.strokeStyle = "rgba(0,0,0,0.4)"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(canvas.width * 0.1, canvas.height * 0.3); ctx.lineTo(canvas.width * 0.45, canvas.height * 0.3); ctx.stroke();
+        const ax = canvas.width * (0.1 + ((t * 0.05) % 0.35));
+        ctx.fillStyle = "rgba(30,30,40,0.6)";
+        ctx.beginPath(); ctx.arc(ax, canvas.height * 0.3 - 8, 5, 0, Math.PI * 2); ctx.fill();
+        break;
+      }
+      case "library": {
+        // Vaggar av bokhyllor bakom + svavande bocker + stege
+        const shelfCols = ["rgba(120,50,40,0.5)", "rgba(50,80,110,0.5)", "rgba(90,110,50,0.5)", "rgba(130,100,40,0.5)"];
+        const so = (distance * 0.05) % 26;
+        for (let bx = -26; bx < canvas.width; bx += 26) {
+          const x = bx - so;
+          for (let row = 0; row < 4; row++) {
+            ctx.fillStyle = shelfCols[(Math.floor(bx / 26) + row) % 4];
+            const bh = 60 + ((bx + row) % 3) * 12;
+            ctx.fillRect(x, GROUND_Y - 40 - row * 62 - bh + 60, 20, bh);
+          }
+        }
+        // Horisontella hyllplan
+        ctx.fillStyle = "rgba(50,30,15,0.5)";
+        for (let row = 0; row < 4; row++) ctx.fillRect(0, GROUND_Y - 40 - row * 62, canvas.width, 5);
+        // Svavande bocker
+        for (let i = 0; i < 4; i++) {
+          const bx = (t * (10 + i * 3) + i * 200) % (canvas.width + 60) - 30;
+          const by = canvas.height * 0.3 + Math.sin(t + i) * 20;
+          ctx.save();
+          ctx.translate(bx, by); ctx.rotate(Math.sin(t + i) * 0.2);
+          ctx.fillStyle = shelfCols[i % 4].replace("0.5", "0.8");
+          ctx.fillRect(-8, -6, 16, 12);
+          ctx.strokeStyle = "rgba(255,240,200,0.6)"; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(0, 6); ctx.stroke();
+          ctx.restore();
+        }
+        break;
+      }
+      case "toyroom": {
+        // Byggklossar, snurra, studsboll och en nallesilhuett
+        const colors2 = ["#ff5a5a", "#5ab4ff", "#ffe066", "#6fce7a", "#ff8ad0"];
+        for (let i = 0; i < 6; i++) {
+          ctx.fillStyle = colors2[i % 5];
+          const bx = canvas.width * 0.5 + i * 30;
+          ctx.fillRect(bx, GROUND_Y - 26 - ((i % 3) * 26), 24, 26);
+          ctx.strokeStyle = "rgba(0,0,0,0.15)"; ctx.lineWidth = 1;
+          ctx.strokeRect(bx, GROUND_Y - 26 - ((i % 3) * 26), 24, 26);
+        }
+        // Snurra
+        ctx.save();
+        ctx.translate(canvas.width * 0.25, GROUND_Y - 16);
+        ctx.rotate(t * 6);
+        ctx.fillStyle = "rgba(255,90,140,0.7)";
+        ctx.beginPath(); ctx.moveTo(0, -16); ctx.lineTo(12, 6); ctx.lineTo(-12, 6); ctx.closePath(); ctx.fill();
+        ctx.restore();
+        // Studsande boll
+        const ballx = canvas.width * 0.4;
+        const bally = GROUND_Y - Math.abs(Math.sin(t * 3)) * 90 - 10;
+        ctx.fillStyle = "rgba(90,180,255,0.8)";
+        ctx.beginPath(); ctx.arc(ballx, bally, 12, 0, Math.PI * 2); ctx.fill();
+        break;
+      }
+      case "storm": {
+        drawJaggedSilhouette(ctx, GROUND_Y - 15, 60, 160, 220, "rgba(10,15,25,0.7)", 0.045);
+        // Morka valvande moln
+        drawDriftingClouds(ctx, t, "rgba(30,35,50,0.6)", 4, canvas.height * 0.15, 1.3, 8);
+        const flashCycle = 5;
+        const fp = (t % flashCycle) / flashCycle;
+        if (fp < 0.06) {
+          ctx.save();
+          ctx.globalAlpha = (1 - fp / 0.06) * 0.45;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.restore();
+          // Blixt-zigzag
+          ctx.save();
+          ctx.strokeStyle = "rgba(255,255,220,0.9)"; ctx.lineWidth = 2;
+          const lx = canvas.width * (0.3 + (Math.floor(t / flashCycle) % 3) * 0.2);
+          ctx.beginPath();
+          ctx.moveTo(lx, canvas.height * 0.15);
+          ctx.lineTo(lx - 15, canvas.height * 0.3);
+          ctx.lineTo(lx + 8, canvas.height * 0.35);
+          ctx.lineTo(lx - 12, canvas.height * 0.55);
+          ctx.stroke();
+          ctx.restore();
+        }
+        drawFallingStreaks(ctx, t, canvas.width, canvas.height, 40, "rgba(200,220,255,0.4)", 70, 24);
+        break;
+      }
+      case "tornado": {
+        // Stor virvlande tromb + kringflygande skrap
+        const tx3 = canvas.width * 0.6;
+        ctx.save();
+        ctx.fillStyle = "rgba(80,75,55,0.4)";
+        ctx.beginPath();
+        ctx.moveTo(tx3 - 12, GROUND_Y);
+        ctx.quadraticCurveTo(tx3 - 60 + Math.sin(t) * 10, canvas.height * 0.4, tx3 - 70, 0);
+        ctx.lineTo(tx3 + 70, 0);
+        ctx.quadraticCurveTo(tx3 + 60 + Math.sin(t) * 10, canvas.height * 0.4, tx3 + 12, GROUND_Y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "rgba(120,110,80,0.4)"; ctx.lineWidth = 2;
+        for (let i = 0; i < 8; i++) {
+          const yy = GROUND_Y - i * (GROUND_Y / 8);
+          const w = 12 + (GROUND_Y - yy) * 0.2;
+          ctx.beginPath();
+          ctx.ellipse(tx3 + Math.sin(t * 3 + i) * 8, yy, w, 6, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+        // Kringflygande skrap
+        for (let i = 0; i < 5; i++) {
+          const a = t * 3 + i * 1.3;
+          const dx = tx3 + Math.cos(a) * (40 + i * 6);
+          const dy = canvas.height * 0.4 + Math.sin(a) * 60 - i * 20;
+          ctx.save(); ctx.translate(dx, dy); ctx.rotate(a);
+          ctx.fillStyle = "rgba(90,70,40,0.6)"; ctx.fillRect(-5, -3, 10, 6);
+          ctx.restore();
+        }
+        break;
+      }
+      case "fog": {
+        // Flera dimlager + spokiga tradsilhuetter som skymtar
+        for (let k = 0; k < 3; k++) {
+          const tx = canvas.width * (0.25 + k * 0.28);
+          ctx.save();
+          ctx.globalAlpha = 0.3;
+          drawSwayingTree(ctx, tx, GROUND_Y, 60 + k * 10, 32, "rgba(40,50,48,0.8)", "rgba(50,62,58,0.8)", t, k);
+          ctx.restore();
+        }
+        for (let layer = 0; layer < 3; layer++) {
+          ctx.save();
+          ctx.globalAlpha = 0.18;
+          ctx.fillStyle = "#c8d4d4";
+          const fo2 = (t * (3 + layer * 2)) % 240;
+          for (let x = -fo2; x < canvas.width; x += 240) {
+            ctx.beginPath();
+            ctx.ellipse(x, GROUND_Y - 15 - layer * 40, 130, 22, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+        break;
+      }
+      case "pizzeria": {
+        // Pizzeria-fasad med neonskylt + rykande skorsten + flygande pizza
+        const px2 = canvas.width * 0.6;
+        ctx.fillStyle = "rgba(150,90,40,0.6)";
+        ctx.fillRect(px2 - 60, GROUND_Y - 80, 120, 80);
+        // Randig markis
+        for (let s = -60; s < 60; s += 20) {
+          ctx.fillStyle = (Math.floor((s + 60) / 20) % 2 === 0) ? "rgba(200,50,50,0.6)" : "rgba(240,240,240,0.6)";
+          ctx.fillRect(px2 + s, GROUND_Y - 50, 20, 14);
+        }
+        // Neonskylt
+        ctx.save();
+        ctx.shadowColor = "rgba(255,90,90,0.9)"; ctx.shadowBlur = 10;
+        ctx.strokeStyle = "rgba(255,120,120,0.9)"; ctx.lineWidth = 3;
+        ctx.strokeRect(px2 - 26, GROUND_Y - 74, 52, 18);
+        ctx.restore();
+        // Rykande skorsten
+        for (let i = 0; i < 3; i++) {
+          const cyc = (t * 0.5 + i * 2.5) % 9; const p3 = cyc / 9;
+          ctx.save(); ctx.globalAlpha = (1 - p3) * 0.3; ctx.fillStyle = "rgba(255,255,255,0.6)";
+          ctx.beginPath(); ctx.arc(px2 + 40, GROUND_Y - 85 - p3 * 90, 6 + p3 * 10, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        }
+        // Flygande pizza-skiva
+        const pzx = (t * 40) % (canvas.width + 80) - 40;
+        ctx.save(); ctx.translate(pzx, canvas.height * 0.25); ctx.rotate(t * 3);
+        ctx.fillStyle = "rgba(240,200,120,0.8)"; ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "rgba(220,60,40,0.8)";
+        ctx.beginPath(); ctx.arc(-4, -3, 2, 0, Math.PI * 2); ctx.arc(4, 2, 2, 0, Math.PI * 2); ctx.arc(0, 5, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case "orchard": {
+        // Rad av frukttrad + fallande blad + korg med frukt
+        for (let i = 0; i < 3; i++) {
+          const ox = canvas.width * (0.45 + i * 0.18);
+          ctx.save();
+          ctx.translate(ox, GROUND_Y);
+          ctx.rotate(Math.sin(t * 0.4 + i) * 0.015);
+          ctx.strokeStyle = "rgba(80,50,20,0.8)"; ctx.lineWidth = 8;
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -70); ctx.stroke();
+          ctx.fillStyle = "rgba(120,180,60,0.75)";
+          ctx.beginPath(); ctx.arc(0, -95, 40, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "rgba(230,50,50,0.85)";
+          for (let f = 0; f < 5; f++) {
+            const fa = f * 1.3;
+            ctx.beginPath(); ctx.arc(Math.cos(fa) * 22, -95 + Math.sin(fa) * 18, 6, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.restore();
+        }
+        // Fallande blad
+        for (let i = 0; i < 10; i++) {
+          const seed = i * 80;
+          const x = (seed * 2.1) % canvas.width + Math.sin(t + i) * 18;
+          const y = ((t * 14 + seed) % (canvas.height + 40)) - 20;
+          ctx.save(); ctx.globalAlpha = 0.5; ctx.fillStyle = "rgba(200,120,50,0.9)";
+          ctx.beginPath(); ctx.ellipse(x, y, 4, 2, i, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        }
+        break;
+      }
+      case "icecream": {
+        // Glasstrutar och en stor glassmaskin + strossel
+        const ix2 = canvas.width * 0.6;
+        ctx.fillStyle = "rgba(255,255,255,0.6)";
+        ctx.fillRect(ix2 - 45, GROUND_Y - 80, 90, 80);
+        // Tre virvlade glassklickar pa taket
+        const flav = ["rgba(255,150,200,0.7)", "rgba(150,220,255,0.7)", "rgba(180,255,180,0.7)"];
+        for (let k = -1; k <= 1; k++) {
+          ctx.fillStyle = flav[k + 1];
+          ctx.beginPath();
+          ctx.arc(ix2 + k * 26, GROUND_Y - 86, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(ix2 + k * 26, GROUND_Y - 74);
+          ctx.lineTo(ix2 + k * 26 - 10, GROUND_Y - 90);
+          ctx.lineTo(ix2 + k * 26 + 10, GROUND_Y - 90);
+          ctx.closePath(); ctx.fill();
+        }
+        // Stralkastare-strossel
+        drawFallingStreaks(ctx, t, canvas.width, canvas.height, 22, "rgba(255,160,200,0.5)", 22, 6);
+        break;
+      }
+      case "spring": {
+        // Blomsteräng, fjarilar, regnbage och drivande moln
+        drawDriftingClouds(ctx, t, "rgba(255,255,255,0.5)", 3, canvas.height * 0.2, 1, 5);
+        drawRainbow(ctx, canvas.width * 0.72, canvas.height * 0.55, 80);
+        const fcols = ["rgba(255,150,190,0.75)", "rgba(255,230,110,0.75)", "rgba(190,150,255,0.75)", "rgba(255,255,255,0.75)"];
+        for (let i = 0; i < 6; i++) {
+          const fx = canvas.width * (0.15 + i * 0.13);
+          drawGroundProp(ctx, fx, GROUND_Y, "flower", fcols[i % 4]);
+        }
+        for (let i = 0; i < 3; i++) {
+          drawFlutterfly(ctx, (t * (7 + i * 2) + i * 300) % (canvas.width + 100) - 50, canvas.height * 0.42 + i * 25, 7, t, i * 3, ["rgba(255,140,190,0.8)", "rgba(140,210,255,0.8)", "rgba(255,220,120,0.8)"][i]);
+        }
+        break;
+      }
+      case "beach": {
+        // Palmer, sol, segelbat pa vagorna, sandslott
+        ctx.save();
+        ctx.shadowColor = "rgba(255,240,180,0.7)"; ctx.shadowBlur = 24;
+        ctx.fillStyle = "rgba(255,245,200,0.9)";
+        ctx.beginPath(); ctx.arc(canvas.width * 0.8, canvas.height * 0.2, 28, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        for (let k = 0; k < 2; k++) {
+          const px3 = canvas.width * (0.18 + k * 0.1);
+          ctx.strokeStyle = "rgba(90,60,25,0.6)"; ctx.lineWidth = 5;
+          ctx.beginPath(); ctx.moveTo(px3, GROUND_Y); ctx.quadraticCurveTo(px3 + 10, GROUND_Y - 40, px3 + 6, GROUND_Y - 70); ctx.stroke();
+          ctx.fillStyle = "rgba(60,130,50,0.6)";
+          for (let f = -2; f <= 2; f++) {
+            ctx.beginPath(); ctx.ellipse(px3 + 6 + f * 8, GROUND_Y - 72, 16, 6, f * 0.3, 0, Math.PI * 2); ctx.fill();
+          }
+        }
+        // Segelbat
+        const bx = (t * 14) % (canvas.width + 100) - 50;
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.beginPath(); ctx.moveTo(bx, canvas.height * 0.42); ctx.lineTo(bx, canvas.height * 0.32); ctx.lineTo(bx + 18, canvas.height * 0.42); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "rgba(120,70,40,0.7)"; ctx.fillRect(bx - 12, canvas.height * 0.42, 30, 5);
+        // Sandslott
+        ctx.fillStyle = "rgba(220,190,130,0.7)";
+        const scx = canvas.width * 0.4;
+        ctx.fillRect(scx - 20, GROUND_Y - 20, 40, 20);
+        ctx.fillRect(scx - 24, GROUND_Y - 28, 8, 8);
+        ctx.fillRect(scx + 16, GROUND_Y - 28, 8, 8);
+        // Vagor
+        ctx.save(); ctx.globalAlpha = 0.2; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3;
+        const wo = (t * 8) % 60;
+        ctx.beginPath();
+        for (let x = -wo; x <= canvas.width; x += 60) { ctx.moveTo(x, GROUND_Y - 8); ctx.quadraticCurveTo(x + 30, GROUND_Y - 14, x + 60, GROUND_Y - 8); }
+        ctx.stroke(); ctx.restore();
+        break;
+      }
+      case "newyear": {
+        // Stadssiluett + fyrverkerier + fallande gnistor
+        drawTowerRow(ctx, GROUND_Y, "rgba(20,15,35,0.7)", 0.03, 20);
+        drawFirework(ctx, canvas.width * 0.3, canvas.height * 0.25, t, 5, 0, "rgba(255,120,190,0.95)");
+        drawFirework(ctx, canvas.width * 0.6, canvas.height * 0.2, t, 5, 2.2, "rgba(120,220,255,0.95)");
+        drawFirework(ctx, canvas.width * 0.8, canvas.height * 0.3, t, 5, 3.8, "rgba(255,230,120,0.95)");
+        drawFirework(ctx, canvas.width * 0.45, canvas.height * 0.15, t, 5, 1.2, "rgba(150,255,180,0.95)");
+        drawFallingStreaks(ctx, t, canvas.width, canvas.height, 20, "rgba(255,220,150,0.5)", 18, 8);
+        break;
+      }
+      case "artgallery": {
+        // Vaggmalningar/tavlor i ramar pa vaggen + spotlights
+        const colors3 = ["#ff5a5a", "#5ab4ff", "#ffe066", "#6fce7a", "#a06fff"];
+        const fo = (distance * 0.05) % 160;
+        for (let bx = -160; bx < canvas.width + 160; bx += 160) {
+          const x = bx - fo;
+          const idx = ((bx / 160) % 5 + 5) % 5 | 0;
+          ctx.fillStyle = "rgba(40,30,20,0.5)";
+          ctx.fillRect(x, GROUND_Y - 130, 90, 90);
+          ctx.fillStyle = colors3[idx];
+          ctx.save(); ctx.globalAlpha = 0.5;
+          if (idx % 2 === 0) { ctx.beginPath(); ctx.arc(x + 45, GROUND_Y - 85, 26, 0, Math.PI * 2); ctx.fill(); }
+          else { ctx.fillRect(x + 20, GROUND_Y - 115, 50, 60); }
+          ctx.restore();
+          // Spotlight
+          ctx.save(); ctx.globalAlpha = 0.08; ctx.fillStyle = "#ffffff";
+          ctx.beginPath(); ctx.moveTo(x + 45, GROUND_Y - 140); ctx.lineTo(x + 10, GROUND_Y - 40); ctx.lineTo(x + 80, GROUND_Y - 40); ctx.closePath(); ctx.fill();
+          ctx.restore();
+        }
+        break;
+      }
+      case "disco": {
+        // Discokula med roterande ljusstralar + rutig dansgolv-glow
+        const dx3 = canvas.width * 0.5, dy3 = canvas.height * 0.22, dr = 26;
+        // Strålar
+        for (let i = 0; i < 6; i++) {
+          const a = t * 0.8 + (Math.PI * 2 / 6) * i;
+          ctx.save();
+          ctx.globalAlpha = 0.09;
+          ctx.fillStyle = ["#ff2fb0", "#00ffcc", "#ffe066", "#5ab4ff", "#ff5a5a", "#a06fff"][i];
+          ctx.beginPath();
+          ctx.moveTo(dx3, dy3);
+          ctx.lineTo(dx3 + Math.cos(a) * 500, dy3 + Math.sin(a) * 500 + 200);
+          ctx.lineTo(dx3 + Math.cos(a + 0.15) * 500, dy3 + Math.sin(a + 0.15) * 500 + 200);
+          ctx.closePath(); ctx.fill();
+          ctx.restore();
+        }
+        // Kula
+        ctx.save();
+        ctx.translate(dx3, dy3); ctx.rotate(t * 0.5);
+        ctx.fillStyle = "rgba(200,200,215,0.7)";
+        ctx.beginPath(); ctx.arc(0, 0, dr, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        for (let ry = -dr; ry < dr; ry += 6) for (let rx = -dr; rx < dr; rx += 6) {
+          if (rx * rx + ry * ry < dr * dr && (Math.floor(rx / 6) + Math.floor(ry / 6)) % 2 === 0) ctx.fillRect(rx, ry, 5, 5);
+        }
+        ctx.restore();
+        // Blinkande dansgolvsrutor
+        ctx.save();
+        ctx.globalAlpha = 0.12;
+        for (let gx = 0; gx < canvas.width; gx += 50) {
+          ctx.fillStyle = (Math.sin(gx * 0.1 + t * 3) > 0) ? "#ff2fb0" : "#00ffcc";
+          ctx.fillRect(gx, GROUND_Y - 6, 46, 6);
+        }
+        ctx.restore();
+        break;
+      }
+      case "shadow": {
+        // Enfargat: lager av svarta silhuetter mot vitt ljus + ensam siluettfigur
+        drawJaggedSilhouette(ctx, GROUND_Y - 15, 100, 240, 260, "rgba(0,0,0,0.4)", 0.02);
+        drawJaggedSilhouette(ctx, GROUND_Y - 15, 60, 170, 210, "rgba(0,0,0,0.7)", 0.05);
+        // Doda trad i siluett
+        for (let k = 0; k < 3; k++) {
+          const tx = canvas.width * (0.25 + k * 0.28);
+          ctx.save();
+          ctx.strokeStyle = "rgba(0,0,0,0.85)"; ctx.lineWidth = 5 - k;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(tx, GROUND_Y); ctx.lineTo(tx + 5, GROUND_Y - 80);
+          ctx.moveTo(tx + 5, GROUND_Y - 55); ctx.lineTo(tx + 26, GROUND_Y - 70);
+          ctx.moveTo(tx + 5, GROUND_Y - 62); ctx.lineTo(tx - 16, GROUND_Y - 78);
+          ctx.stroke();
+          ctx.restore();
+        }
+        drawShootingStar(ctx, t, 15, 2, "rgba(255,255,255,0.95)", canvas.height * 0.1, canvas.height * 0.4);
+        break;
+      }
+      case "dream": {
+        // Svavande oar, drivande moln, sovande mane och stjarnstoft
+        drawDriftingClouds(ctx, t, "rgba(255,255,255,0.4)", 4, canvas.height * 0.25, 1.1, 4);
+        for (let k = 0; k < 3; k++) {
+          drawFloatingIsland(ctx, canvas.width * (0.25 + k * 0.28), canvas.height * (0.5 + (k % 2) * 0.1), 70 - k * 12, "rgba(180,160,255,0.5)", "rgba(90,70,150,0.5)", t + k);
+        }
+        // Sovande mane
+        const cx4 = canvas.width * 0.72, cy4 = canvas.height * 0.22;
+        ctx.save();
+        ctx.shadowColor = "rgba(255,240,200,0.6)"; ctx.shadowBlur = 20;
+        ctx.fillStyle = "rgba(255,245,210,0.7)";
+        ctx.beginPath(); ctx.arc(cx4, cy4, 26, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle = "rgba(120,90,150,0.6)"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(cx4 - 6, cy4 - 2, 5, 0.2, Math.PI - 0.2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx4 + 8, cy4 - 2, 5, 0.2, Math.PI - 0.2); ctx.stroke();
+        // Stjarnstoft-stig
+        for (let i = 0; i < 20; i++) {
+          const sx = (i * 90 + t * 20) % (canvas.width + 40) - 20;
+          const sy = canvas.height * 0.4 + Math.sin(i + t) * 40;
+          ctx.save(); ctx.globalAlpha = 0.3 + 0.4 * (0.5 + Math.sin(t * 3 + i) * 0.5);
+          ctx.fillStyle = "rgba(255,255,220,0.9)";
+          ctx.beginPath(); ctx.arc(sx, sy, 1.5, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        }
+        break;
+      }
+    }
+  }
+
+  function drawStarShape(ctx, cx, cy, outerR, innerR) {
+    const spikes = 5;
+    let rot = -Math.PI / 2;
+    const step = Math.PI / spikes;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerR);
+    for (let i = 0; i < spikes; i++) {
+      let x = cx + Math.cos(rot) * outerR;
+      let y = cy + Math.sin(rot) * outerR;
+      ctx.lineTo(x, y);
+      rot += step;
+      x = cx + Math.cos(rot) * innerR;
+      y = cy + Math.sin(rot) * innerR;
+      ctx.lineTo(x, y);
+      rot += step;
+    }
+    ctx.closePath();
+  }
+
+  function drawCoin(ctx, coin, theme, t) {
+    const spin = Math.max(0.15, Math.abs(Math.cos(t * 3 + coin.phase)));
+    ctx.save();
+    ctx.translate(coin.x, coin.y);
+    ctx.scale(spin, 1);
+    switch (theme.key) {
+      case "ocean":
+        ctx.save();
+        ctx.shadowColor = "rgba(255,255,255,0.7)";
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = "rgba(150,220,210,0.55)";
+        ctx.beginPath();
+        ctx.ellipse(0, coin.r * 0.3, coin.r * 1.3, coin.r * 0.6, 0, 0, Math.PI);
+        ctx.fill();
+        ctx.fillStyle = "#eafdf6";
+        ctx.beginPath();
+        ctx.arc(0, 0, coin.r * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      case "jungle": {
+        ctx.save();
+        ctx.shadowColor = "rgba(255,220,80,0.8)";
+        ctx.shadowBlur = 10;
+        const r = coin.r;
+        const bananaGrad = ctx.createLinearGradient(-r, -r, r, r);
+        bananaGrad.addColorStop(0, "#fff2a8");
+        bananaGrad.addColorStop(0.5, "#ffd93d");
+        bananaGrad.addColorStop(1, "#e2a92b");
+        // Banankroppen ritas som ett langt, smalt bojt streck sa den inte blir en rund "boll"
+        ctx.strokeStyle = bananaGrad;
+        ctx.lineWidth = r * 0.45;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-r * 1.1, r * 0.55);
+        ctx.quadraticCurveTo(0, -r * 1.35, r * 1.1, -r * 0.45);
+        ctx.stroke();
+        // Morkare ridge-linje langs mitten for lite djup
+        ctx.strokeStyle = "rgba(150,100,10,0.55)";
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.95, r * 0.4);
+        ctx.quadraticCurveTo(0, -r * 1.0, r * 0.95, -r * 0.3);
+        ctx.stroke();
+        // Bruna tippar i bada andar
+        ctx.fillStyle = "#6b4a1f";
+        ctx.beginPath();
+        ctx.arc(-r * 1.1, r * 0.55, r * 0.16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(r * 1.1, -r * 0.45, r * 0.16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case "ice":
+        ctx.save();
+        ctx.shadowColor = "rgba(150,220,255,0.9)";
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = "#cdefff";
+        ctx.beginPath();
+        ctx.moveTo(0, -coin.r);
+        ctx.lineTo(coin.r * 0.7, 0);
+        ctx.lineTo(0, coin.r);
+        ctx.lineTo(-coin.r * 0.7, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        break;
+      case "space":
+        ctx.save();
+        ctx.shadowColor = "rgba(255,255,200,0.9)";
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = "#fff6c8";
+        drawStarShape(ctx, 0, 0, coin.r, coin.r * 0.45);
+        ctx.fill();
+        ctx.restore();
+        break;
+      case "desert":
+        ctx.save();
+        ctx.shadowColor = "rgba(255,220,120,0.9)";
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = "#e8c26a";
+        ctx.beginPath();
+        ctx.moveTo(0, -coin.r);
+        ctx.lineTo(coin.r * 0.9, coin.r * 0.7);
+        ctx.lineTo(-coin.r * 0.9, coin.r * 0.7);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "rgba(140,90,20,0.6)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -coin.r);
+        ctx.lineTo(0, coin.r * 0.7);
+        ctx.stroke();
+        ctx.restore();
+        break;
+      case "sky":
+        ctx.save();
+        ctx.shadowColor = "rgba(255,255,255,0.9)";
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(-coin.r * 0.4, coin.r * 0.15, coin.r * 0.55, 0, Math.PI * 2);
+        ctx.arc(coin.r * 0.3, coin.r * 0.1, coin.r * 0.65, 0, Math.PI * 2);
+        ctx.arc(0, -coin.r * 0.3, coin.r * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      case "neon":
+        ctx.save();
+        ctx.shadowColor = "rgba(0,255,255,0.9)";
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = "#0ff0fc";
+        ctx.beginPath();
+        ctx.moveTo(0, -coin.r);
+        ctx.lineTo(coin.r * 0.75, 0);
+        ctx.lineTo(0, coin.r);
+        ctx.lineTo(-coin.r * 0.75, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#ff2fb0";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+        break;
+      case "haunted":
+        ctx.save();
+        ctx.shadowColor = "rgba(140,255,170,0.9)";
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = "rgba(210,255,220,0.85)";
+        ctx.beginPath();
+        ctx.arc(0, -coin.r * 0.2, coin.r * 0.75, Math.PI, 0, false);
+        ctx.lineTo(coin.r * 0.75, coin.r * 0.6);
+        ctx.lineTo(coin.r * 0.35, coin.r * 0.3);
+        ctx.lineTo(0, coin.r * 0.6);
+        ctx.lineTo(-coin.r * 0.35, coin.r * 0.3);
+        ctx.lineTo(-coin.r * 0.75, coin.r * 0.6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#1a1a22";
+        ctx.beginPath();
+        ctx.arc(-coin.r * 0.25, -coin.r * 0.2, coin.r * 0.12, 0, Math.PI * 2);
+        ctx.arc(coin.r * 0.25, -coin.r * 0.2, coin.r * 0.12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      case "viking":
+        ctx.save();
+        ctx.shadowColor = "rgba(200,230,255,0.8)";
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = "#8a95a0";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, coin.r * 0.85, coin.r, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#e8eef2";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, -coin.r * 0.6);
+        ctx.lineTo(0, coin.r * 0.6);
+        ctx.moveTo(-coin.r * 0.4, -coin.r * 0.3);
+        ctx.lineTo(coin.r * 0.4, coin.r * 0.3);
+        ctx.stroke();
+        ctx.restore();
+        break;
+      case "dino":
+        ctx.save();
+        ctx.shadowColor = "rgba(200,255,140,0.8)";
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = "#e9dfae";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, coin.r * 0.75, coin.r, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(120,150,60,0.6)";
+        ctx.beginPath();
+        ctx.ellipse(-coin.r * 0.2, -coin.r * 0.3, coin.r * 0.12, coin.r * 0.18, 0.3, 0, Math.PI * 2);
+        ctx.ellipse(coin.r * 0.25, coin.r * 0.1, coin.r * 0.1, coin.r * 0.15, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(-coin.r * 0.1, coin.r * 0.4, coin.r * 0.1, coin.r * 0.14, 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      case "candy":
+        ctx.save();
+        ctx.shadowColor = "rgba(255,150,200,0.9)";
+        ctx.shadowBlur = 10;
+        for (let i = 0; i < 3; i++) {
+          ctx.strokeStyle = i % 2 === 0 ? "#e0325c" : "#ffffff";
+          ctx.lineWidth = coin.r * 0.4;
+          ctx.beginPath();
+          ctx.arc(0, 0, coin.r * (1 - i * 0.32), 0, Math.PI * 1.5);
+          ctx.stroke();
+        }
+        ctx.restore();
+        break;
+      case "robot":
+        ctx.save();
+        ctx.shadowColor = "rgba(255,190,60,0.9)";
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = "#e8b840";
+        drawGearSpike(ctx, { x: -coin.r, y: -coin.r, w: coin.r * 2, h: coin.r * 2 });
+        ctx.restore();
+        break;
+      case "autumn":
+        ctx.save();
+        ctx.shadowColor = "rgba(230,150,60,0.8)";
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = "#8a5a2a";
+        ctx.beginPath();
+        ctx.ellipse(0, -coin.r * 0.55, coin.r * 0.6, coin.r * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#c98a4a";
+        ctx.beginPath();
+        ctx.ellipse(0, coin.r * 0.15, coin.r * 0.6, coin.r * 0.75, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      default: {
+        ctx.save();
+        ctx.shadowColor = "rgba(255,210,80,0.9)";
+        ctx.shadowBlur = 12;
+        const g = ctx.createRadialGradient(0, 0, 1, 0, 0, coin.r);
+        g.addColorStop(0, "#fff6c8");
+        g.addColorStop(0.5, "#ffd54a");
+        g.addColorStop(1, "#c98b1f");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(0, 0, coin.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawPlayer(ctx) {
+    ctx.save();
+    ctx.translate(player.x + player.w / 2, player.y + player.h / 2);
+    ctx.rotate(player.rotation);
+    ctx.fillStyle = "#2563eb";
+    ctx.fillRect(-player.w / 2, -player.h / 2, player.w, player.h);
+
+    // ögon
+    ctx.fillStyle = "#1b1f2a";
+    ctx.fillRect(4, -8, 5, 5);
+    ctx.fillRect(-player.w / 2 + 6, -8, 5, 5);
+
+    // arga ögonbryn (vinklade linjer ovanför ögonen)
+    ctx.strokeStyle = "#1b1f2a";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(2, -13);
+    ctx.lineTo(11, -16);
+    ctx.moveTo(-2, -13);
+    ctx.lineTo(-11, -16);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawFloatingTexts(ctx) {
+    for (const ft of floatingTexts) {
+      const alpha = Math.max(0, ft.life / ft.maxLife);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.textAlign = "center";
+      ctx.font = "bold 20px 'Segoe UI', Arial, sans-serif";
+      ctx.strokeStyle = "rgba(0,0,0,0.7)";
+      ctx.lineWidth = 3;
+      ctx.strokeText(ft.text, ft.x, ft.y);
+      ctx.fillStyle = "#ffe066";
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
+  }
+
+  function drawSeaUrchin(ctx, obs) {
+    const cx = obs.x + obs.w / 2, cy = obs.y + obs.h / 2, r = Math.min(obs.w, obs.h) / 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.lineWidth = 2;
+    const spikes = 10;
+    for (let i = 0; i < spikes; i++) {
+      const a = (Math.PI * 2 / spikes) * i;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * r * 0.5, cy + Math.sin(a) * r * 0.5);
+      ctx.lineTo(cx + Math.cos(a) * r * 1.2, cy + Math.sin(a) * r * 1.2);
+      ctx.stroke();
+    }
+  }
+
+  function drawVenusTrap(ctx, obs) {
+    const cx = obs.x + obs.w / 2;
+    const groundY = obs.y + obs.h;
+    const headY = obs.y + obs.h * 0.42;   // dar de gapande kaftarna sitter
+    const lobeR = obs.w * 0.52;
+    const gape = 0.42;                      // hur mycket munnen gapar (radianer fran mittlinjen)
+    // Latt "andning"/tuggning sa vaxten kanns levande
+    const chew = Math.sin(performance.now() / 220 + obs.x * 0.05) * 0.12;
+    const openAngle = gape + Math.max(0, chew);
+
+    // ---- Stjalk med ett par blad ----
+    ctx.save();
+    ctx.strokeStyle = "#2f6b22";
+    ctx.lineWidth = obs.w * 0.16;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(cx, groundY);
+    ctx.quadraticCurveTo(cx + Math.sin(chew) * 6, (groundY + headY) / 2, cx, headY + lobeR * 0.4);
+    ctx.stroke();
+    // Blad
+    ctx.fillStyle = "#3a7d26";
+    for (const dir of [-1, 1]) {
+      ctx.beginPath();
+      ctx.ellipse(cx + dir * obs.w * 0.28, groundY - obs.h * 0.18, obs.w * 0.22, obs.h * 0.08, dir * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // ---- Tva gapande kaftlober ----
+    // Varje lob ar en halvellips som roterats ut fran mittlinjen (uppat).
+    for (const side of [-1, 1]) {
+      ctx.save();
+      ctx.translate(cx, headY);
+      ctx.rotate(side * openAngle);
+      // Yttre lob (gron gradient)
+      const g = ctx.createLinearGradient(0, -lobeR, 0, 0);
+      g.addColorStop(0, "#7ab83a");
+      g.addColorStop(1, "#356b1e");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.ellipse(0, -lobeR * 0.5, lobeR * 0.62, lobeR, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Rod insida
+      ctx.fillStyle = "#c0324f";
+      ctx.beginPath();
+      ctx.ellipse(0, -lobeR * 0.5, lobeR * 0.4, lobeR * 0.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Sma trigger-har pa insidan
+      ctx.strokeStyle = "rgba(255,255,255,0.5)";
+      ctx.lineWidth = 1;
+      for (let h = 0; h < 3; h++) {
+        ctx.beginPath();
+        ctx.moveTo(0, -lobeR * (0.35 + h * 0.2));
+        ctx.lineTo(side * 3, -lobeR * (0.35 + h * 0.2) - 5);
+        ctx.stroke();
+      }
+      // Sammanflatande tander langs innerkanten (den rundade toppen)
+      ctx.fillStyle = "#eae4cf";
+      const teeth = 7;
+      for (let i = 0; i <= teeth; i++) {
+        const a = Math.PI + (Math.PI * i) / teeth; // over ytterkanten
+        const ex = Math.cos(a) * lobeR * 0.62;
+        const ey = -lobeR * 0.5 + Math.sin(a) * lobeR;
+        // rikta tanden inat mot mittlinjen (side * -1)
+        ctx.beginPath();
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(ex - side * 7, ey - 3);
+        ctx.lineTo(ex - side * 2, ey + 6);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // Liten glodande "lockbete"-droppe i mitten av munnen
+    ctx.fillStyle = "rgba(255,240,150,0.8)";
+    ctx.beginPath();
+    ctx.arc(cx, headY - lobeR * 0.35, obs.w * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawIcicleCluster(ctx, obs) {
+    const n = 3;
+    for (let i = 0; i < n; i++) {
+      const bx = obs.x + (obs.w / n) * i;
+      const bw = obs.w / n;
+      const h = obs.h * (i === 1 ? 1 : 0.65);
+      ctx.beginPath();
+      ctx.moveTo(bx, obs.y + obs.h);
+      ctx.lineTo(bx + bw / 2, obs.y + (obs.h - h));
+      ctx.lineTo(bx + bw, obs.y + obs.h);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  function drawAsteroidChunk(ctx, obs) {
+    ctx.beginPath();
+    ctx.moveTo(obs.x, obs.y + obs.h * 0.6);
+    ctx.lineTo(obs.x + obs.w * 0.25, obs.y + obs.h * 0.1);
+    ctx.lineTo(obs.x + obs.w * 0.6, obs.y);
+    ctx.lineTo(obs.x + obs.w, obs.y + obs.h * 0.35);
+    ctx.lineTo(obs.x + obs.w * 0.85, obs.y + obs.h);
+    ctx.lineTo(obs.x + obs.w * 0.2, obs.y + obs.h);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawCactus(ctx, obs) {
+    const cx = obs.x + obs.w / 2;
+    const stemW = obs.w * 0.4;
+    ctx.fillRect(cx - stemW / 2, obs.y, stemW, obs.h);
+    const armW = obs.w * 0.28;
+    ctx.fillRect(obs.x, obs.y + obs.h * 0.35, armW, obs.h * 0.45);
+    ctx.fillRect(obs.x + obs.w - armW, obs.y + obs.h * 0.2, armW, obs.h * 0.45);
+  }
+
+  function drawCandyCane(ctx, obs) {
+    const cx = obs.x + obs.w / 2;
+    const w = obs.w * 0.5;
+    const hookY = obs.y + obs.h * 0.35;
+
+    // Vit stav med bojd hake upptill
+    ctx.save();
+    ctx.lineWidth = w;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.moveTo(cx, obs.y + obs.h);
+    ctx.lineTo(cx, hookY);
+    ctx.arc(cx - w * 0.5, hookY, w * 0.5, 0, -Math.PI, true);
+    ctx.stroke();
+    ctx.restore();
+
+    // Roda diagonala ranSder ovanpa staven
+    ctx.save();
+    ctx.strokeStyle = "#e0325c";
+    ctx.lineWidth = w * 0.28;
+    ctx.lineCap = "round";
+    for (let i = 0; i < 4; i++) {
+      const yy = obs.y + obs.h * 0.42 + i * ((obs.h * 0.58) / 4);
+      ctx.beginPath();
+      ctx.moveTo(cx - w * 0.42, yy + w * 0.3);
+      ctx.lineTo(cx + w * 0.42, yy - w * 0.3);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawGearSpike(ctx, obs) {
+    const cx = obs.x + obs.w / 2, cy = obs.y + obs.h / 2, r = Math.min(obs.w, obs.h) / 2;
+    const teeth = 8;
+    ctx.beginPath();
+    for (let i = 0; i < teeth; i++) {
+      const a1 = (Math.PI * 2 / teeth) * i;
+      const a2 = a1 + (Math.PI * 2 / teeth) * 0.5;
+      const x1 = cx + Math.cos(a1) * r, y1 = cy + Math.sin(a1) * r;
+      const x2 = cx + Math.cos(a2) * r * 0.65, y2 = cy + Math.sin(a2) * r * 0.65;
+      if (i === 0) ctx.moveTo(x1, y1); else ctx.lineTo(x1, y1);
+      ctx.lineTo(x2, y2);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawObstacle(ctx, obs, theme) {
+    if (obs.type === "platform") {
+      ctx.fillStyle = theme.platform;
+      ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+      ctx.fillStyle = theme.platformTop;
+      ctx.fillRect(obs.x, obs.y, obs.w, 8);
+      // lite kant-textur
+      ctx.fillStyle = "rgba(0,0,0,0.2)";
+      for (let x = obs.x + 10; x < obs.x + obs.w - 5; x += 22) {
+        ctx.fillRect(x, obs.y + 10, 10, obs.h - 16);
+      }
+    } else if (obs.type === "ceiling") {
+      ctx.fillStyle = theme.ceiling;
+      ctx.fillRect(obs.x, 0, obs.w, obs.h);
+      // hängande formationer längs underkanten (stalaktiter/istappar/vinrankor/klippor)
+      ctx.fillStyle = theme.ceiling;
+      const spikeCount = Math.max(2, Math.floor(obs.w / 20));
+      const spikeW = obs.w / spikeCount;
+      for (let i = 0; i < spikeCount; i++) {
+        const sx = obs.x + i * spikeW;
+        ctx.beginPath();
+        ctx.moveTo(sx, obs.h);
+        ctx.lineTo(sx + spikeW / 2, obs.h + 14);
+        ctx.lineTo(sx + spikeW, obs.h);
+        ctx.closePath();
+        ctx.fill();
+        if (theme.ceilingAccent) {
+          ctx.save();
+          ctx.shadowColor = theme.ceilingAccent;
+          ctx.shadowBlur = 8;
+          ctx.fillStyle = theme.ceilingAccent;
+          ctx.beginPath();
+          ctx.arc(sx + spikeW / 2, obs.h + 12, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          ctx.fillStyle = theme.ceiling;
+        }
+      }
+    } else {
+      ctx.fillStyle = theme.spike;
+      switch (theme.key) {
+        case "ocean":
+          drawSeaUrchin(ctx, obs);
+          break;
+        case "jungle":
+          drawVenusTrap(ctx, obs);
+          break;
+        case "ice":
+          drawIcicleCluster(ctx, obs);
+          break;
+        case "space":
+          drawAsteroidChunk(ctx, obs);
+          break;
+        case "desert":
+          drawCactus(ctx, obs);
+          break;
+        case "candy":
+          drawCandyCane(ctx, obs);
+          break;
+        case "robot":
+          drawGearSpike(ctx, obs);
+          break;
+        default:
+          ctx.beginPath();
+          ctx.moveTo(obs.x, obs.y + obs.h);
+          ctx.lineTo(obs.x + obs.w / 2, obs.y);
+          ctx.lineTo(obs.x + obs.w, obs.y + obs.h);
+          ctx.closePath();
+          ctx.fill();
+          if (theme.spikeStroke) {
+            ctx.strokeStyle = theme.spikeStroke;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+      }
+    }
+  }
+
+  function drawUI(ctx, theme) {
+    ctx.save();
+    ctx.fillStyle = "#f5f0e6";
+    ctx.shadowColor = "rgba(0,0,0,0.8)";
+    ctx.shadowBlur = 4;
+    ctx.font = "bold 20px 'Segoe UI', Arial, sans-serif";
+    ctx.fillText("Poäng: " + getScore(), 16, 30);
+    ctx.font = "14px 'Segoe UI', Arial, sans-serif";
+    ctx.fillText("Bästa: " + best, 16, 50);
+    ctx.font = "13px 'Segoe UI', Arial, sans-serif";
+    ctx.fillText(theme.name, 16, 70);
+    ctx.restore();
+
+    if (state === "ready") {
+      overlayText(ctx, "Tryck MELLANSLAG eller skärmen för att starta");
+    } else if (state === "gameover") {
+      overlayText(ctx, "Du dog! Poäng: " + getScore() + " — Mellanslag/skärm för att starta om");
+    }
+
+    if (themeAnnounce > 0) {
+      const alpha = Math.min(1, themeAnnounce / 30);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
+      ctx.fillRect(0, canvas.height / 2 - 60, canvas.width, 90);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 34px 'Segoe UI', Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(theme.name + "!", canvas.width / 2, canvas.height / 2);
+      ctx.restore();
+      themeAnnounce--;
+    }
+  }
+
+  function overlayText(ctx, text) {
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.45)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 24px 'Segoe UI', Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+    ctx.restore();
+  }
+
+  function draw() {
+    const ctx = Engine.ctx;
+    const theme = THEMES[currentThemeIndex()];
+
+    if (appliedThemeIndex !== currentThemeIndex()) {
+      appliedThemeIndex = currentThemeIndex();
+      canvas.style.background = theme.bg;
+      if (state === "playing") {
+        themeAnnounce = 150;
+      }
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const t = performance.now() / 250;
+    drawAmbientParticles(ctx, theme, t);
+    drawScenery(ctx, theme, t);
+    drawGround(ctx, theme);
+    for (const obs of obstacles) drawObstacle(ctx, obs, theme);
+    for (const c of coins) drawCoin(ctx, c, theme, t);
+    drawPlayer(ctx);
+    drawFloatingTexts(ctx);
+    drawUI(ctx, theme);
+
+    // Loggan visas bara pa startskarmen
+    const showLogo = state === "ready";
+    if (showLogo !== logoVisible) {
+      logoVisible = showLogo;
+      logoEl.classList.toggle("hidden", !showLogo);
+    }
+  }
+
+  const logoEl = document.getElementById("logo");
+  let logoVisible = true;
+
+  resetGame();
+  Engine.start(update, draw);
+})();
+</script>
+</body>
+</html>
