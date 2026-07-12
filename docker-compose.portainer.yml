@@ -1,0 +1,8 @@
+services:
+  hoppspelet:
+    networks:
+      - nginx
+
+networks:
+  nginx:
+    external: true

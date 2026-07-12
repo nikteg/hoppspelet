@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Hoppspelet</title>
+<meta name="description" content="Hoppa över hinder, samla mynt och upplev nya världar var 1000:e poäng!">
+<meta name="theme-color" content="#0a0710">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game"></canvas>
+  <div id="hint">Tryck MELLANSLAG eller på skärmen för att hoppa / starta / starta om</div>
+  <div id="logo">
+    <img src="assets/logo.svg" alt="Hoppspelet">
+  </div>
+  <button id="musicMute" type="button" tabindex="-1" aria-label="Ljud på/av">🔊</button>
+  <div id="debugThemeNav">
+    <button id="debugPrevTheme" type="button" tabindex="-1" aria-label="Föregående tema">◀</button>
+    <button id="debugNextTheme" type="button" tabindex="-1" aria-label="Nästa tema">▶</button>
+  </div>
+  <button id="debugReload" type="button" tabindex="-1">Ladda om</button>
+</div>
+
+<!-- Laddas som vanliga skript (inte type="module") sa spelet aven funkar
+     direkt fran file:// (dubbelklick pa index.html). Ordningen ar viktig. -->
+<script src="js/engine.mjs"></script>
+<script src="js/state.mjs"></script>
+<script src="js/themes.mjs"></script>
+<script src="js/world.mjs"></script>
+<script src="js/audio.mjs"></script>
+<script src="js/gameplay.mjs"></script>
+<script src="js/input.mjs"></script>
+<script src="js/update.mjs"></script>
+<script src="js/render-helpers.mjs"></script>
+<script src="js/scenery.mjs"></script>
+<script src="js/sprites.mjs"></script>
+<script src="js/main.mjs"></script>
+<script>
+  // PWA-delarna aktiveras bara nar spelet hostas (inte fran file://, dar
+  // manifest-hamtning blockeras av CORS och service workers inte ar tillatna).
+  if (location.protocol !== "file:") {
+    var manifestLink = document.createElement("link");
+    manifestLink.rel = "manifest";
+    manifestLink.href = "manifest.webmanifest";
+    document.head.appendChild(manifestLink);
+
+    // Service worker kraver dessutom en saker kontext (https eller localhost).
+    if ("serviceWorker" in navigator && window.isSecureContext) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("sw.js").catch(function () {});
+      });
+    }
+  }
+</script>
+</body>
+</html>

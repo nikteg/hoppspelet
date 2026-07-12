@@ -1,0 +1,19 @@
+{
+  "name": "Hoppspelet",
+  "short_name": "Hoppspelet",
+  "description": "Hoppa över hinder, samla mynt och upplev nya världar var 1000:e poäng!",
+  "lang": "sv",
+  "id": ".",
+  "start_url": ".",
+  "scope": ".",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0a0710",
+  "theme_color": "#0a0710",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

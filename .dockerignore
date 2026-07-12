@@ -1,0 +1,7 @@
+*.sh
+.vscode
+.DS_Store
+.AppleDouble
+.LSOverride
+com.apple.*
+.git

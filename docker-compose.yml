@@ -1,0 +1,6 @@
+services:
+  hoppspelet:
+    build: .
+    pull_policy: build
+    container_name: hoppspelet
+    restart: unless-stopped
