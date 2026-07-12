@@ -48,23 +48,21 @@
     max-height: 30vh;
   }
   #logo.hidden { opacity: 0; }
-  #musicMute, #debugThemeNav, #debugReload {
+  #topButtons {
     position: fixed;
-    right: calc(12px + var(--sai-right));
-    z-index: 10;
-  }
-  #musicMute {
     top: calc(12px + var(--sai-top));
-  }
-  #debugThemeNav {
-    top: calc(76px + var(--sai-top));
+    right: calc(12px + var(--sai-right));
     display: flex;
     gap: 8px;
+    z-index: 10;
   }
-  #debugReload {
-    top: calc(140px + var(--sai-top));
+  /* iPhone rapporterar samma safe area-inset pa BADA sidor i liggande lage.
+     Sitter notchen till vanster (data-notch satts i world.mjs) behover
+     knapparna till hoger ingen indragning. */
+  html[data-notch="left"] #topButtons {
+    right: 12px;
   }
-  #musicMute, #debugThemeNav button, #debugReload {
+  #topButtons button {
     min-width: 56px;
     min-height: 52px;
     padding: 12px 16px;
@@ -74,17 +72,9 @@
     border-radius: 10px;
     font-weight: bold;
     font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 22px;
     cursor: pointer;
     touch-action: manipulation;
-  }
-  #musicMute {
-    font-size: 22px;
-  }
-  #debugThemeNav button {
-    font-size: 22px;
-  }
-  #debugReload {
-    font-size: 16px;
   }
 
   /* ---------- Rotera-skarmen (mobil i portrattlage) ---------- */

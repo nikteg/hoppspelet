@@ -40,7 +40,6 @@
 
   wireButton("debugPrevTheme", function () { debugGoToTheme(-1); });
   wireButton("debugNextTheme", function () { debugGoToTheme(1); });
-  wireButton("debugReload", function () { window.location.reload(); });
 
   // ---------- Pausa i portrattlage pa mobil ----------
   // Samma media query som visar #rotateHint i styles.css. Spelet pausas sa
