@@ -42,7 +42,7 @@
   }
 
   function drawCoin(ctx, coin, theme, t) {
-    const spin = Math.max(0.15, Math.abs(Math.cos(t * 3 + coin.phase)));
+    const spin = Math.max(0.15, Math.abs(Math.cos(t * 1.5 + coin.phase)));
     const sprite = getCoinSprite(theme, coin.r);
     ctx.save();
     ctx.translate(coin.x, coin.y);
