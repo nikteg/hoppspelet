@@ -1474,13 +1474,8 @@
           ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(t * 0.3) * r * 0.85, cy + Math.sin(t * 0.3) * r * 0.85); ctx.stroke();
           ctx.restore();
         }
-        // Drivande kugghjul pa marken
-        ctx.save();
-        ctx.translate(canvas.width * 0.2, GROUND_Y - 30);
-        ctx.rotate(t * 0.4);
-        ctx.fillStyle = "rgba(200,170,110,0.4)";
-        drawGearSpike(ctx, { x: -26, y: -26, w: 52, h: 52 });
-        ctx.restore();
+        // (Det snurrande kugghjulet vid marken ar borttaget: det drog blicken
+        // fran riktiga hinder och kunde sjalv misstas for ett.)
         break;
       }
       case "ufo": {
