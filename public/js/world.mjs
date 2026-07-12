@@ -70,6 +70,13 @@
     nextSpawnAt = 60 + Math.random() * 40;
     appliedThemeIndex = -1;
     themeAnnounceUntil = 0;
-    debugThemeOverride = null; // sa att en ny omgang alltid byter niva efter poang (1000, 2000, ...)
-    levelOffset = pendingLevelOffset; // starta pa den niva man senast dog pa
+    // Har man valt en niva med pil-knapparna startar omgangen dar - sa att
+    // man kan prova en specifik niva. Annars startas pa nivan man senast dog
+    // pa. Overriden slapps sedan sa att nivan fortsatter bytas per 1000 poang.
+    if (debugThemeOverride !== null) {
+      levelOffset = debugThemeOverride;
+    } else {
+      levelOffset = pendingLevelOffset;
+    }
+    debugThemeOverride = null;
   }

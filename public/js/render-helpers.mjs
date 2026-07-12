@@ -1,6 +1,16 @@
 "use strict";
 
   function drawGround(ctx, theme) {
+    // Kontrastband: mork gradient som tonar in mot marknivan, ritad OVER
+    // sceneriet men UNDER hinder/mynt/spelare (de ritas efter drawGround).
+    // Gor att spelobjekten syns tydligt aven i ljusa teman som Saltoknen.
+    const bandH = 180;
+    const band = ctx.createLinearGradient(0, GROUND_Y - bandH, 0, GROUND_Y);
+    band.addColorStop(0, "rgba(0,0,0,0)");
+    band.addColorStop(1, "rgba(0,0,0,0.32)");
+    ctx.fillStyle = band;
+    ctx.fillRect(0, GROUND_Y - bandH, canvas.width, bandH);
+
     // Marken (sten/sand/is beroende på tema)
     ctx.fillStyle = theme.groundColor;
     ctx.fillRect(0, GROUND_Y, canvas.width, canvas.height - GROUND_Y);
