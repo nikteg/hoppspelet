@@ -962,21 +962,46 @@
         break;
       }
       case "tornado": {
-        // Virveltratt av staplade bagar
+        // Fylld virveltratt med vindband och kringflygande skrap
         ctx.save();
         ctx.shadowColor = "rgba(230,225,170,0.8)";
         ctx.shadowBlur = 8;
-        ctx.strokeStyle = "#d9d089";
-        ctx.lineCap = "round";
-        for (let k = 0; k < 4; k++) {
-          ctx.lineWidth = r * (0.26 - k * 0.05);
-          const w = r * (0.9 - k * 0.22);
-          const y = -r * 0.7 + k * r * 0.45;
-          ctx.beginPath();
-          ctx.moveTo(-w, y);
-          ctx.quadraticCurveTo(0, y + r * 0.2, w, y);
-          ctx.stroke();
-        }
+        ctx.fillStyle = "#e8e0b0";
+        ctx.strokeStyle = "#3a3520";
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.95, -r * 0.85);
+        ctx.quadraticCurveTo(0, -r * 1.15, r * 0.95, -r * 0.85);
+        ctx.quadraticCurveTo(r * 0.55, -r * 0.25, r * 0.3, r * 0.15);
+        ctx.quadraticCurveTo(r * 0.18, r * 0.6, r * 0.05, r * 1.0);
+        ctx.quadraticCurveTo(-r * 0.12, r * 0.5, -r * 0.28, r * 0.1);
+        ctx.quadraticCurveTo(-r * 0.6, -r * 0.3, -r * 0.95, -r * 0.85);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        // Vindband tvars over tratten
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "rgba(90,82,40,0.55)";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.62, -r * 0.5);
+        ctx.quadraticCurveTo(0, -r * 0.3, r * 0.6, -r * 0.52);
+        ctx.moveTo(-r * 0.32, 0);
+        ctx.quadraticCurveTo(0, r * 0.14, r * 0.32, -r * 0.02);
+        ctx.moveTo(-r * 0.14, r * 0.5);
+        ctx.quadraticCurveTo(0, r * 0.6, r * 0.15, r * 0.48);
+        ctx.stroke();
+        // Skrap som virvlar runt
+        ctx.fillStyle = "#6a4a20";
+        ctx.save();
+        ctx.translate(-r * 1.05, -r * 0.15);
+        ctx.rotate(0.5);
+        ctx.fillRect(-r * 0.18, -r * 0.07, r * 0.36, r * 0.14);
+        ctx.restore();
+        ctx.beginPath();
+        ctx.arc(r * 0.85, -r * 0.1, r * 0.09, 0, Math.PI * 2);
+        ctx.arc(r * 0.6, r * 0.55, r * 0.07, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
         break;
       }
@@ -1369,56 +1394,123 @@
   }
 
   function drawCactus(ctx, obs) {
+    // Saguarokaktus: rundade armar (tjocka streck med runda andar), ribbor,
+    // taggar och en blomma pa toppen. Mork kontur ger tydlighet mot sanden.
     const cx = obs.x + obs.w / 2;
-    const stemW = obs.w * 0.4;
-    const armW = obs.w * 0.28;
+    const bot = obs.y + obs.h;
     ctx.save();
-    ctx.strokeStyle = "#142a0c";
-    ctx.lineWidth = 1.6;
-    ctx.fillRect(cx - stemW / 2, obs.y, stemW, obs.h);
-    ctx.strokeRect(cx - stemW / 2, obs.y, stemW, obs.h);
-    ctx.fillRect(obs.x, obs.y + obs.h * 0.35, armW, obs.h * 0.45);
-    ctx.strokeRect(obs.x, obs.y + obs.h * 0.35, armW, obs.h * 0.45);
-    ctx.fillRect(obs.x + obs.w - armW, obs.y + obs.h * 0.2, armW, obs.h * 0.45);
-    ctx.strokeRect(obs.x + obs.w - armW, obs.y + obs.h * 0.2, armW, obs.h * 0.45);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    const trunk = () => {
+      ctx.beginPath();
+      ctx.moveTo(cx, bot);
+      ctx.lineTo(cx, obs.y + 8);
+    };
+    const armL = () => {
+      ctx.beginPath();
+      ctx.moveTo(cx - 1, bot - obs.h * 0.36);
+      ctx.lineTo(cx - obs.w * 0.32, bot - obs.h * 0.4);
+      ctx.lineTo(cx - obs.w * 0.32, bot - obs.h * 0.64);
+    };
+    const armR = () => {
+      ctx.beginPath();
+      ctx.moveTo(cx + 1, bot - obs.h * 0.5);
+      ctx.lineTo(cx + obs.w * 0.32, bot - obs.h * 0.54);
+      ctx.lineTo(cx + obs.w * 0.32, bot - obs.h * 0.76);
+    };
+    // Forst bred mork kontur, sedan gron kropp ovanpa
+    for (const [col, extra] of [["#142a0c", 3.5], ["#3f7d32", 0]]) {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = obs.w * 0.3 + extra;
+      trunk();
+      ctx.stroke();
+      ctx.lineWidth = obs.w * 0.2 + extra;
+      armL();
+      ctx.stroke();
+      armR();
+      ctx.stroke();
+    }
+    // Ribbor
+    ctx.strokeStyle = "rgba(15,40,8,0.45)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(cx - 2, bot - 2);
+    ctx.lineTo(cx - 2, obs.y + 10);
+    ctx.moveTo(cx + 2, bot - 2);
+    ctx.lineTo(cx + 2, obs.y + 12);
+    ctx.stroke();
+    // Taggar
+    ctx.strokeStyle = "#ffdf9b";
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    for (const [tx, ty] of [[-0.18, 0.2], [0.18, 0.3], [-0.18, 0.45], [0.18, 0.62], [-0.18, 0.72]]) {
+      ctx.moveTo(cx + tx * obs.w, bot - obs.h * ty);
+      ctx.lineTo(cx + tx * obs.w * 1.7, bot - obs.h * (ty + 0.03));
+    }
+    ctx.stroke();
+    // Blomma pa toppen
+    ctx.fillStyle = "#ff7ab0";
+    for (let p = 0; p < 5; p++) {
+      const a = (Math.PI * 2 * p) / 5 - Math.PI / 2;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a) * 3.6, obs.y + 4 + Math.sin(a) * 3.6, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = "#ffdf9b";
+    ctx.beginPath();
+    ctx.arc(cx, obs.y + 4, 2.2, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
 
-  function drawCandyCane(ctx, obs) {
+  function drawLollipop(ctx, obs) {
+    // Stor snurrklubba pa pinne (candy)
     const cx = obs.x + obs.w / 2;
-    const w = obs.w * 0.5;
-    const hookY = obs.y + obs.h * 0.35;
-
-    // Vit stav med bojd hake upptill
+    const R = obs.w * 0.48;
+    const cy = obs.y + R + 2;
     ctx.save();
-    ctx.lineWidth = w;
+    // Pinne
+    ctx.strokeStyle = "#8a4a5a";
+    ctx.lineWidth = 3.5;
     ctx.lineCap = "round";
-    ctx.strokeStyle = "#ffffff";
     ctx.beginPath();
     ctx.moveTo(cx, obs.y + obs.h);
-    ctx.lineTo(cx, hookY);
-    ctx.arc(cx - w * 0.5, hookY, w * 0.5, 0, -Math.PI, true);
+    ctx.lineTo(cx, cy + R * 0.5);
     ctx.stroke();
-    ctx.restore();
-
-    // Roda diagonala ranSder ovanpa staven
-    ctx.save();
+    // Klubba
+    ctx.fillStyle = "#fff6fa";
+    ctx.strokeStyle = "#7a1435";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // Rod spiral
     ctx.strokeStyle = "#e0325c";
-    ctx.lineWidth = w * 0.28;
+    ctx.lineWidth = R * 0.24;
     ctx.lineCap = "round";
-    for (let i = 0; i < 4; i++) {
-      const yy = obs.y + obs.h * 0.42 + i * ((obs.h * 0.58) / 4);
-      ctx.beginPath();
-      ctx.moveTo(cx - w * 0.42, yy + w * 0.3);
-      ctx.lineTo(cx + w * 0.42, yy - w * 0.3);
-      ctx.stroke();
+    ctx.beginPath();
+    const turns = Math.PI * 5;
+    for (let a = 0; a <= turns; a += 0.25) {
+      const rr = R * 0.08 + (a / turns) * R * 0.74;
+      const px = cx + Math.cos(a) * rr;
+      const py = cy + Math.sin(a) * rr;
+      if (a === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
     }
+    ctx.stroke();
     ctx.restore();
   }
 
   function drawGearSpike(ctx, obs) {
+    // Kugghjul med varmgul kant och navring - stalgratt smalter annars in
+    // i fabrikens morka mark.
     const cx = obs.x + obs.w / 2, cy = obs.y + obs.h / 2, r = Math.min(obs.w, obs.h) / 2;
     const teeth = 8;
+    ctx.save();
+    ctx.strokeStyle = "#ffc94a";
+    ctx.lineWidth = 2;
+    ctx.lineJoin = "round";
     ctx.beginPath();
     for (let i = 0; i < teeth; i++) {
       const a1 = (Math.PI * 2 / teeth) * i;
@@ -1430,10 +1522,15 @@
     }
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.stroke();
+    ctx.fillStyle = "rgba(0,0,0,0.45)";
     ctx.beginPath();
     ctx.arc(cx, cy, r * 0.3, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = "#ffc94a";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
   }
 
   function drawFlameSpike(ctx, obs, theme) {
@@ -1492,47 +1589,58 @@
   }
 
   function drawAnchor(ctx, obs) {
-    // Rostigt skeppsankare (piratema)
+    // Skeppsankare (piratema). Ritas forst med bred ljus kontur och sedan
+    // morkt jarn ovanpa - annars forsvinner det mot strandens morka mark.
     const cx = obs.x + obs.w / 2;
     const top = obs.y;
     const bot = obs.y + obs.h;
     ctx.save();
-    ctx.strokeStyle = "#3a3a3a";
-    ctx.lineWidth = obs.w * 0.16;
     ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.arc(cx, top + obs.w * 0.14, obs.w * 0.13, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(cx, top + obs.w * 0.28);
-    ctx.lineTo(cx, bot - obs.h * 0.12);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(cx - obs.w * 0.32, top + obs.h * 0.32);
-    ctx.lineTo(cx + obs.w * 0.32, top + obs.h * 0.32);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(cx, bot - obs.h * 0.38, obs.w * 0.42, Math.PI * 0.15, Math.PI * 0.85);
-    ctx.stroke();
-    ctx.fillStyle = "#3a3a3a";
+    const strokeAll = (col, lw) => {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = lw;
+      ctx.beginPath();
+      ctx.arc(cx, top + obs.w * 0.14, obs.w * 0.13, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx, top + obs.w * 0.28);
+      ctx.lineTo(cx, bot - obs.h * 0.12);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx - obs.w * 0.32, top + obs.h * 0.32);
+      ctx.lineTo(cx + obs.w * 0.32, top + obs.h * 0.32);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, bot - obs.h * 0.38, obs.w * 0.42, Math.PI * 0.15, Math.PI * 0.85);
+      ctx.stroke();
+    };
+    strokeAll("#e8dcc0", obs.w * 0.16 + 3.5);
+    strokeAll("#22262a", obs.w * 0.16);
     for (const s of [-1, 1]) {
       const fx = cx + s * obs.w * 0.42;
       const fy = bot - obs.h * 0.3;
+      ctx.fillStyle = "#22262a";
+      ctx.strokeStyle = "#e8dcc0";
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
       ctx.moveTo(fx, fy);
       ctx.lineTo(fx + s * obs.w * 0.16, fy - obs.h * 0.1);
       ctx.lineTo(fx, fy - obs.h * 0.16);
       ctx.closePath();
+      ctx.stroke();
       ctx.fill();
     }
     ctx.restore();
   }
 
   function drawObelisk(ctx, obs, theme) {
-    // Obelisk med guldtopp och hieroglyfstreck (egypten)
+    // Obelisk med guldtopp och hieroglyfstreck (egypten). Mork kontur och
+    // glodande topp sa den inte flyter ihop med sandens farger.
     const cx = obs.x + obs.w / 2;
     ctx.save();
     ctx.fillStyle = theme.spike;
+    ctx.strokeStyle = "#241404";
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(cx - obs.w * 0.32, obs.y + obs.h);
     ctx.lineTo(cx - obs.w * 0.2, obs.y + obs.h * 0.25);
@@ -1541,6 +1649,9 @@
     ctx.lineTo(cx + obs.w * 0.32, obs.y + obs.h);
     ctx.closePath();
     ctx.fill();
+    ctx.stroke();
+    ctx.shadowColor = "rgba(255,216,90,0.9)";
+    ctx.shadowBlur = 8;
     ctx.fillStyle = "#ffd85a";
     ctx.beginPath();
     ctx.moveTo(cx, obs.y);
@@ -1548,6 +1659,7 @@
     ctx.lineTo(cx - obs.w * 0.14, obs.y + obs.h * 0.18);
     ctx.closePath();
     ctx.fill();
+    ctx.shadowBlur = 0;
     ctx.strokeStyle = "rgba(255,224,160,0.7)";
     ctx.lineWidth = 1.3;
     ctx.beginPath();
@@ -1663,7 +1775,7 @@
           drawCactus(ctx, obs);
           break;
         case "candy":
-          drawCandyCane(ctx, obs);
+          drawLollipop(ctx, obs);
           break;
         case "robot":
           drawGearSpike(ctx, obs);
@@ -2191,25 +2303,48 @@
           break;
         }
         case "moonbase": {
-          // Antennmast med varningslampa
+          // Parabolantenn pa stativ med varningslampa
           ctx.save();
           ctx.strokeStyle = "#1f262e";
-          ctx.lineWidth = 2.6;
+          ctx.lineWidth = 2.8;
           ctx.lineCap = "round";
           ctx.beginPath();
-          ctx.moveTo(sx + 5, sgy);
-          ctx.lineTo(scx, sy + 6);
-          ctx.moveTo(sx + sw - 5, sgy);
-          ctx.lineTo(scx, sy + 6);
-          ctx.moveTo(sx + 8, sgy - sh * 0.35);
-          ctx.lineTo(sx + sw - 8, sgy - sh * 0.35);
+          ctx.moveTo(sx + 6, sgy);
+          ctx.lineTo(scx, sgy - sh * 0.42);
+          ctx.moveTo(sx + sw - 6, sgy);
+          ctx.lineTo(scx, sgy - sh * 0.42);
+          ctx.moveTo(scx, sgy - sh * 0.42);
+          ctx.lineTo(scx, sgy - sh * 0.6);
+          ctx.stroke();
+          ctx.save();
+          ctx.translate(scx, sgy - sh * 0.68);
+          ctx.rotate(-0.55);
+          ctx.fillStyle = "#e4eaf2";
+          ctx.strokeStyle = "#14181f";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, sw * 0.44, sh * 0.15, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(20,24,31,0.45)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, sw * 0.26, sh * 0.08, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          // Matararm ut till fokuspunkten
+          ctx.strokeStyle = "#14181f";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, -sh * 0.3);
           ctx.stroke();
           ctx.shadowColor = "rgba(255,80,80,0.95)";
-          ctx.shadowBlur = 10;
+          ctx.shadowBlur = 9;
           ctx.fillStyle = "#ff4a4a";
           ctx.beginPath();
-          ctx.arc(scx, sy + 4, 3.2, 0, Math.PI * 2);
+          ctx.arc(0, -sh * 0.3, 2.8, 0, Math.PI * 2);
           ctx.fill();
+          ctx.restore();
           ctx.restore();
           break;
         }
