@@ -10,7 +10,7 @@
     ctx.font = "14px 'Segoe UI', Arial, sans-serif";
     ctx.fillText("Bästa: " + best, 16, 50);
     ctx.font = "13px 'Segoe UI', Arial, sans-serif";
-    ctx.fillText(theme.name, 16, 70);
+    ctx.fillText("#" + (currentThemeIndex() + 1) + " " + theme.name, 16, 70);
     ctx.restore();
 
     if (state === "ready") {
@@ -30,7 +30,7 @@
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 34px 'Segoe UI', Arial, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(theme.name + "!", canvas.width / 2, canvas.height / 2);
+      ctx.fillText("#" + (currentThemeIndex() + 1) + " " + theme.name + "!", canvas.width / 2, canvas.height / 2);
       ctx.restore();
     }
   }
