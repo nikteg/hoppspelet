@@ -39,8 +39,9 @@ byt ut stämpeln manuellt vid deploy.
 Ikonerna i `public/icons/` är genererade från `public/favicon.svg`
 (macOS: `qlmanage -t -s 512 -o public/icons public/favicon.svg`).
 Skärmbilderna på startsidan (`public/assets/screens/`) är riktiga
-spelbilder tagna via `canvas.toDataURL` med bakgrundsgradienten
-inkomponerad.
+spelbilder. Regenerera dem med `tools/capture-screens.js` — klistra in
+filen i webbläsarkonsolen på spelsidan, så iscensätts scenerna och tre
+jpg-filer laddas ner (instruktioner i filens huvud).
 
 ## Filstruktur
 
