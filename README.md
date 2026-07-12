@@ -22,13 +22,19 @@ I Portainer: skapa en stack från repot med `docker-compose.yml` +
 `docker-compose.portainer.yml` (lägger containern i det externa
 `nginx`-nätverket för reverse proxy, samma upplägg som niklas.tegnander.nu).
 
+Containern svarar både på `/` och under `/hoppspelet/`, så en custom
+location `/hoppspelet` i Nginx Proxy Manager fungerar rakt av — hela
+sökvägen får skickas vidare oförändrad till containern.
+
 ## PWA
 
 Spelet är installerbart som PWA (manifest + service worker) och fungerar
 offline efter första besöket. Service workern registreras bara över
-https/localhost. **Vid deploy av nya versioner: bumpa `CACHE_VERSION` i
-`public/sw.js`**, annars fortsätter installerade klienter köra gamla filer
-ur cachen.
+https/localhost. Cacheversionen stämplas automatiskt med byggtidpunkten
+när Docker-imagen byggs (`__BUILD_STAMP__` i `public/sw.js` byts ut i
+Dockerfilen), så en ny deploy invaliderar gamla klienters cache utan
+manuell versionsbump. Hostas filerna på annat sätt än via Docker-imagen:
+byt ut stämpeln manuellt vid deploy.
 
 Ikonerna i `public/icons/` är genererade från `public/favicon.svg`
 (macOS: `qlmanage -t -s 512 -o public/icons public/favicon.svg`).

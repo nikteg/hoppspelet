@@ -8,6 +8,12 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy your static files into the nginx html directory
 COPY ./public/ /usr/share/nginx/html
 
+# Stampla service workerns cachenyckel med byggtidpunkten. Varje ny image
+# far darmed en ny cacheversion och installerade PWA-klienter hamtar de nya
+# filerna vid nasta besok - ingen manuell bump behovs. (Layer-cachning gor
+# att stampeln bara andras nar filerna i public/ faktiskt andrats.)
+RUN sed -i "s/__BUILD_STAMP__/$(date -u +%Y%m%d%H%M%S)/" /usr/share/nginx/html/sw.js
+
 # Expose port 80
 EXPOSE 80
 

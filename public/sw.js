@@ -1,9 +1,11 @@
 /* Service worker for Hoppspelet.
    Cache-first sa spelet fungerar helt offline efter forsta besoket.
-   Bumpa CACHE_VERSION vid varje deploy sa gamla filer rensas. */
+   __BUILD_STAMP__ ersatts med byggtidpunkten av Dockerfilen, sa varje ny
+   image far automatiskt en ny cacheversion och gamla filer rensas. Kors
+   filen ostamplad (lokal utveckling) ar strangen anda en giltig nyckel. */
 "use strict";
 
-const CACHE_VERSION = "hoppspelet-v1";
+const CACHE_VERSION = "hoppspelet-__BUILD_STAMP__";
 
 const PRECACHE = [
   ".",

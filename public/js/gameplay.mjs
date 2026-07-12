@@ -41,12 +41,16 @@
     // Slumpa typ: spik (hoppa över), plattform (hoppa upp på) eller takblock (måste gå under)
     let r = Math.random();
     if (r >= 0.8) {
-      // Takblock krayver att man springer LAGT. Om en hog plattform precis
-      // spawnats star spelaren troligen uppe pa den utan chans att hinna ner
-      // - gor det till en plattform i stallet for en orattvis dod.
+      // Takblock kraver att man springer LAGT. Ett hinder tatt FORE ett
+      // takblock ar omojligt att passera: hopp-bagen over spiken/plattformen
+      // nar in i takblockets zon och man hinner aldrig ner igen (ett helt
+      // hopp tar ~39 steg men minsta spawn-avstand ar 35). Krav darfor fri
+      // mark motsvarande ett helt hopp plus marginal fore varje takblock,
+      // annars spawnas nagot annat i stallet.
+      const clearPx = 55 * speed;
       for (const obs of obstacles) {
-        if (obs.type === "platform" && obs.x + obs.w > canvas.width - 320) {
-          r = 0.7;
+        if (obs.x + obs.w > spawnX - clearPx) {
+          r = obs.type === "platform" ? 0.7 : 0.3; // plattform resp. spik i stallet
           break;
         }
       }
