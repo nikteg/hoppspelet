@@ -9,18 +9,18 @@
     band.addColorStop(0, "rgba(0,0,0,0)");
     band.addColorStop(1, "rgba(0,0,0,0.32)");
     ctx.fillStyle = band;
-    ctx.fillRect(0, GROUND_Y - bandH, canvas.width, bandH);
+    ctx.fillRect(0, GROUND_Y - bandH, viewW, bandH);
 
     // Marken (sten/sand/is beroende på tema)
     ctx.fillStyle = theme.groundColor;
-    ctx.fillRect(0, GROUND_Y, canvas.width, canvas.height - GROUND_Y);
+    ctx.fillRect(0, GROUND_Y, viewW, viewH - GROUND_Y);
 
     // Textur i marken, rör sig med spelet för känsla av fart
     ctx.fillStyle = theme.crackColor;
     const stripeWidth = 46;
     const offset = Math.floor(distance) % stripeWidth;
-    for (let x = -offset; x < canvas.width; x += stripeWidth) {
-      ctx.fillRect(x, GROUND_Y + 14, stripeWidth * 0.4, canvas.height - GROUND_Y - 14);
+    for (let x = -offset; x < viewW; x += stripeWidth) {
+      ctx.fillRect(x, GROUND_Y + 14, stripeWidth * 0.4, viewH - GROUND_Y - 14);
     }
 
     // Glödande "hazard-remsa" rakt under markytan - rent visuellt, påverkar inte spelet.
@@ -31,12 +31,13 @@
     const t = performance.now() / 250;
     const glow = 0.5 + Math.sin(t) * 0.5;
     const strip = getHazardStrip(theme);
-    ctx.drawImage(strip, 0, GROUND_Y - 2 - HAZARD_PAD);
+    const stripH = hazardH + HAZARD_PAD * 2;
+    ctx.drawImage(strip, 0, GROUND_Y - 2 - HAZARD_PAD, viewW, stripH);
     // "Pulsen": rita glowlagret en gang till med varierande alpha sa remsan
     // lyser starkare och svagare, som originalets pulserande shadowBlur.
     ctx.save();
     ctx.globalAlpha = glow * 0.4;
-    ctx.drawImage(strip, 0, GROUND_Y - 2 - HAZARD_PAD);
+    ctx.drawImage(strip, 0, GROUND_Y - 2 - HAZARD_PAD, viewW, stripH);
     ctx.restore();
 
     // Glödande partiklar i remsan. Sin-seedas med varldskoordinaten (inte
@@ -45,7 +46,7 @@
     const dotSpacing = 90;
     const dotScroll = Math.floor(distance * 1.4);
     const dOffset = dotScroll % dotSpacing;
-    for (let x = -dOffset; x < canvas.width; x += dotSpacing) {
+    for (let x = -dOffset; x < viewW; x += dotSpacing) {
       const bob = Math.sin(t + x + dotScroll) * 2;
       ctx.beginPath();
       ctx.arc(x, GROUND_Y + 2 + bob, 3, 0, Math.PI * 2);
@@ -61,7 +62,7 @@
       ctx.shadowColor = theme.crystalColor;
       ctx.shadowBlur = 10;
       ctx.fillStyle = theme.crystalColor;
-      for (let x = -crOffset; x < canvas.width; x += crystalSpacing) {
+      for (let x = -crOffset; x < viewW; x += crystalSpacing) {
         const cy = GROUND_Y + 34 + Math.sin((x + crScroll) * 0.04) * 8;
         ctx.beginPath();
         ctx.moveTo(x, cy - 8);
@@ -81,13 +82,16 @@
   let hazardStripKey = "";
 
   function getHazardStrip(theme) {
-    const key = theme.key + ":" + canvas.width;
+    const key = theme.key + ":" + viewW + ":" + DPR;
     if (hazardStripKey !== key) {
       const hazardH = 12;
       const off = document.createElement("canvas");
-      off.width = Math.max(1, canvas.width);
-      off.height = hazardH + HAZARD_PAD * 2;
+      // Bakas i DPR-upplosning (logiken raknar i CSS-pixlar) sa remsan ar
+      // skarp aven pa retinaskarmar.
+      off.width = Math.max(1, Math.ceil(viewW * DPR));
+      off.height = Math.ceil((hazardH + HAZARD_PAD * 2) * DPR);
       const octx = off.getContext("2d");
+      octx.scale(DPR, DPR);
       // Remsan ritas pa y=GROUND_Y-2 men gradienten spande GROUND_Y±hazardH i
       // originalet - samma forhallande har (rekt-toppen ligger 10px in i gradienten).
       const grad = octx.createLinearGradient(0, HAZARD_PAD - (hazardH - 2), 0, HAZARD_PAD + hazardH + 2);
@@ -97,7 +101,7 @@
       octx.shadowColor = theme.hazard.glow;
       octx.shadowBlur = 20;
       octx.fillStyle = grad;
-      octx.fillRect(0, HAZARD_PAD, off.width, hazardH);
+      octx.fillRect(0, HAZARD_PAD, viewW, hazardH);
       hazardStripCache = off;
       hazardStripKey = key;
     }
@@ -113,17 +117,17 @@
       switch (theme.particle) {
         case "bubbles":
           p.y -= p.speed * fs;
-          if (p.y < -10) p.y = canvas.height + 10;
+          if (p.y < -10) p.y = viewH + 10;
           break;
         case "snow":
           p.y += p.speed * 0.6 * fs;
           p.x += Math.sin(t + p.phase) * 0.4 * fs;
-          if (p.y > canvas.height + 10) p.y = -10;
+          if (p.y > viewH + 10) p.y = -10;
           break;
         case "embers":
           p.y -= p.speed * 0.8 * fs;
           p.x += p.drift * fs;
-          if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+          if (p.y < -10) { p.y = viewH + 10; p.x = Math.random() * viewW; }
           break;
         case "fireflies":
           p.x += Math.sin(t * 0.6 + p.phase) * 0.6 * fs;
@@ -133,8 +137,8 @@
           // Stjärnorna står stilla och blinkar bara
           break;
       }
-      if (p.x < -10) p.x = canvas.width + 10;
-      if (p.x > canvas.width + 10) p.x = -10;
+      if (p.x < -10) p.x = viewW + 10;
+      if (p.x > viewW + 10) p.x = -10;
 
       const twinkle = theme.particle === "stars" || theme.particle === "fireflies"
         ? 0.4 + 0.6 * (0.5 + Math.sin(t * 2 + p.phase) * 0.5)
@@ -158,14 +162,14 @@
     ctx.beginPath();
     ctx.moveTo(-spacing * 2, GROUND_Y);
     ctx.lineTo(-spacing * 2, baseY);
-    for (let bx = -spacing * 2; bx < canvas.width + spacing * 2; bx += spacing) {
+    for (let bx = -spacing * 2; bx < viewW + spacing * 2; bx += spacing) {
       const x = bx - offset;
       const peak = baseY - (peakMin + Math.abs(Math.sin((bx + colBase) * 0.013)) * (peakMax - peakMin));
       ctx.lineTo(x + spacing / 2, peak);
       ctx.lineTo(x + spacing, baseY);
     }
-    ctx.lineTo(canvas.width + spacing * 2, baseY);
-    ctx.lineTo(canvas.width + spacing * 2, GROUND_Y);
+    ctx.lineTo(viewW + spacing * 2, baseY);
+    ctx.lineTo(viewW + spacing * 2, GROUND_Y);
     ctx.closePath();
     ctx.fill();
   }
@@ -174,8 +178,8 @@
     const phase = ((t + seedOffset) % cycle) / cycle;
     if (phase > 0.15) return;
     const p = phase / 0.15;
-    const startX = canvas.width * 1.05;
-    const endX = -canvas.width * 0.1;
+    const startX = viewW * 1.05;
+    const endX = -viewW * 0.1;
     const x = startX + (endX - startX) * p;
     const y = y0 + (y1 - y0) * p;
     const len = 90;
@@ -374,7 +378,7 @@
   // Parallax-lager av moln som glider forbi langsamt
   function drawDriftingClouds(ctx, t, color, count, yBase, scale, speed) {
     for (let i = 0; i < count; i++) {
-      const span = canvas.width + 300;
+      const span = viewW + 300;
       const x = ((i * span) / count + t * speed) % span - 150;
       const y = yBase + (i % 2) * 40 * scale;
       drawCloud(ctx, x, y, scale * (0.7 + (i % 3) * 0.2), color);
@@ -520,7 +524,7 @@
     const colBase = Math.floor(scroll / spacing) * spacing;
     ctx.save();
     ctx.fillStyle = color;
-    for (let bx = -spacing; bx < canvas.width + spacing; bx += spacing) {
+    for (let bx = -spacing; bx < viewW + spacing; bx += spacing) {
       const x = bx - offset;
       const wc = bx + colBase + seed;
       const h = 60 + Math.abs(Math.sin(wc * 0.03)) * 120;

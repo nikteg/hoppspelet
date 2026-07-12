@@ -4,6 +4,13 @@
   const canvas = document.getElementById("game");
   Engine.init(canvas);
 
+  // Logisk spelyta i CSS-pixlar. Canvasens backing store ar DPR ganger
+  // storre (satts i resizeCanvas) sa spelet blir skarpt pa mobil-/retina-
+  // skarmar - all spellogik och rendering raknar i viewW/viewH.
+  let viewW = 0;
+  let viewH = 0;
+  let DPR = 1;
+
   const GRAVITY = 0.7;
   const JUMP_FORCE = -13.5;
   const PLAYER_X = 150;

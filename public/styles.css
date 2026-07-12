@@ -89,6 +89,43 @@
     font-size: 16px;
   }
 
+  /* ---------- Rotera-skarmen (mobil i portrattlage) ---------- */
+  /* Webblasare kan inte tvinga fram liggande lage (iOS ignorerar bade
+     orientation-lasning och manifestets orientation-falt), sa i portratt
+     visas i stallet en uppmaning att vrida pa mobilen. Samma media query
+     anvands i input.mjs for att pausa spelet. */
+  #rotateHint {
+    display: none;
+  }
+  @media (orientation: portrait) and (pointer: coarse) {
+    #rotateHint {
+      display: flex;
+      position: fixed;
+      inset: 0;
+      z-index: 15; /* over spelet och knapparna, under startsidan */
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: radial-gradient(ellipse at 50% 40%, #241a3a 0%, #0a0710 75%);
+      color: #f5f0e6;
+    }
+  }
+  .rotate-inner p {
+    margin: 18px 0 0;
+    font-size: 20px;
+    line-height: 1.5;
+  }
+  .rotate-icon {
+    font-size: 64px;
+    display: inline-block;
+    animation: rotatePhone 2s ease-in-out infinite;
+  }
+  @keyframes rotatePhone {
+    0%, 20% { transform: rotate(0deg); }
+    55%, 80% { transform: rotate(90deg); }
+    100% { transform: rotate(90deg); }
+  }
+
   /* ---------- Startsida ---------- */
   #landing {
     position: fixed;

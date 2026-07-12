@@ -28,6 +28,15 @@
   <button id="debugReload" type="button" tabindex="-1">Ladda om</button>
 </div>
 
+<!-- Visas pa mobiler i portrattlage: spelet ar gjort for liggande skarm.
+     Overlagret styrs helt av CSS (media query); JS pausar bara spelet. -->
+<div id="rotateHint" aria-hidden="true">
+  <div class="rotate-inner">
+    <div class="rotate-icon">📱</div>
+    <p><strong>Vänd på mobilen!</strong><br>Spelet spelas i liggande läge.</p>
+  </div>
+</div>
+
 <!-- Startsida: visas ovanpa spelet tills man trycker Spela (eller mellanslag). -->
 <div id="landing">
   <div class="landing-inner">

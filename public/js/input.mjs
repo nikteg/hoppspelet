@@ -42,6 +42,18 @@
   wireButton("debugNextTheme", function () { debugGoToTheme(1); });
   wireButton("debugReload", function () { window.location.reload(); });
 
+  // ---------- Pausa i portrattlage pa mobil ----------
+  // Samma media query som visar #rotateHint i styles.css. Spelet pausas sa
+  // att man inte hinner do bakom rotera-overlagret.
+  const portraitBlock = window.matchMedia("(orientation: portrait) and (pointer: coarse)");
+  function applyOrientationPause() {
+    Engine.paused = portraitBlock.matches;
+  }
+  if (portraitBlock.addEventListener) {
+    portraitBlock.addEventListener("change", applyOrientationPause);
+  }
+  applyOrientationPause();
+
   // ---------- Startsidans Spela-knapp ----------
   // handleAction gommer startsidan och startar rundan direkt (state "ready").
   wireButton("playBtn", handleAction);

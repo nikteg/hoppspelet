@@ -26,14 +26,17 @@
   const coinSpriteCache = new Map();
 
   function getCoinSprite(theme, r) {
-    const key = theme.key + ":" + r;
+    const key = theme.key + ":" + r + ":" + DPR;
     let sprite = coinSpriteCache.get(key);
     if (!sprite) {
       sprite = document.createElement("canvas");
       const size = Math.ceil(r * 5); // plats for glow och former utanfor radien
-      sprite.width = size;
-      sprite.height = size;
+      // Bakas i DPR-upplosning, annars blir mynten suddiga pa retinaskarmar.
+      sprite.width = Math.ceil(size * DPR);
+      sprite.height = Math.ceil(size * DPR);
+      sprite.logicalSize = size;
       const octx = sprite.getContext("2d");
+      octx.scale(DPR, DPR);
       octx.translate(size / 2, size / 2);
       drawCoinDesign(octx, r, theme);
       coinSpriteCache.set(key, sprite);
@@ -44,10 +47,11 @@
   function drawCoin(ctx, coin, theme, t) {
     const spin = Math.max(0.15, Math.abs(Math.cos(t * 1.5 + coin.phase)));
     const sprite = getCoinSprite(theme, coin.r);
+    const size = sprite.logicalSize;
     ctx.save();
     ctx.translate(coin.x, coin.y);
     ctx.scale(spin, 1);
-    ctx.drawImage(sprite, -sprite.width / 2, -sprite.height / 2);
+    ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
     ctx.restore();
   }
 

@@ -33,7 +33,7 @@
   }
 
   function spawnObstacle() {
-    const spawnX = canvas.width + 20;
+    const spawnX = viewW + 20;
     // Spawna inget ovanpa en redan utlagd myntbage - annars lockas spelaren
     // rakt in i en fara som dok upp efter att mynten placerades.
     if (hasCoinNear(spawnX, spawnX + 150)) return;
@@ -85,7 +85,7 @@
   function spawnCoins() {
     const arcCount = 5;
     const spacing = 60;
-    const startX = canvas.width + 40;
+    const startX = viewW + 40;
     const endX = startX + spacing * (arcCount - 1);
     if (hasObstacleNear(startX, endX)) return;
 

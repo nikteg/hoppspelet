@@ -13,8 +13,8 @@
     ambientParticles = [];
     for (let i = 0; i < 45; i++) {
       ambientParticles.push({
-        x: Math.random() * (canvas.width || window.innerWidth),
-        y: Math.random() * (canvas.height || window.innerHeight),
+        x: Math.random() * (viewW || window.innerWidth),
+        y: Math.random() * (viewH || window.innerHeight),
         size: 1 + Math.random() * 2.5,
         speed: 0.3 + Math.random() * 1.3,
         drift: (Math.random() - 0.5) * 0.6,
@@ -25,9 +25,18 @@
 
   function resizeCanvas() {
     const prevGroundY = GROUND_Y;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    GROUND_Y = canvas.height - 80;
+    viewW = window.innerWidth;
+    viewH = window.innerHeight;
+    // Backing store i fysiska pixlar, logiken i CSS-pixlar. Utan DPR-skalning
+    // renderas spelet i tredjedels upplosning pa t.ex. iPhone (DPR 3) och
+    // blir suddigt. Cap pa 2 - skillnaden 2->3 syns knappt men kostar ~2x
+    // fill-rate. CSS:en (width/height 100%) skalar ner till skarmstorlek.
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(viewW * DPR);
+    canvas.height = Math.round(viewH * DPR);
+    // Resize nollstaller canvas-tillstandet, sa transformen satts om har.
+    Engine.ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    GROUND_Y = viewH - 80;
     // Levande objekt har koordinater raknade fran den gamla markytan. Flytta
     // med dem vid resize, annars svavar spikar i luften och takblockens lucka
     // andrar storlek (kunde bli opasserbar). Takblock hanger fran taket, sa

@@ -34,8 +34,20 @@
       requestAnimationFrame(this.loop);
     },
 
+    // Satts nar spelet inte ska ticka (rotera-skarmen pa mobil i portratt-
+    // lage). Ritningen fortsatter sa vyn inte fryser, men tiden star stilla.
+    paused: false,
+
     loop(time) {
       if (!this.lastTime) this.lastTime = time;
+      if (this.paused) {
+        this.lastTime = time;
+        this.accumulator = 0;
+        this.frameScale = 0;
+        this.onDraw();
+        requestAnimationFrame(this.loop);
+        return;
+      }
       let elapsed = time - this.lastTime;
       this.lastTime = time;
       // Efter t.ex. en flikvaxling kan elapsed vara enormt - hoppa inte ikapp,

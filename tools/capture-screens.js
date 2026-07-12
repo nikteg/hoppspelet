@@ -2,7 +2,8 @@
  *
  * Användning:
  *   1. Ställ webbläsarfönstret på ca 800x450 (t.ex. devtools responsive mode)
- *      - bildstorleken blir samma som spelytans storlek.
+ *      - bilden blir fönsterstorleken gånger skärmens devicePixelRatio
+ *      (spelet renderar i DPR-upplösning, max 2x).
  *   2. Öppna spelet (dubbelklicka public/index.html eller den hostade sidan).
  *   3. Klistra in HELA den här filen i devtools-konsolen och tryck Enter.
  *      Webbläsaren frågar ev. om den får ladda ner flera filer - tillåt.
@@ -40,12 +41,12 @@
     coins = [];
   }
 
-  const spike = (fx) => ({ x: canvas.width * fx, y: GROUND_Y - 44, w: 34, h: 44, type: "spike" });
+  const spike = (fx) => ({ x: viewW * fx, y: GROUND_Y - 44, w: 34, h: 44, type: "spike" });
 
   function coinArc(fromFx, n, spacing, above, amp) {
     for (let i = 0; i < n; i++) {
       coins.push({
-        x: canvas.width * fromFx + i * spacing,
+        x: viewW * fromFx + i * spacing,
         y: GROUND_Y - above - Math.sin((i / (n - 1)) * Math.PI) * amp,
         r: 13,
         phase: i
@@ -67,9 +68,9 @@
       stage: () => {
         setBase("unicorn");
         obstacles.push(spike(0.5));
-        obstacles.push({ x: canvas.width * 0.7, y: GROUND_Y - 111, w: 140, h: 90, type: "platform" });
+        obstacles.push({ x: viewW * 0.7, y: GROUND_Y - 111, w: 140, h: 90, type: "platform" });
         for (let i = 0; i < 4; i++) {
-          coins.push({ x: canvas.width * 0.7 + 24 + i * 32, y: GROUND_Y - 139, r: 13, phase: i * 2 });
+          coins.push({ x: viewW * 0.7 + 24 + i * 32, y: GROUND_Y - 139, r: 13, phase: i * 2 });
         }
       }
     },

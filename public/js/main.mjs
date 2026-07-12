@@ -26,11 +26,11 @@
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.fillStyle = "rgba(0,0,0,0.35)";
-      ctx.fillRect(0, canvas.height / 2 - 60, canvas.width, 90);
+      ctx.fillRect(0, viewH / 2 - 60, viewW, 90);
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 34px 'Segoe UI', Arial, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("#" + (currentThemeIndex() + 1) + " " + theme.name + "!", canvas.width / 2, canvas.height / 2);
+      ctx.fillText("#" + (currentThemeIndex() + 1) + " " + theme.name + "!", viewW / 2, viewH / 2);
       ctx.restore();
     }
   }
@@ -38,11 +38,11 @@
   function overlayText(ctx, text) {
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,0.45)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, viewW, viewH);
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 24px 'Segoe UI', Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+    ctx.fillText(text, viewW / 2, viewH / 2);
     ctx.restore();
   }
 
@@ -59,7 +59,7 @@
       }
     }
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, viewW, viewH);
     const t = performance.now() / 250;
     drawAmbientParticles(ctx, theme, t);
     drawScenery(ctx, theme, t);
