@@ -45,20 +45,15 @@
     safeLeft = parseFloat(rootStyle.getPropertyValue("--sai-left")) || 0;
     safeTop = parseFloat(rootStyle.getPropertyValue("--sai-top")) || 0;
     // iPhone ger samma inset pa BADA sidor i liggande lage, sa utan att veta
-    // at vilket hall mobilen ar vriden indenteras aven sidan utan notch.
-    // window.orientation lever kvar pa iOS: 90 = notch till vanster,
-    // -90 = notch till hoger. data-notch later CSS:en gora samma avvagning
-    // for knapparna till hoger.
-    let notch = "unknown";
+    // at vilket hall mobilen ar vriden indenteras HUD:en aven nar notchen
+    // sitter till hoger. window.orientation lever kvar pa iOS:
+    // 90 = notch till vanster, -90 = notch till hoger.
     if (/iPhone/.test(navigator.userAgent)) {
       let angle = null;
       if (typeof window.orientation === "number") angle = window.orientation;
       else if (screen.orientation && typeof screen.orientation.angle === "number") angle = screen.orientation.angle;
-      if (angle === 90) notch = "left";
-      else if (angle === -90 || angle === 270) notch = "right";
+      if (angle === -90 || angle === 270) safeLeft = 0; // notch till hoger - HUD:en till vanster gar fri
     }
-    document.documentElement.dataset.notch = notch;
-    if (notch === "right") safeLeft = 0; // HUD:en sitter till vanster om notchen ar till hoger
     // Levande objekt har koordinater raknade fran den gamla markytan. Flytta
     // med dem vid resize, annars svavar spikar i luften och takblockens lucka
     // andrar storlek (kunde bli opasserbar). Takblock hanger fran taket, sa

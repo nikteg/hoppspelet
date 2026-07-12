@@ -48,19 +48,17 @@
     max-height: 30vh;
   }
   #logo.hidden { opacity: 0; }
+  /* Ingen safe area-indragning har: i liggande lage sitter notchen
+     vertikalt centrerad pa kanten, medan knappraden ligger i det ovre
+     hornet som ar fritt. Insetsen (44-59px) gjorde bara att knapparna
+     hamnade onodigt langt in. */
   #topButtons {
     position: fixed;
-    top: calc(12px + var(--sai-top));
-    right: calc(12px + var(--sai-right));
+    top: 12px;
+    right: 12px;
     display: flex;
     gap: 8px;
     z-index: 10;
-  }
-  /* iPhone rapporterar samma safe area-inset pa BADA sidor i liggande lage.
-     Sitter notchen till vanster (data-notch satts i world.mjs) behover
-     knapparna till hoger ingen indragning. */
-  html[data-notch="left"] #topButtons {
-    right: 12px;
   }
   #topButtons button {
     min-width: 56px;
