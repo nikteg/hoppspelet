@@ -6,7 +6,7 @@
   }
 
   let appliedThemeIndex = -1;
-  let themeAnnounce = 0; // frames kvar att visa temats namn
+  let themeAnnounceUntil = 0; // tidpunkt (ms) da temanamnet slutar visas
 
   let ambientParticles = [];
   function initParticles() {
@@ -24,9 +24,27 @@
   }
 
   function resizeCanvas() {
+    const prevGroundY = GROUND_Y;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     GROUND_Y = canvas.height - 80;
+    // Levande objekt har koordinater raknade fran den gamla markytan. Flytta
+    // med dem vid resize, annars svavar spikar i luften och takblockens lucka
+    // andrar storlek (kunde bli opasserbar). Takblock hanger fran taket, sa
+    // dar ar det hojden (avstandet ner till luckan) som foljer marken.
+    const dy = GROUND_Y - prevGroundY;
+    if (dy !== 0 && prevGroundY !== 0) {
+      for (const obs of obstacles) {
+        if (obs.type === "ceiling") {
+          obs.h += dy;
+        } else {
+          obs.y += dy;
+        }
+      }
+      for (const c of coins) c.y += dy;
+      for (const ft of floatingTexts) ft.y += dy;
+      if (state === "playing") player.y += dy;
+    }
     if (state !== "playing") {
       player.y = GROUND_Y - player.h;
     }
@@ -51,7 +69,7 @@
     spawnTimer = 0;
     nextSpawnAt = 60 + Math.random() * 40;
     appliedThemeIndex = -1;
-    themeAnnounce = 0;
+    themeAnnounceUntil = 0;
     debugThemeOverride = null; // sa att en ny omgang alltid byter niva efter poang (1000, 2000, ...)
     levelOffset = pendingLevelOffset; // starta pa den niva man senast dog pa
   }

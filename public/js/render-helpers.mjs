@@ -15,26 +15,28 @@
 
     // Glödande "hazard-remsa" rakt under markytan - rent visuellt, påverkar inte spelet.
     // Lava, bioluminescent rev, gyllene nektar, sprickande is eller alien-energi beroende på tema.
+    // Remsan med sin dyra shadowBlur-glow forrenderas till en offscreen-canvas
+    // per tema/bredd; per frame ar det bara tva drawImage-anrop.
     const hazardH = 12;
     const t = performance.now() / 250;
     const glow = 0.5 + Math.sin(t) * 0.5;
-    const grad = ctx.createLinearGradient(0, GROUND_Y - hazardH, 0, GROUND_Y + hazardH);
-    grad.addColorStop(0, theme.hazard.top);
-    grad.addColorStop(0.4, theme.hazard.mid);
-    grad.addColorStop(1, theme.hazard.bottom);
+    const strip = getHazardStrip(theme);
+    ctx.drawImage(strip, 0, GROUND_Y - 2 - HAZARD_PAD);
+    // "Pulsen": rita glowlagret en gang till med varierande alpha sa remsan
+    // lyser starkare och svagare, som originalets pulserande shadowBlur.
     ctx.save();
-    ctx.shadowColor = theme.hazard.glow;
-    ctx.shadowBlur = 20 * (0.7 + glow * 0.3);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, GROUND_Y - 2, canvas.width, hazardH);
+    ctx.globalAlpha = glow * 0.4;
+    ctx.drawImage(strip, 0, GROUND_Y - 2 - HAZARD_PAD);
     ctx.restore();
 
-    // Glödande partiklar i remsan
+    // Glödande partiklar i remsan. Sin-seedas med varldskoordinaten (inte
+    // skarmpositionen), annars hoppar guppet varje gang offseten slar runt.
     ctx.fillStyle = theme.hazard.dot;
     const dotSpacing = 90;
-    const dOffset = Math.floor(distance * 1.4) % dotSpacing;
+    const dotScroll = Math.floor(distance * 1.4);
+    const dOffset = dotScroll % dotSpacing;
     for (let x = -dOffset; x < canvas.width; x += dotSpacing) {
-      const bob = Math.sin(t + x) * 2;
+      const bob = Math.sin(t + x + dotScroll) * 2;
       ctx.beginPath();
       ctx.arc(x, GROUND_Y + 2 + bob, 3, 0, Math.PI * 2);
       ctx.fill();
@@ -43,13 +45,14 @@
     // Glödande kristaller inbäddade i berget, för lite färgpop mot stenen
     if (theme.crystalColor) {
       const crystalSpacing = 150;
-      const crOffset = Math.floor(distance * 0.7) % crystalSpacing;
+      const crScroll = Math.floor(distance * 0.7);
+      const crOffset = crScroll % crystalSpacing;
       ctx.save();
       ctx.shadowColor = theme.crystalColor;
       ctx.shadowBlur = 10;
       ctx.fillStyle = theme.crystalColor;
       for (let x = -crOffset; x < canvas.width; x += crystalSpacing) {
-        const cy = GROUND_Y + 34 + Math.sin(x * 0.04) * 8;
+        const cy = GROUND_Y + 34 + Math.sin((x + crScroll) * 0.04) * 8;
         ctx.beginPath();
         ctx.moveTo(x, cy - 8);
         ctx.lineTo(x + 5, cy);
@@ -62,26 +65,59 @@
     }
   }
 
+  // ---------- Forrenderad hazard-remsa ----------
+  const HAZARD_PAD = 26; // utrymme for glowen ovanfor/under remsan
+  let hazardStripCache = null;
+  let hazardStripKey = "";
+
+  function getHazardStrip(theme) {
+    const key = theme.key + ":" + canvas.width;
+    if (hazardStripKey !== key) {
+      const hazardH = 12;
+      const off = document.createElement("canvas");
+      off.width = Math.max(1, canvas.width);
+      off.height = hazardH + HAZARD_PAD * 2;
+      const octx = off.getContext("2d");
+      // Remsan ritas pa y=GROUND_Y-2 men gradienten spande GROUND_Y±hazardH i
+      // originalet - samma forhallande har (rekt-toppen ligger 10px in i gradienten).
+      const grad = octx.createLinearGradient(0, HAZARD_PAD - (hazardH - 2), 0, HAZARD_PAD + hazardH + 2);
+      grad.addColorStop(0, theme.hazard.top);
+      grad.addColorStop(0.4, theme.hazard.mid);
+      grad.addColorStop(1, theme.hazard.bottom);
+      octx.shadowColor = theme.hazard.glow;
+      octx.shadowBlur = 20;
+      octx.fillStyle = grad;
+      octx.fillRect(0, HAZARD_PAD, off.width, hazardH);
+      hazardStripCache = off;
+      hazardStripKey = key;
+    }
+    return hazardStripCache;
+  }
+
   function drawAmbientParticles(ctx, theme, t) {
+    // Partiklarna flyttas i rit-steget (inte update) sa de lever aven pa
+    // start-/gameover-skarmen. Skala med frameScale sa farten blir densamma
+    // pa 120+ Hz-skarmar som pa 60 Hz.
+    const fs = Engine.frameScale;
     for (const p of ambientParticles) {
       switch (theme.particle) {
         case "bubbles":
-          p.y -= p.speed;
+          p.y -= p.speed * fs;
           if (p.y < -10) p.y = canvas.height + 10;
           break;
         case "snow":
-          p.y += p.speed * 0.6;
-          p.x += Math.sin(t + p.phase) * 0.4;
+          p.y += p.speed * 0.6 * fs;
+          p.x += Math.sin(t + p.phase) * 0.4 * fs;
           if (p.y > canvas.height + 10) p.y = -10;
           break;
         case "embers":
-          p.y -= p.speed * 0.8;
-          p.x += p.drift;
+          p.y -= p.speed * 0.8 * fs;
+          p.x += p.drift * fs;
           if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
           break;
         case "fireflies":
-          p.x += Math.sin(t * 0.6 + p.phase) * 0.6;
-          p.y += Math.cos(t * 0.5 + p.phase) * 0.4;
+          p.x += Math.sin(t * 0.6 + p.phase) * 0.6 * fs;
+          p.y += Math.cos(t * 0.5 + p.phase) * 0.4 * fs;
           break;
         case "stars":
           // Stjärnorna står stilla och blinkar bara
@@ -103,14 +139,18 @@
   }
 
   function drawJaggedSilhouette(ctx, baseY, peakMin, peakMax, spacing, color, offsetFactor) {
-    const offset = (distance * offsetFactor) % spacing;
+    const scroll = distance * offsetFactor;
+    const offset = scroll % spacing;
+    // Toppens hojd seedas med varldskolumnen (inte skarmplatsen) - annars
+    // byter alla berg form varje gang offseten slar runt.
+    const colBase = Math.floor(scroll / spacing) * spacing;
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.moveTo(-spacing * 2, GROUND_Y);
     ctx.lineTo(-spacing * 2, baseY);
     for (let bx = -spacing * 2; bx < canvas.width + spacing * 2; bx += spacing) {
       const x = bx - offset;
-      const peak = baseY - (peakMin + Math.abs(Math.sin(bx * 0.013)) * (peakMax - peakMin));
+      const peak = baseY - (peakMin + Math.abs(Math.sin((bx + colBase) * 0.013)) * (peakMax - peakMin));
       ctx.lineTo(x + spacing / 2, peak);
       ctx.lineTo(x + spacing, baseY);
     }
@@ -463,16 +503,21 @@
   // Silhuett av flera byggnader/torn som en stad langt bort
   function drawTowerRow(ctx, baseY, color, offsetFactor, seed) {
     const spacing = 90;
-    const offset = (distance * offsetFactor) % spacing;
+    const scroll = distance * offsetFactor;
+    const offset = scroll % spacing;
+    // Byggnadernas form seedas med varldskolumnen sa staden inte byter
+    // skepnad varje gang offseten slar runt.
+    const colBase = Math.floor(scroll / spacing) * spacing;
     ctx.save();
     ctx.fillStyle = color;
     for (let bx = -spacing; bx < canvas.width + spacing; bx += spacing) {
       const x = bx - offset;
-      const h = 60 + Math.abs(Math.sin((bx + seed) * 0.03)) * 120;
-      const w = spacing * (0.4 + Math.abs(Math.sin((bx + seed) * 0.07)) * 0.25);
+      const wc = bx + colBase + seed;
+      const h = 60 + Math.abs(Math.sin(wc * 0.03)) * 120;
+      const w = spacing * (0.4 + Math.abs(Math.sin(wc * 0.07)) * 0.25);
       ctx.fillRect(x, baseY - h, w, h);
       // spira ibland
-      if (Math.sin((bx + seed) * 0.05) > 0.5) {
+      if (Math.sin(wc * 0.05) > 0.5) {
         ctx.beginPath();
         ctx.moveTo(x, baseY - h);
         ctx.lineTo(x + w / 2, baseY - h - 20);

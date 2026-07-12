@@ -19,8 +19,10 @@
       overlayText(ctx, "Du dog! Poäng: " + getScore() + " — Mellanslag/skärm för att starta om");
     }
 
-    if (themeAnnounce > 0) {
-      const alpha = Math.min(1, themeAnnounce / 30);
+    // Tidsbaserad (inte frame-raknad) sa annonsen visas lika lange pa alla skarmar
+    const announceLeft = themeAnnounceUntil - performance.now();
+    if (announceLeft > 0) {
+      const alpha = Math.min(1, announceLeft / 500);
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.fillStyle = "rgba(0,0,0,0.35)";
@@ -30,7 +32,6 @@
       ctx.textAlign = "center";
       ctx.fillText(theme.name + "!", canvas.width / 2, canvas.height / 2);
       ctx.restore();
-      themeAnnounce--;
     }
   }
 
@@ -47,13 +48,14 @@
 
   function draw() {
     const ctx = Engine.ctx;
-    const theme = THEMES[currentThemeIndex()];
+    const themeIndex = currentThemeIndex();
+    const theme = THEMES[themeIndex];
 
-    if (appliedThemeIndex !== currentThemeIndex()) {
-      appliedThemeIndex = currentThemeIndex();
+    if (appliedThemeIndex !== themeIndex) {
+      appliedThemeIndex = themeIndex;
       canvas.style.background = theme.bg;
       if (state === "playing") {
-        themeAnnounce = 150;
+        themeAnnounceUntil = performance.now() + 2500;
       }
     }
 

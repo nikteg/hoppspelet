@@ -1,10 +1,15 @@
 "use strict";
 
+  // Fartkapp: hindrar bade omojlig svarighetsgrad och "tunnling" - vid extrem
+  // fart kan ett smalt hinder annars passera rakt genom spelarens hitbox
+  // mellan tva uppdateringar utan att kollisionen upptacks.
+  const MAX_SPEED = 22;
+
   function update() {
     if (state !== "playing") return;
 
     // Öka svårighetsgrad sakta med tiden
-    speed += 0.0015;
+    if (speed < MAX_SPEED) speed += 0.0015;
     distance += speed;
 
     // Gravitation + kollision mot plattformar (kan hoppas upp på, är annars solida)
@@ -15,6 +20,9 @@
 
     let floor = GROUND_Y;
     let crashed = false;
+    // Samma marginal som dodliga hinder far (nedan), sa att en pixelsnudd
+    // mot plattformens framkant inte dodar - kanns orattvist annars.
+    const sideMargin = 6;
 
     for (const obs of obstacles) {
       if (obs.type !== "platform") continue;
@@ -23,7 +31,10 @@
       if (prevBottom <= obs.y + 1 && tentativeBottom >= obs.y) {
         // Landar ovanpå plattformen
         if (obs.y < floor) floor = obs.y;
-      } else if (tentativeBottom > obs.y && player.y < obs.y + obs.h) {
+      } else if (tentativeBottom > obs.y + sideMargin &&
+                 player.y + sideMargin < obs.y + obs.h &&
+                 player.x + player.w - sideMargin > obs.x &&
+                 player.x + sideMargin < obs.x + obs.w) {
         // Sprang in i plattformens sida/undersida
         crashed = true;
       }

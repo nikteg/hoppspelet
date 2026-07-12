@@ -367,20 +367,23 @@
       }
       case "neon": {
         const spacing = 130;
-        const offset = (distance * 0.06) % spacing;
+        const scroll = distance * 0.06;
+        const offset = scroll % spacing;
+        // Byggnadens hojd och fonstermonster seedas med dess VARLDSKOLUMN
+        // (bx + colBase), inte skarmplatsen - annars byter alla hus form och
+        // fonster varje gang offseten slar runt (och fonstren "blinkar").
+        const colBase = Math.floor(scroll / spacing) * spacing;
         for (let bx = -spacing; bx < canvas.width + spacing; bx += spacing) {
           const x = bx - offset;
-          const h = 90 + Math.abs(Math.sin(bx * 0.02)) * 140;
+          const wcol = bx + colBase;
+          const h = 90 + Math.abs(Math.sin(wcol * 0.02)) * 140;
           ctx.fillStyle = "rgba(10,5,20,0.85)";
           ctx.fillRect(x, GROUND_Y - h, spacing * 0.6, h);
-          // Vilka fonster som lyser bestams av byggnadens FASTA position (bx) och lokalt
-          // rad/kolumn-index - inte skarmpositionen (x) - annars "blinkar" fonstren nar
-          // huset glider forbi eftersom bx-offset andras varje bildruta.
           let row = 0;
           for (let wy = GROUND_Y - h + 10; wy < GROUND_Y - 10; wy += 16) {
             let col = 0;
             for (let wx = x + 6; wx < x + spacing * 0.6 - 6; wx += 14) {
-              if (Math.sin(bx * 0.7 + row * 2.1 + col * 1.3) > 0.3) {
+              if (Math.sin(wcol * 0.7 + row * 2.1 + col * 1.3) > 0.3) {
                 ctx.fillStyle = "rgba(0,255,255,0.5)";
               } else {
                 ctx.fillStyle = "rgba(255,60,200,0.35)";
@@ -797,7 +800,10 @@
         drawJaggedSilhouette(ctx, GROUND_Y - 15, 50, 140, 200, "rgba(30,10,60,0.6)", 0.045);
         // Jattekristaller som reser sig ur marken, glodande
         const cCols = ["#5ff2e0", "#a06fff", "#ff6fd0"];
-        for (let i = 0; i < 5; i++) {
+        // Antalet skalar med skarmbredden - fast 5 st lamnade hogra halvan tom
+        // pa breda skarmar.
+        const nCrystals = Math.ceil(canvas.width / 160) + 1;
+        for (let i = 0; i < nCrystals; i++) {
           const cx = (i * 160 + 80 - (distance * 0.06) % 160);
           if (cx < -60 || cx > canvas.width + 60) continue;
           const h = 70 + (i % 3) * 55;
@@ -841,8 +847,9 @@
         for (let i = 0; i < 2; i++) {
           drawHangingVine(ctx, Math.max(380, canvas.width * (0.4 + i * 0.15)), 0, 60, t, i * 3, "rgba(20,40,10,0.5)");
         }
-        // Glodande irrblossmoln
-        for (let i = 0; i < 4; i++) {
+        // Glodande irrblossmoln (antal efter skarmbredd)
+        const nWisps = Math.ceil(canvas.width / 220) + 1;
+        for (let i = 0; i < nWisps; i++) {
           drawLantern(ctx, (i * 220 + 60 - (t * 10) % 220), GROUND_Y - 30 - (i % 3) * 20, "rgba(150,255,120,0.9)", t, i * 2);
         }
         ctx.save();
@@ -895,7 +902,8 @@
         drawJaggedSilhouette(ctx, GROUND_Y - 5, 15, 45, 130, "rgba(255,150,180,0.4)", 0.06);
         // Korallformationer pa botten
         const coralCols = ["rgba(255,110,150,0.6)", "rgba(255,180,90,0.6)", "rgba(180,120,255,0.6)"];
-        for (let i = 0; i < 5; i++) {
+        const nCorals = Math.ceil(canvas.width / 150) + 1; // tack hela bredden
+        for (let i = 0; i < nCorals; i++) {
           const cx = (i * 150 + 50 - (distance * 0.05) % 150);
           ctx.save();
           ctx.strokeStyle = coralCols[i % 3];
@@ -1219,8 +1227,9 @@
       }
       case "atlantis": {
         drawJaggedSilhouette(ctx, GROUND_Y - 15, 60, 160, 210, "rgba(5,20,30,0.7)", 0.045);
-        // Sjunkna ruiner: pelare i olika hojd
-        for (let k = 0; k < 4; k++) {
+        // Sjunkna ruiner: pelare i olika hojd (antal efter skarmbredd)
+        const nPillars = Math.ceil(canvas.width / 150) + 1;
+        for (let k = 0; k < nPillars; k++) {
           const cx = (k * 150 + 60 - (distance * 0.05) % 150);
           drawPillar(ctx, cx, GROUND_Y, 20, 60 + (k % 3) * 40, "rgba(30,80,90,0.55)", "rgba(40,100,110,0.6)");
         }
@@ -1431,10 +1440,12 @@
         ctx.save();
         ctx.strokeStyle = "rgba(0,255,204,0.4)";
         ctx.lineWidth = 1.5;
-        const so = (distance * 0.05) % 90;
+        const scroll3 = distance * 0.05;
+        const so = scroll3 % 90;
+        const colBase3 = Math.floor(scroll3 / 90) * 90; // stabil form vid wrap
         for (let bx = -90; bx < canvas.width; bx += 90) {
           const x = bx - so;
-          const h = 60 + Math.abs(Math.sin(bx * 0.03)) * 120;
+          const h = 60 + Math.abs(Math.sin((bx + colBase3) * 0.03)) * 120;
           ctx.strokeRect(x, GROUND_Y - h, 40, h);
         }
         ctx.restore();
@@ -1770,10 +1781,14 @@
         ctx.restore();
         drawTowerRow(ctx, GROUND_Y, "rgba(15,12,20,0.7)", 0.025, 100);
         const spacing2 = 140;
-        const offset2 = (distance * 0.05) % spacing2;
+        const scroll2 = distance * 0.05;
+        const offset2 = scroll2 % spacing2;
+        // Seedas med varldskolumnen sa husen inte byter form/fonster vid wrap
+        const colBase2 = Math.floor(scroll2 / spacing2) * spacing2;
         for (let bx3 = -spacing2; bx3 < canvas.width + spacing2; bx3 += spacing2) {
           const x = bx3 - offset2;
-          const h = 80 + Math.abs(Math.sin(bx3 * 0.02)) * 130;
+          const wcol = bx3 + colBase2;
+          const h = 80 + Math.abs(Math.sin(wcol * 0.02)) * 130;
           ctx.fillStyle = "rgba(20,15,10,0.85)";
           ctx.fillRect(x, GROUND_Y - h, spacing2 * 0.6, h);
           ctx.fillStyle = "rgba(255,200,110,0.6)";
@@ -1781,7 +1796,7 @@
           for (let wy = GROUND_Y - h + 10; wy < GROUND_Y - 10; wy += 16) {
             let col = 0;
             for (let wx2 = x + 6; wx2 < x + spacing2 * 0.6 - 6; wx2 += 14) {
-              if (Math.sin(bx3 * 0.7 + row * 2.1 + col * 1.3) > 0.3) ctx.fillRect(wx2, wy, 6, 8);
+              if (Math.sin(wcol * 0.7 + row * 2.1 + col * 1.3) > 0.3) ctx.fillRect(wx2, wy, 6, 8);
               col++;
             }
             row++;
@@ -1867,12 +1882,15 @@
       case "library": {
         // Vaggar av bokhyllor bakom + svavande bocker + stege
         const shelfCols = ["rgba(120,50,40,0.5)", "rgba(50,80,110,0.5)", "rgba(90,110,50,0.5)", "rgba(130,100,40,0.5)"];
-        const so = (distance * 0.05) % 26;
+        const shelfScroll = distance * 0.05;
+        const so = shelfScroll % 26;
+        const shelfBase = Math.floor(shelfScroll / 26) * 26; // stabila bokfarger vid wrap
         for (let bx = -26; bx < canvas.width; bx += 26) {
           const x = bx - so;
+          const wcol = bx + shelfBase;
           for (let row = 0; row < 4; row++) {
-            ctx.fillStyle = shelfCols[(Math.floor(bx / 26) + row) % 4];
-            const bh = 60 + ((bx + row) % 3) * 12;
+            ctx.fillStyle = shelfCols[((Math.floor(wcol / 26) % 4 + 4) + row) % 4];
+            const bh = 60 + (((wcol + row) % 3 + 3) % 3) * 12;
             ctx.fillRect(x, GROUND_Y - 40 - row * 62 - bh + 60, 20, bh);
           }
         }
@@ -2142,10 +2160,14 @@
       case "artgallery": {
         // Vaggmalningar/tavlor i ramar pa vaggen + spotlights
         const colors3 = ["#ff5a5a", "#5ab4ff", "#ffe066", "#6fce7a", "#a06fff"];
-        const fo = (distance * 0.05) % 160;
+        const paintScroll = distance * 0.05;
+        const fo = paintScroll % 160;
+        // Tavlans motiv foljer sin varldskolumn sa den inte byter utseende
+        // varje gang offseten slar runt.
+        const paintBase = Math.floor(paintScroll / 160);
         for (let bx = -160; bx < canvas.width + 160; bx += 160) {
           const x = bx - fo;
-          const idx = ((bx / 160) % 5 + 5) % 5 | 0;
+          const idx = ((bx / 160 + paintBase) % 5 + 5) % 5 | 0;
           ctx.fillStyle = "rgba(40,30,20,0.5)";
           ctx.fillRect(x, GROUND_Y - 130, 90, 90);
           ctx.fillStyle = colors3[idx];

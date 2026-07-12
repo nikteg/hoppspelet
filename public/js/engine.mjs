@@ -5,12 +5,14 @@
   const Engine = {
     canvas: null,
     ctx: null,
-    keys: {},
-    entities: [],
     onUpdate: null,
     onDraw: null,
     lastTime: 0,
     accumulator: 0,
+    // Hur lang den senaste bildrutan var relativt ett 60 Hz-steg (0.5 pa en
+    // 120 Hz-skarm). Anvands av rena rit-animationer (t.ex. bakgrundspartiklar
+    // som ska rora sig aven pa startskarmen) sa de gar i samma takt overallt.
+    frameScale: 1,
     // Fysiken ar tunad i "per frame"-varden for 60 fps. Darfor kors updates i
     // fasta 60 Hz-steg oavsett skarmens uppdateringsfrekvens (120+ Hz-skarmar
     // fick annars dubbel spelhastighet). Ritning sker fortfarande varje frame.
@@ -20,19 +22,16 @@
       this.canvas = canvas;
       this.ctx = canvas.getContext("2d");
       window.addEventListener("keydown", (e) => {
-        this.keys[e.code] = true;
         if (e.code === "Space") e.preventDefault();
         if (this.onKeyDown) this.onKeyDown(e.code);
-      });
-      window.addEventListener("keyup", (e) => {
-        this.keys[e.code] = false;
       });
     },
 
     start(update, draw) {
       this.onUpdate = update;
       this.onDraw = draw;
-      requestAnimationFrame(this.loop.bind(this));
+      this.loop = this.loop.bind(this); // bind en gang i stallet for varje frame
+      requestAnimationFrame(this.loop);
     },
 
     loop(time) {
@@ -42,13 +41,14 @@
       // Efter t.ex. en flikvaxling kan elapsed vara enormt - hoppa inte ikapp,
       // det skulle ge en storm av updates (och orattvis dod).
       if (elapsed > 250) elapsed = 250;
+      this.frameScale = elapsed / this.STEP_MS;
       this.accumulator += elapsed;
       while (this.accumulator >= this.STEP_MS) {
         this.onUpdate();
         this.accumulator -= this.STEP_MS;
       }
       this.onDraw();
-      requestAnimationFrame(this.loop.bind(this));
+      requestAnimationFrame(this.loop);
     }
   };
 

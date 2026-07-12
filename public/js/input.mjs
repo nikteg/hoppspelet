@@ -9,62 +9,43 @@
     handleAction();
   }, { passive: false });
 
-  // ---------- Felsökningsknapp (+1000 poäng) ----------
+  // ---------- Knapp-koppling ----------
   // mousedown med preventDefault hindrar knapparna fran att ta emot fokus, sa att
   // MELLANSLAG for att hoppa fortsatter fungera som vanligt efter ett klick.
   // Touch hanteras separat och direkt i touchstart eftersom preventDefault dar
   // stoppar webblasaren fran att nagonsin skicka den efterföljande click-handelsen
   // (annars gjorde knapparna ingenting pa iPad).
+  // Returnerar elementet (eller null om det saknas i HTML:en - da hoppas
+  // knappen bara over i stallet for att krascha resten av inputkopplingen).
+  function wireButton(id, action) {
+    const btn = document.getElementById(id);
+    if (!btn) return null;
+    btn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    btn.addEventListener("touchstart", function (e) {
+      e.preventDefault();
+      action();
+    }, { passive: false });
+    btn.addEventListener("click", function () {
+      action();
+      btn.blur();
+    });
+    return btn;
+  }
+
+  // ---------- Felsökningsknappar (temabyte + omladdning) ----------
   function debugGoToTheme(delta) {
     const cur = currentThemeIndex();
     debugThemeOverride = ((cur + delta) % THEMES.length + THEMES.length) % THEMES.length;
   }
 
-  const prevThemeBtn = document.getElementById("debugPrevTheme");
-  prevThemeBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
-  prevThemeBtn.addEventListener("touchstart", function (e) {
-    e.preventDefault();
-    debugGoToTheme(-1);
-  }, { passive: false });
-  prevThemeBtn.addEventListener("click", function () {
-    debugGoToTheme(-1);
-    prevThemeBtn.blur();
-  });
-
-  const nextThemeBtn = document.getElementById("debugNextTheme");
-  nextThemeBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
-  nextThemeBtn.addEventListener("touchstart", function (e) {
-    e.preventDefault();
-    debugGoToTheme(1);
-  }, { passive: false });
-  nextThemeBtn.addEventListener("click", function () {
-    debugGoToTheme(1);
-    nextThemeBtn.blur();
-  });
-
-  const reloadBtn = document.getElementById("debugReload");
-  reloadBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
-  reloadBtn.addEventListener("touchstart", function (e) {
-    e.preventDefault();
-    window.location.reload();
-  }, { passive: false });
-  reloadBtn.addEventListener("click", function () {
-    window.location.reload();
-  });
+  wireButton("debugPrevTheme", function () { debugGoToTheme(-1); });
+  wireButton("debugNextTheme", function () { debugGoToTheme(1); });
+  wireButton("debugReload", function () { window.location.reload(); });
 
   // ---------- Mute-knapp for musiken ----------
-  const muteBtn = document.getElementById("musicMute");
-  muteBtn.textContent = musicOn ? "🔊" : "🔇";
   function toggleMusic() {
     startMusic();       // sakerstall att musiken ar igang (och ljudet upplast av gesten)
     setMusicOn(!musicOn);
   }
-  muteBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
-  muteBtn.addEventListener("touchstart", function (e) {
-    e.preventDefault();
-    toggleMusic();
-  }, { passive: false });
-  muteBtn.addEventListener("click", function () {
-    toggleMusic();
-    muteBtn.blur();
-  });
+  const muteBtn = wireButton("musicMute", toggleMusic);
+  if (muteBtn) muteBtn.textContent = musicOn ? "🔊" : "🔇";
