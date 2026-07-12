@@ -98,7 +98,15 @@
     }
   }
 
+  // Startsidan ska bort vid forsta speltryck - oavsett om det ar Spela-knappen,
+  // mellanslag eller ett tryck pa skarmen.
+  function hideLanding() {
+    const el = document.getElementById("landing");
+    if (el && el.style.display !== "none") el.style.display = "none";
+  }
+
   function handleAction() {
+    hideLanding();
     startMusic(); // startar musiken vid forsta anvandarinteraktion (browsers kraver en gest)
     if (state === "ready") {
       state = "playing";

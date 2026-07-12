@@ -28,6 +28,30 @@
   <button id="debugReload" type="button" tabindex="-1">Ladda om</button>
 </div>
 
+<!-- Startsida: visas ovanpa spelet tills man trycker Spela (eller mellanslag). -->
+<div id="landing">
+  <div class="landing-inner">
+    <img class="landing-logo" src="assets/logo.svg" alt="Hoppspelet">
+    <p class="landing-byline">Skapat av Ida &amp; Niklas</p>
+    <div class="landing-shots">
+      <img src="assets/screens/screen1.jpg" alt="Lavagrottan – hoppa över glödande spikar">
+      <img src="assets/screens/screen2.jpg" alt="Enhörningsdalen – plattformar och stjärnmynt">
+      <img src="assets/screens/screen3.jpg" alt="Storstadsnatten – hoppa i neonljuset">
+    </div>
+    <div class="landing-how">
+      <h2>Så funkar spelet</h2>
+      <ul>
+        <li>🕹️ Hoppa med <strong>MELLANSLAG</strong> – eller tryck var som helst på skärmen.</li>
+        <li>⚠️ Hoppa över hindren och kläm dig under de hängande blocken. Nuddar du något är rundan över!</li>
+        <li>🪙 Samla mynt – varje mynt ger 10 poäng, och du får poäng för hur långt du springer.</li>
+        <li>🌍 Var 1000:e poäng hamnar du i en ny värld – det finns 65 olika!</li>
+        <li>💨 Farten ökar ju längre du kommer. Hur långt klarar du dig?</li>
+      </ul>
+    </div>
+    <button id="playBtn" type="button">Spela</button>
+  </div>
+</div>
+
 <!-- Laddas som vanliga skript (inte type="module") sa spelet aven funkar
      direkt fran file:// (dubbelklick pa index.html). Ordningen ar viktig. -->
 <script src="js/engine.mjs"></script>

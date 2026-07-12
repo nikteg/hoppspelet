@@ -88,3 +88,88 @@
   #debugReload {
     font-size: 16px;
   }
+
+  /* ---------- Startsida ---------- */
+  #landing {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    overflow-y: auto;
+    /* body har touch-action: none - tillat vertikal scroll har */
+    touch-action: pan-y;
+    background: radial-gradient(ellipse at 50% 0%, #2a1a4a 0%, #14081a 55%, #0a0710 100%);
+    color: #f5f0e6;
+    text-align: center;
+  }
+  .landing-inner {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 36px 20px 56px;
+  }
+  .landing-logo {
+    width: min(78vw, 460px);
+    height: auto;
+    filter: drop-shadow(0 4px 16px rgba(0,0,0,0.55));
+  }
+  .landing-byline {
+    margin: 4px 0 26px;
+    color: #cfd3dc;
+    font-size: 15px;
+  }
+  .landing-shots {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 26px;
+  }
+  .landing-shots img {
+    width: min(272px, 84vw);
+    height: auto;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.18);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  }
+  .landing-how {
+    display: inline-block;
+    text-align: left;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 16px 26px 18px;
+    margin: 0 0 30px;
+    max-width: 580px;
+  }
+  .landing-how h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    color: #ffe066;
+  }
+  .landing-how ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .landing-how li {
+    margin: 10px 0;
+    line-height: 1.45;
+    font-size: 15px;
+  }
+  #playBtn {
+    display: block;
+    margin: 0 auto;
+    padding: 18px 76px;
+    font-size: 26px;
+    font-weight: bold;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #14081a;
+    background: linear-gradient(180deg, #ffe066 0%, #ffc94a 100%);
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(255,205,80,0.35);
+    touch-action: manipulation;
+  }
+  #playBtn:active {
+    transform: scale(0.97);
+  }

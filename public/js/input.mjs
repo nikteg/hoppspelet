@@ -42,6 +42,10 @@
   wireButton("debugNextTheme", function () { debugGoToTheme(1); });
   wireButton("debugReload", function () { window.location.reload(); });
 
+  // ---------- Startsidans Spela-knapp ----------
+  // handleAction gommer startsidan och startar rundan direkt (state "ready").
+  wireButton("playBtn", handleAction);
+
   // ---------- Mute-knapp for musiken ----------
   function toggleMusic() {
     startMusic();       // sakerstall att musiken ar igang (och ljudet upplast av gesten)

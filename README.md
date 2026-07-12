@@ -38,12 +38,15 @@ byt ut stämpeln manuellt vid deploy.
 
 Ikonerna i `public/icons/` är genererade från `public/favicon.svg`
 (macOS: `qlmanage -t -s 512 -o public/icons public/favicon.svg`).
+Skärmbilderna på startsidan (`public/assets/screens/`) är riktiga
+spelbilder tagna via `canvas.toDataURL` med bakgrundsgradienten
+inkomponerad.
 
 ## Filstruktur
 
 ```
 public/
-  index.html          Skal + skriptordning + SW-registrering
+  index.html          Skal + startsida + skriptordning + SW-registrering
   styles.css          All CSS
   js/
     engine.mjs        Minimal game loop + kollisionshjälp
