@@ -1,48 +1,59 @@
 "use strict";
 
   function drawUI(ctx, theme) {
+    // HUD:en skjuts in innanfor safe area (iPhone-notchen sitter till
+    // vanster/uppe beroende pa hur mobilen halls).
+    const hx = 16 + safeLeft;
+    const hy = safeTop;
     ctx.save();
     ctx.fillStyle = "#f5f0e6";
     ctx.shadowColor = "rgba(0,0,0,0.8)";
     ctx.shadowBlur = 4;
     ctx.font = "bold 20px 'Segoe UI', Arial, sans-serif";
-    ctx.fillText("Poäng: " + getScore(), 16, 30);
+    ctx.fillText("Poäng: " + getScore(), hx, hy + 30);
     ctx.font = "14px 'Segoe UI', Arial, sans-serif";
-    ctx.fillText("Bästa: " + best, 16, 50);
+    ctx.fillText("Bästa: " + best, hx, hy + 50);
     ctx.font = "13px 'Segoe UI', Arial, sans-serif";
-    ctx.fillText("#" + (currentThemeIndex() + 1) + " " + theme.name, 16, 70);
+    ctx.fillText("#" + (currentThemeIndex() + 1) + " " + theme.name, hx, hy + 70);
     ctx.restore();
 
     if (state === "ready") {
-      overlayText(ctx, "Tryck MELLANSLAG eller skärmen för att starta");
+      overlayText(ctx, "Tryck MELLANSLAG eller skärmen", "för att starta");
     } else if (state === "gameover") {
-      overlayText(ctx, "Du dog! Poäng: " + getScore() + " — Mellanslag/skärm för att starta om");
+      overlayText(ctx, "Du dog! Poäng: " + getScore(), "Mellanslag/skärm för att starta om");
     }
 
-    // Tidsbaserad (inte frame-raknad) sa annonsen visas lika lange pa alla skarmar
+    // Tidsbaserad (inte frame-raknad) sa annonsen visas lika lange pa alla
+    // skarmar. Ligger en bit upp pa skarmen sa den inte skymmer spelaren
+    // och hindren mitt i bild.
     const announceLeft = themeAnnounceUntil - performance.now();
     if (announceLeft > 0) {
+      const announceY = Math.max(safeTop + 90, viewH * 0.24);
       const alpha = Math.min(1, announceLeft / 500);
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.fillStyle = "rgba(0,0,0,0.35)";
-      ctx.fillRect(0, viewH / 2 - 60, viewW, 90);
+      ctx.fillRect(0, announceY - 60, viewW, 90);
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 34px 'Segoe UI', Arial, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("#" + (currentThemeIndex() + 1) + " " + theme.name + "!", viewW / 2, viewH / 2);
+      ctx.fillText("#" + (currentThemeIndex() + 1) + " " + theme.name + "!", viewW / 2, announceY);
       ctx.restore();
     }
   }
 
-  function overlayText(ctx, text) {
+  function overlayText(ctx, text, subtext) {
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,0.45)";
     ctx.fillRect(0, 0, viewW, viewH);
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 24px 'Segoe UI', Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(text, viewW / 2, viewH / 2);
+    ctx.font = "bold 24px 'Segoe UI', Arial, sans-serif";
+    ctx.fillText(text, viewW / 2, viewH / 2 - (subtext ? 14 : 0));
+    if (subtext) {
+      ctx.font = "18px 'Segoe UI', Arial, sans-serif";
+      ctx.fillText(subtext, viewW / 2, viewH / 2 + 22);
+    }
     ctx.restore();
   }
 

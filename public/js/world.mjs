@@ -36,7 +36,14 @@
     canvas.height = Math.round(viewH * DPR);
     // Resize nollstaller canvas-tillstandet, sa transformen satts om har.
     Engine.ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    GROUND_Y = viewH - 80;
+    // Markremsan ar 80px pa stora skarmar men krymper pa laga (mobil i
+    // liggande lage) sa den inte ater upp spelytan.
+    GROUND_Y = viewH - Math.min(80, Math.max(40, Math.round(viewH * 0.12)));
+    // Safe area-insets (notch etc.) - CSS-variablerna satts fran env() i
+    // styles.css; canvasritad HUD kan inte lasa env() direkt.
+    const rootStyle = getComputedStyle(document.documentElement);
+    safeLeft = parseFloat(rootStyle.getPropertyValue("--sai-left")) || 0;
+    safeTop = parseFloat(rootStyle.getPropertyValue("--sai-top")) || 0;
     // Levande objekt har koordinater raknade fran den gamla markytan. Flytta
     // med dem vid resize, annars svavar spikar i luften och takblockens lucka
     // andrar storlek (kunde bli opasserbar). Takblock hanger fran taket, sa

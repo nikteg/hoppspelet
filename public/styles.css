@@ -1,3 +1,11 @@
+  /* Safe area-insets (iPhone-notch m.m.) som CSS-variabler sa aven den
+     canvasritade HUD:en kan lasa dem via getComputedStyle (world.mjs). */
+  :root {
+    --sai-top: env(safe-area-inset-top, 0px);
+    --sai-right: env(safe-area-inset-right, 0px);
+    --sai-bottom: env(safe-area-inset-bottom, 0px);
+    --sai-left: env(safe-area-inset-left, 0px);
+  }
   html, body {
     margin: 0;
     padding: 0;
@@ -21,16 +29,6 @@
     height: 100%;
     touch-action: none;
   }
-  #hint {
-    position: fixed;
-    bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #cfd3dc;
-    font-size: 14px;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
-    pointer-events: none;
-  }
   #logo {
     position: fixed;
     left: 50%;
@@ -52,19 +50,19 @@
   #logo.hidden { opacity: 0; }
   #musicMute, #debugThemeNav, #debugReload {
     position: fixed;
-    right: 12px;
+    right: calc(12px + var(--sai-right));
     z-index: 10;
   }
   #musicMute {
-    top: 12px;
+    top: calc(12px + var(--sai-top));
   }
   #debugThemeNav {
-    top: 76px;
+    top: calc(76px + var(--sai-top));
     display: flex;
     gap: 8px;
   }
   #debugReload {
-    top: 140px;
+    top: calc(140px + var(--sai-top));
   }
   #musicMute, #debugThemeNav button, #debugReload {
     min-width: 56px;
@@ -141,7 +139,7 @@
   .landing-inner {
     max-width: 940px;
     margin: 0 auto;
-    padding: 36px 20px 56px;
+    padding: calc(36px + var(--sai-top)) calc(20px + var(--sai-right)) calc(56px + var(--sai-bottom)) calc(20px + var(--sai-left));
   }
   .landing-logo {
     width: min(78vw, 460px);

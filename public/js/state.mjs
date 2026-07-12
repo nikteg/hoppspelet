@@ -10,6 +10,9 @@
   let viewW = 0;
   let viewH = 0;
   let DPR = 1;
+  // Safe area-insets i CSS-pixlar (iPhone-notch m.m.), lasta i resizeCanvas.
+  let safeLeft = 0;
+  let safeTop = 0;
 
   const GRAVITY = 0.7;
   const JUMP_FORCE = -13.5;
