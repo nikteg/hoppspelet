@@ -1,30 +1,30 @@
-/* Genererar startsidans skärmbilder (public/assets/screens/screen1-3.jpg).
+/* Generates landing page screenshots (public/assets/screens/screen1-3.jpg).
  *
- * Användning:
- *   1. Ställ webbläsarfönstret på ca 800x450 (t.ex. devtools responsive mode)
- *      - bilden blir fönsterstorleken gånger skärmens devicePixelRatio
- *      (spelet renderar i DPR-upplösning, max 2x).
- *   2. Öppna spelet (dubbelklicka public/index.html eller den hostade sidan).
- *   3. Klistra in HELA den här filen i devtools-konsolen och tryck Enter.
- *      Webbläsaren frågar ev. om den får ladda ner flera filer - tillåt.
- *   4. Flytta de nedladdade screen1.jpg/screen2.jpg/screen3.jpg till
- *      public/assets/screens/ och ladda om sidan (skriptet lämnar spelet i
- *      ett iscensatt läge).
+ * Usage:
+ *   1. Set the browser window to about 800x450 (e.g. devtools responsive mode)
+ *      - the image will be window size times the screen's devicePixelRatio
+ *      (the game renders at DPR resolution, max 2x).
+ *   2. Open the game (double-click public/index.html or the hosted page).
+ *   3. Paste THIS ENTIRE file into the devtools console and press Enter.
+ *      The browser may ask about downloading multiple files - allow it.
+ *   4. Move the downloaded screen1.jpg/screen2.jpg/screen3.jpg to
+ *      public/assets/screens/ and reload the page (the script leaves the game
+ *      in a staged state).
  *
- * Vill du byta motiv: ändra i SHOTS nedan. Koordinaterna är relativa
- * canvasbredden så scenerna funkar i olika fönsterstorlekar.
+ * To change the motif: edit SHOTS below. Coordinates are relative to
+ * canvas width so scenes work at different window sizes.
  */
 (async function captureScreens() {
   "use strict";
   if (typeof THEMES === "undefined" || typeof canvas === "undefined") {
-    console.error("Kör detta i spelets flik (öppna public/index.html först).");
+    console.error("Run this in the game tab (open public/index.html first).");
     return;
   }
 
   const JPEG_QUALITY = 0.82;
 
-  // Iscensätt ett stillsamt "playing"-läge: inga nya spawns, spelaren på
-  // marken och poängräknaren tickande - ser ut som mitt i en runda.
+  // Stage a quiet "playing" mode: no new spawns, player on
+  // the ground and score ticking - looks like mid-round.
   function setBase(themeKey) {
     debugThemeOverride = THEMES.findIndex((t) => t.key === themeKey);
     state = "playing";
@@ -93,12 +93,12 @@
   async function grab(shot) {
     shot.stage();
     await frame();
-    themeAnnounceUntil = 0; // temaannonsen ska inte synas på bilden
+    themeAnnounceUntil = 0; // theme announcement should not show in the picture
     await frame();
     await frame();
 
-    // Canvasen är transparent där CSS-bakgrunden syns - återskapa temats
-    // radialgradient och rita spelet ovanpå.
+    // The canvas is transparent where the CSS background shows - recreate the theme's
+    // radial gradient and draw the game on top.
     const th = THEMES[currentThemeIndex()];
     const out = document.createElement("canvas");
     out.width = canvas.width;
@@ -133,5 +133,5 @@
     await grab(shot);
     await new Promise((r) => setTimeout(r, 400)); // ge nedladdningen andrum
   }
-  console.log("Klart! Flytta filerna till public/assets/screens/ och ladda om sidan.");
+  console.log("Done! Move the files to public/assets/screens/ and reload the page.");
 })();

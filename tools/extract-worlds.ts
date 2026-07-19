@@ -16,7 +16,8 @@ const sceneryLines = fs.readFileSync("src/scenery.ts", "utf8").split("\n");
 const spritesLines = fs.readFileSync("src/sprites.ts", "utf8").split("\n");
 
 // Find the drawScenery switch bounds by brace counting
-let scSwitchStart = -1, scSwitchEnd = -1;
+let scSwitchStart = -1,
+  scSwitchEnd = -1;
 let braceDepth = 0;
 let inScSwitch = false;
 for (let i = 0; i < sceneryLines.length; i++) {
@@ -40,7 +41,8 @@ for (let i = 0; i < sceneryLines.length; i++) {
 console.log(`Scenery switch: lines ${scSwitchStart}-${scSwitchEnd}`);
 
 // Find the drawCoinDesign switch bounds by brace counting
-let coinSwitchStart = -1, coinSwitchEnd = -1;
+let coinSwitchStart = -1,
+  coinSwitchEnd = -1;
 braceDepth = 0;
 inScSwitch = false;
 for (let i = 0; i < spritesLines.length; i++) {
@@ -113,7 +115,10 @@ for (const [key, lines] of scCases) {
   }
   // If depth is positive, the case opened with `{` and we're missing the closing `}`.
   // Add it back (the stripper removed too many).
-  while (depth > 0) { lines.push("}"); depth--; }
+  while (depth > 0) {
+    lines.push("}");
+    depth--;
+  }
 }
 
 // ---- Extract coin design cases (handle multi-label cases) ----
@@ -126,7 +131,7 @@ for (let i = coinSwitchStart; i < coinSwitchEnd; i++) {
   const caseMatch = line.match(/^\s*case\s+"(\w+)":/);
   if (caseMatch) {
     // New case label - if we have accumulated content, save to all current keys
-    if (currentCoinKeys.length > 0 && currentCoinLines.some(l => l.trim().length > 0)) {
+    if (currentCoinKeys.length > 0 && currentCoinLines.some((l) => l.trim().length > 0)) {
       for (const k of currentCoinKeys) {
         // Only save if not already set (first occurrence wins)
         if (!coinCases.has(k)) coinCases.set(k, [...currentCoinLines]);
@@ -135,7 +140,7 @@ for (let i = coinSwitchStart; i < coinSwitchEnd; i++) {
     currentCoinKeys.push(caseMatch[1]);
     currentCoinLines = [];
   } else if (line.trim() === "default:") {
-    if (currentCoinKeys.length > 0 && currentCoinLines.some(l => l.trim().length > 0)) {
+    if (currentCoinKeys.length > 0 && currentCoinLines.some((l) => l.trim().length > 0)) {
       for (const k of currentCoinKeys) {
         if (!coinCases.has(k)) coinCases.set(k, [...currentCoinLines]);
       }
@@ -147,7 +152,7 @@ for (let i = coinSwitchStart; i < coinSwitchEnd; i++) {
   }
 }
 // Save final case
-if (currentCoinKeys.length > 0 && currentCoinLines.some(l => l.trim().length > 0)) {
+if (currentCoinKeys.length > 0 && currentCoinLines.some((l) => l.trim().length > 0)) {
   for (const k of currentCoinKeys) {
     if (!coinCases.has(k)) coinCases.set(k, [...currentCoinLines]);
   }
@@ -173,7 +178,10 @@ for (const [key, lines] of coinCases) {
       if (ch === "}") depth--;
     }
   }
-  while (depth > 0) { lines.push("}"); depth--; }
+  while (depth > 0) {
+    lines.push("}");
+    depth--;
+  }
 }
 
 // ---- Read theme keys from themes.ts ----
@@ -195,8 +203,8 @@ for (const key of themeKeys) {
   if (!lines) continue;
   // Normalize: trim, remove empty and comment-only lines
   const normalized = lines
-    .map(l => l.trim())
-    .filter(l => l.length > 0)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0)
     .join("\n");
   if (!normalized) continue;
   const existing = coinDesignKeys.get(normalized);
@@ -211,7 +219,9 @@ const sharedCoins = [...coinDesignKeys.entries()]
   .filter(([_, keys]) => keys.length > 1)
   .map(([code, keys]) => ({ primary: keys[0], keys, rawLines: coinCases.get(keys[0])! }));
 
-console.log(`Found ${sharedCoins.length} shared coin designs: ${sharedCoins.map(s => s.keys.join("/")).join(", ")}`);
+console.log(
+  `Found ${sharedCoins.length} shared coin designs: ${sharedCoins.map((s) => s.keys.join("/")).join(", ")}`,
+);
 
 // ---- Generate _shared.ts ----
 let sharedSrc = `// Shared coin designs used by multiple worlds.\nimport type { Ctx } from "../types.js";\nimport { drawStarShape, drawGearSpike } from "../sprites.js";\n\n`;
@@ -276,14 +286,14 @@ for (const key of themeKeys) {
   const coinLines = coinCases.get(key);
 
   // Determine if this world uses a shared coin design
-  const sharedEntry = sharedCoins.find(s => s.keys.includes(key));
+  const sharedEntry = sharedCoins.find((s) => s.keys.includes(key));
   const usesSharedCoin = sharedEntry !== undefined;
   const sharedPrimary = usesSharedCoin ? sharedEntry!.primary : null;
 
   let src = `// World: ${key}\n`;
 
   // Scenery imports and function
-  if (scLines && scLines.some(l => l.trim().length > 0)) {
+  if (scLines && scLines.some((l) => l.trim().length > 0)) {
     src += sceneryImports;
     src += `\nexport function drawScenery(ctx: Ctx, t: number) {\n`;
     src += scLines.join("\n") + "\n}\n";
@@ -300,8 +310,8 @@ for (const key of themeKeys) {
     src += `export function drawCoinDesign(ctx: Ctx, r: number) {\n`;
     src += `  sharedCoin_${sharedPrimary}(ctx, r, "${key}");\n`;
     src += `}\n`;
-  } else if (coinLines && coinLines.some(l => l.trim().length > 0)) {
-    if (!scLines || !scLines.some(l => l.trim().length > 0)) {
+  } else if (coinLines && coinLines.some((l) => l.trim().length > 0)) {
+    if (!scLines || !scLines.some((l) => l.trim().length > 0)) {
       src = `import type { Ctx } from "../types.js";\n`;
       src += `import { drawStarShape, drawGearSpike } from "../sprites.js";\n\n`;
       src += `export function drawScenery(_ctx: Ctx, _t: number) {}\n\n`;
@@ -315,7 +325,7 @@ for (const key of themeKeys) {
       src += coinLines.slice(startIdx).join("\n") + "\n}\n";
     }
   } else {
-    if (!scLines || !scLines.some(l => l.trim().length > 0)) {
+    if (!scLines || !scLines.some((l) => l.trim().length > 0)) {
       src = `import type { Ctx } from "../types.js";\n\n`;
       src += `export function drawScenery(_ctx: Ctx, _t: number) {}\n\n`;
     }
