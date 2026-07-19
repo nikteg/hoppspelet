@@ -5,3 +5,6 @@
 .LSOverride
 com.apple.*
 .git
+node_modules
+public/engine/node_modules
+public/engine/src

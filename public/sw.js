@@ -22,7 +22,7 @@ const PRECACHE = [
   "icons/icon-192-maskable.png",
   "icons/icon-512-maskable.png",
   "icons/apple-touch-icon.png",
-  "js/engine.mjs",
+  "engine/engine.js",
   "js/state.mjs",
   "js/themes.mjs",
   "js/world.mjs",

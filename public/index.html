@@ -61,7 +61,9 @@
 
 <!-- Laddas som vanliga skript (inte type="module") sa spelet aven funkar
      direkt fran file:// (dubbelklick pa index.html). Ordningen ar viktig. -->
-<script src="js/engine.mjs"></script>
+<!-- Motorn (Minimotor) ar en git-submodul (public/engine/) sa den kan
+     ateranvandas i andra projekt. engine.js kompileras fran src/engine.ts. -->
+<script src="engine/engine.js"></script>
 <script src="js/state.mjs"></script>
 <script src="js/themes.mjs"></script>
 <script src="js/world.mjs"></script>

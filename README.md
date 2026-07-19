@@ -49,8 +49,10 @@ jpg-filer laddas ner (instruktioner i filens huvud).
 public/
   index.html          Skal + startsida + skriptordning + SW-registrering
   styles.css          All CSS
+  engine/             Git-submodul: Minimotor, spelmotorn (återanvänds i andra projekt)
+    src/engine.ts     TypeScript-källkod (minimal game loop + kollisionshjälp)
+    engine.js         Kompilerad output av tsc (den fil spelet laddar)
   js/
-    engine.mjs        Minimal game loop + kollisionshjälp
     state.mjs         Konstanter, spelarens/rundans tillstånd
     themes.mjs        Temadata (färger/partiklar per tema)
     world.mjs         Temaval, partiklar, resize, resetGame
