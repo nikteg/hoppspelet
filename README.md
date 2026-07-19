@@ -9,7 +9,7 @@ Spelet använder ES-moduler med en importmap, så du måste servera
 filerna — `file://` fungerar inte. Enklast:
 
 ```bash
-npx serve public
+pnpm dlx serve public
 ```
 
 Öppna `http://localhost:3000` i webbläsaren.
