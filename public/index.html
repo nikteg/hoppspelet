@@ -61,22 +61,15 @@
 
 <!-- Laddas som vanliga skript (inte type="module") sa spelet aven funkar
      direkt fran file:// (dubbelklick pa index.html). Ordningen ar viktig. -->
-<!-- Motorn (Minimotor) ar en git-submodul (packages/minimotor/) sa den kan
-     ateranvandas i andra projekt. public/engine.js kompileras fran
-     packages/minimotor/src/engine.ts (pnpm run build:engine).
-     Spelet kompileras fran src/*.ts till public/js/ (pnpm run build). -->
-<script src="engine.js"></script>
-<script src="js/state.js"></script>
-<script src="js/themes.js"></script>
-<script src="js/world.js"></script>
-<script src="js/audio.js"></script>
-<script src="js/gameplay.js"></script>
-<script src="js/input.js"></script>
-<script src="js/update.js"></script>
-<script src="js/render-helpers.js"></script>
-<script src="js/scenery.js"></script>
-<script src="js/sprites.js"></script>
-<script src="js/main.js"></script>
+<!-- Import map: bare specifier "minimotor" pekar pa den kompilerade
+     motorn i public/minimotor/. Bade motorn och spelet ar ES-moduler. -->
+<script type="importmap">
+{ "imports": { "minimotor": "./minimotor/index.js" } }
+</script>
+<!-- Laddas som ES-modul: ordningen pa filerna spelar ingen roll nar de
+     importerar varandra explicit - det gor main.js. file:// stods inte
+     av ES-moduler, sa spelet maste serveras (t.ex. pnpm dlx serve public). -->
+<script type="module" src="js/main.js"></script>
 <script>
   // PWA-delarna aktiveras bara nar spelet hostas (inte fran file://, dar
   // manifest-hamtning blockeras av CORS och service workers inte ar tillatna).

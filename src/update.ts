@@ -1,18 +1,23 @@
 "use strict";
+import { Minimotor } from "minimotor";
+import { game, player, GRAVITY } from "./state.js";
+import { GROUND_Y } from "./stage.js";
+import { die, spawnObstacle, spawnCoins } from "./gameplay.js";
+import { playCoinSound } from "./audio.js";
 
 // Fartkapp: hindrar bade omojlig svarighetsgrad och "tunnling" - vid extrem
-// fart kan ett smalt hinder annars passera rakt genom spelarens hitbox
+// fart kan ett smalt obstacle annars passera rakt genom player hitbox
 // mellan tva uppdateringar utan att kollisionen upptacks.
 const MAX_SPEED = 22;
 
-function update() {
-  if (state !== "playing") return;
+export function update() {
+  if (game.state !== "playing") return;
 
-  // Öka svårighetsgrad sakta med tiden
-  if (speed < MAX_SPEED) speed += 0.0015;
-  distance += speed;
+  // Öka difficulty sakta med tiden
+  if (game.speed < MAX_SPEED) game.speed += 0.0015;
+  game.distance += game.speed;
 
-  // Gravitation + kollision mot plattformar (kan hoppas upp på, är annars solida)
+  // Gravitation + collision mot plattformar (kan hoppas upp på, är annars solida)
   const prevBottom = player.y + player.h;
   player.vy += GRAVITY;
   const tentativeY = player.y + player.vy;
@@ -20,11 +25,11 @@ function update() {
 
   let floor = GROUND_Y;
   let crashed = false;
-  // Samma marginal som dodliga hinder far (nedan), sa att en pixelsnudd
+  // Samma marginal som dodliga obstacle far (nedan), sa att en pixelsnudd
   // mot plattformens framkant inte dodar - kanns orattvist annars.
   const sideMargin = 6;
 
-  for (const obs of obstacles) {
+  for (const obs of game.obstacles) {
     if (obs.type !== "platform") continue;
     const overlapsX = player.x + player.w > obs.x && player.x < obs.x + obs.w;
     if (!overlapsX) continue;
@@ -63,34 +68,34 @@ function update() {
     player.rotation = 0;
   }
 
-  // Flytta hinder
-  for (const obs of obstacles) {
-    obs.x -= speed;
+  // Flytta obstacle
+  for (const obs of game.obstacles) {
+    obs.x -= game.speed;
   }
-  obstacles = obstacles.filter((o) => o.x + o.w > -10);
+  game.obstacles = game.obstacles.filter((o) => o.x + o.w > -10);
 
-  // Spawna nya hinder
-  spawnTimer++;
-  if (spawnTimer >= nextSpawnAt) {
+  // Spawna nya obstacle
+  game.spawnTimer++;
+  if (game.spawnTimer >= game.nextSpawnAt) {
     spawnObstacle();
-    spawnTimer = 0;
-    nextSpawnAt = 55 + Math.random() * 50 - Math.min(speed, 20);
-    if (nextSpawnAt < 35) nextSpawnAt = 35;
+    game.spawnTimer = 0;
+    game.nextSpawnAt = 55 + Math.random() * 50 - Math.min(game.speed, 20);
+    if (game.nextSpawnAt < 35) game.nextSpawnAt = 35;
   }
 
-  // Flytta och samla in mynt (ger extrapoäng, är aldrig farliga)
-  for (const c of coins) {
-    c.x -= speed;
+  // Flytta och samla in coins (ger extrapoäng, är aldrig farliga)
+  for (const c of game.coins) {
+    c.x -= game.speed;
   }
-  for (const c of coins) {
+  for (const c of game.coins) {
     if (c.collected) continue;
     const dx = player.x + player.w / 2 - c.x;
     const dy = player.y + player.h / 2 - c.y;
     if (Math.sqrt(dx * dx + dy * dy) < c.r + player.w * 0.4) {
       c.collected = true;
-      coinScore += 10;
+      game.coinScore += 10;
       playCoinSound();
-      floatingTexts.push({
+      game.floatingTexts.push({
         x: player.x + player.w / 2,
         y: player.y - 6,
         text: "+10",
@@ -99,24 +104,24 @@ function update() {
       });
     }
   }
-  coins = coins.filter((c) => !c.collected && c.x > -30);
+  game.coins = game.coins.filter((c) => !c.collected && c.x > -30);
 
   // Poängtext som flyter uppåt vid figuren och tonar bort
-  for (const ft of floatingTexts) {
+  for (const ft of game.floatingTexts) {
     ft.y -= 1.3;
-    ft.x -= speed * 0.3;
+    ft.x -= game.speed * 0.3;
     ft.life--;
   }
-  floatingTexts = floatingTexts.filter((ft) => ft.life > 0);
+  game.floatingTexts = game.floatingTexts.filter((ft) => ft.life > 0);
 
-  coinSpawnTimer++;
-  if (coinSpawnTimer >= coinNextSpawnAt) {
+  game.coinSpawnTimer++;
+  if (game.coinSpawnTimer >= game.coinNextSpawnAt) {
     spawnCoins();
-    coinSpawnTimer = 0;
-    coinNextSpawnAt = 70 + Math.random() * 80;
+    game.coinSpawnTimer = 0;
+    game.coinNextSpawnAt = 70 + Math.random() * 80;
   }
 
-  // Kollisionskoll mot dödliga hinder (spikar och takblock). Lite marginal för rättvis känsla.
+  // Kollisionskoll mot dödliga obstacle (spikar och takblock). Lite marginal för rättvis känsla.
   const margin = 6;
   const playerBox = {
     x: player.x + margin,
@@ -124,9 +129,9 @@ function update() {
     w: player.w - margin * 2,
     h: player.h - margin * 2,
   };
-  for (const obs of obstacles) {
+  for (const obs of game.obstacles) {
     if (obs.type === "platform") continue;
-    if (rectsOverlap(playerBox, obs)) {
+    if (Minimotor.rectsOverlap(playerBox, obs)) {
       die();
     }
   }

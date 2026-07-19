@@ -1,6 +1,11 @@
 "use strict";
+import { Minimotor } from "minimotor";
+import { canvas } from "./stage.js";
+import { handleAction } from "./gameplay.js";
+import { debugGoToTheme } from "./world.js";
+import { startMusic, setMusicOn, isMusicOn } from "./audio.js";
 
-Engine.onKeyDown = function (code) {
+Minimotor.Engine.onKeyDown = function (code) {
   if (code === "Space") handleAction();
 };
 
@@ -42,11 +47,7 @@ function wireButton(id: string, action: () => void) {
   return btn;
 }
 
-// ---------- Felsökningsknappar (temabyte + omladdning) ----------
-function debugGoToTheme(delta: number) {
-  const cur = currentThemeIndex();
-  debugThemeOverride = (((cur + delta) % THEMES.length) + THEMES.length) % THEMES.length;
-}
+// ---------- Debug buttons (temabyte) ----------
 
 wireButton("debugPrevTheme", function () {
   debugGoToTheme(-1);
@@ -55,26 +56,14 @@ wireButton("debugNextTheme", function () {
   debugGoToTheme(1);
 });
 
-// ---------- Pausa i portrattlage pa mobil ----------
-// Samma media query som visar #rotateHint i styles.css. Spelet pausas sa
-// att man inte hinner do bakom rotera-overlagret.
-const portraitBlock = window.matchMedia("(orientation: portrait) and (pointer: coarse)");
-function applyOrientationPause() {
-  Engine.paused = portraitBlock.matches;
-}
-if (portraitBlock.addEventListener) {
-  portraitBlock.addEventListener("change", applyOrientationPause);
-}
-applyOrientationPause();
-
 // ---------- Startsidans Spela-knapp ----------
-// handleAction gommer startsidan och startar rundan direkt (state "ready").
+// handleAction gommer startsidan och starts rundan direkt (game.state "ready").
 wireButton("playBtn", handleAction);
 
-// ---------- Mute-knapp for musiken ----------
+// ---------- Mute-knapp for music ----------
 function toggleMusic() {
-  startMusic(); // sakerstall att musiken ar igang (och ljudet upplast av gesten)
-  setMusicOn(!musicOn);
+  startMusic(); // ensure music is started (and audio unlocked by the gesture)
+  setMusicOn(!isMusicOn());
 }
 const muteBtn = wireButton("musicMute", toggleMusic);
-if (muteBtn) muteBtn.textContent = musicOn ? "🔊" : "🔇";
+if (muteBtn) muteBtn.textContent = isMusicOn() ? "🔊" : "🔇";

@@ -1,5 +1,4 @@
 node_modules/
-# Byggs ut fran packages/minimotor (se pnpm run build:engine).
-# public/engine.js checkas daremot in, sa att Docker-bygget (som bara
-# kopierar public/) fungerar utan node/pnpm.
-public/engine.d.ts
+# Motorn byggs fran packages/minimotor av pnpm prepare i workspace.
+# .js-filerna checkas in sa att Docker fungerar utan node/pnpm.
+public/minimotor/*.d.ts

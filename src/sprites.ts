@@ -1,6 +1,10 @@
 "use strict";
+import { DPR, GROUND_Y } from "./stage.js";
+import { player, game } from "./state.js";
+import type { Ctx, Theme, Coin, Obstacle, SpriteCanvas } from "./types.js";
+import type { Rect } from "minimotor";
 
-function drawStarShape(ctx: Ctx, cx: number, cy: number, outerR: number, innerR: number) {
+export function drawStarShape(ctx: Ctx, cx: number, cy: number, outerR: number, innerR: number) {
   const spikes = 5;
   let rot = -Math.PI / 2;
   const step = Math.PI / spikes;
@@ -19,19 +23,19 @@ function drawStarShape(ctx: Ctx, cx: number, cy: number, outerR: number, innerR:
   ctx.closePath();
 }
 
-// Mynten forrenderas till en offscreen-canvas per tema (motiven ar statiska
+// Mynten forrenderas till en offscreen-canvas per theme (motiven ar statiska
 // - snurret ar bara en x-skalning vid ritning). Da betalar vi shadowBlur och
-// gradienter EN gang per tema i stallet for per mynt och frame, och kan
+// gradienter EN gang per theme i stallet for per coins och frame, och kan
 // darfor kosta pa oss detaljerade motiv.
 const coinSpriteCache = new Map<string, SpriteCanvas>();
 
-function getCoinSprite(theme: Theme, r: number) {
+export function getCoinSprite(theme: Theme, r: number) {
   const key = theme.key + ":" + r + ":" + DPR;
   let sprite = coinSpriteCache.get(key);
   if (!sprite) {
     sprite = document.createElement("canvas") as SpriteCanvas;
     const size = Math.ceil(r * 5); // plats for glow och former utanfor radien
-    // Bakas i DPR-upplosning, annars blir mynten suddiga pa retinaskarmar.
+    // Bakas i DPR-upplosning, annars blir coins suddiga pa retinaskarmar.
     sprite.width = Math.ceil(size * DPR);
     sprite.height = Math.ceil(size * DPR);
     sprite.logicalSize = size;
@@ -44,7 +48,7 @@ function getCoinSprite(theme: Theme, r: number) {
   return sprite;
 }
 
-function drawCoin(ctx: Ctx, coin: Coin, theme: Theme, t: number) {
+export function drawCoin(ctx: Ctx, coin: Coin, theme: Theme, t: number) {
   const spin = Math.max(0.15, Math.abs(Math.cos(t * 1.5 + coin.phase)));
   const sprite = getCoinSprite(theme, coin.r);
   const size = sprite.logicalSize;
@@ -58,7 +62,7 @@ function drawCoin(ctx: Ctx, coin: Coin, theme: Theme, t: number) {
 // Ritar sjalva myntmotivet centrerat kring (0,0). Kors ENDAST mot
 // offscreen-canvasen i getCoinSprite, sa composite-tricks (t.ex.
 // destination-out for manskaran) ar sakra har.
-function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
+export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
   switch (theme.key) {
     case "ocean":
       ctx.save();
@@ -1248,7 +1252,7 @@ function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "shadow": {
-      // Morkt mynt med skarp vit kontur - passar den svartvita varlden
+      // Morkt coins med skarp vit kontur - passar den svartvita varlden
       ctx.save();
       ctx.shadowColor = "rgba(255,255,255,0.95)";
       ctx.shadowBlur = 12;
@@ -1303,7 +1307,7 @@ function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
   }
 }
 
-function drawPlayer(ctx: Ctx) {
+export function drawPlayer(ctx: Ctx) {
   ctx.save();
   ctx.translate(player.x + player.w / 2, player.y + player.h / 2);
   ctx.rotate(player.rotation);
@@ -1329,8 +1333,8 @@ function drawPlayer(ctx: Ctx) {
   ctx.restore();
 }
 
-function drawFloatingTexts(ctx: Ctx) {
-  for (const ft of floatingTexts) {
+export function drawFloatingTexts(ctx: Ctx) {
+  for (const ft of game.floatingTexts) {
     const alpha = Math.max(0, ft.life / ft.maxLife);
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -1345,7 +1349,7 @@ function drawFloatingTexts(ctx: Ctx) {
   }
 }
 
-function drawSeaUrchin(ctx: Ctx, obs: Obstacle) {
+export function drawSeaUrchin(ctx: Ctx, obs: Obstacle) {
   const cx = obs.x + obs.w / 2,
     cy = obs.y + obs.h / 2,
     r = Math.min(obs.w, obs.h) / 2;
@@ -1364,7 +1368,7 @@ function drawSeaUrchin(ctx: Ctx, obs: Obstacle) {
   }
 }
 
-function drawVenusTrap(ctx: Ctx, obs: Obstacle) {
+export function drawVenusTrap(ctx: Ctx, obs: Obstacle) {
   const cx = obs.x + obs.w / 2;
   const groundY = obs.y + obs.h;
   const headY = obs.y + obs.h * 0.42; // dar de gapande kaftarna sitter
@@ -1453,7 +1457,7 @@ function drawVenusTrap(ctx: Ctx, obs: Obstacle) {
   ctx.fill();
 }
 
-function drawIcicleCluster(ctx: Ctx, obs: Obstacle) {
+export function drawIcicleCluster(ctx: Ctx, obs: Obstacle) {
   // Morkbla kontur - istapparna ar nastan vita, precis som isens mark
   ctx.save();
   ctx.strokeStyle = "#1f4a6a";
@@ -1474,7 +1478,7 @@ function drawIcicleCluster(ctx: Ctx, obs: Obstacle) {
   ctx.restore();
 }
 
-function drawAsteroidChunk(ctx: Ctx, obs: Obstacle) {
+export function drawAsteroidChunk(ctx: Ctx, obs: Obstacle) {
   // Ljus kontur + kratrar - stenen ar nastan lika mork som rymdmarken
   ctx.save();
   ctx.strokeStyle = "#b8b8cf";
@@ -1497,7 +1501,7 @@ function drawAsteroidChunk(ctx: Ctx, obs: Obstacle) {
   ctx.restore();
 }
 
-function drawCactus(ctx: Ctx, obs: Obstacle) {
+export function drawCactus(ctx: Ctx, obs: Obstacle) {
   // Saguarokaktus: rundade armar (tjocka streck med runda andar), ribbor,
   // taggar och en blomma pa toppen. Mork kontur ger tydlighet mot sanden.
   const cx = obs.x + obs.w / 2;
@@ -1576,7 +1580,7 @@ function drawCactus(ctx: Ctx, obs: Obstacle) {
   ctx.restore();
 }
 
-function drawLollipop(ctx: Ctx, obs: Obstacle) {
+export function drawLollipop(ctx: Ctx, obs: Obstacle) {
   // Stor snurrklubba pa pinne (candy)
   const cx = obs.x + obs.w / 2;
   const R = obs.w * 0.48;
@@ -1615,7 +1619,7 @@ function drawLollipop(ctx: Ctx, obs: Obstacle) {
   ctx.restore();
 }
 
-function drawGearSpike(ctx: Ctx, obs: Rect) {
+export function drawGearSpike(ctx: Ctx, obs: Rect) {
   // Kugghjul med varmgul kant och navring - stalgratt smalter annars in
   // i fabrikens morka mark.
   const cx = obs.x + obs.w / 2,
@@ -1651,7 +1655,7 @@ function drawGearSpike(ctx: Ctx, obs: Rect) {
   ctx.restore();
 }
 
-function drawFlameSpike(ctx: Ctx, obs: Obstacle, theme: Theme) {
+export function drawFlameSpike(ctx: Ctx, obs: Obstacle, theme: Theme) {
   // Fladdrande eldpelare (drak-/fenix-/vulkanteman)
   const cx = obs.x + obs.w / 2;
   const baseY = obs.y + obs.h;
@@ -1680,7 +1684,7 @@ function drawFlameSpike(ctx: Ctx, obs: Obstacle, theme: Theme) {
   ctx.restore();
 }
 
-function drawCrystalSpike(ctx: Ctx, obs: Obstacle, theme: Theme) {
+export function drawCrystalSpike(ctx: Ctx, obs: Obstacle, theme: Theme) {
   // Klunga av glodande kristallspetsar (kristall-/alv-/dromteman)
   const col = theme.crystalColor || theme.spikeStroke || theme.platformTop;
   ctx.save();
@@ -1706,7 +1710,7 @@ function drawCrystalSpike(ctx: Ctx, obs: Obstacle, theme: Theme) {
   ctx.restore();
 }
 
-function drawAnchor(ctx: Ctx, obs: Obstacle) {
+export function drawAnchor(ctx: Ctx, obs: Obstacle) {
   // Skeppsankare (piratema). Ritas forst med bred ljus kontur och sedan
   // morkt jarn ovanpa - annars forsvinner det mot strandens morka mark.
   const cx = obs.x + obs.w / 2;
@@ -1751,7 +1755,7 @@ function drawAnchor(ctx: Ctx, obs: Obstacle) {
   ctx.restore();
 }
 
-function drawObelisk(ctx: Ctx, obs: Obstacle, theme: Theme) {
+export function drawObelisk(ctx: Ctx, obs: Obstacle, theme: Theme) {
   // Obelisk med guldtopp och hieroglyfstreck (egypten). Mork kontur och
   // glodande topp sa den inte flyter ihop med sandens farger.
   const cx = obs.x + obs.w / 2;
@@ -1791,7 +1795,7 @@ function drawObelisk(ctx: Ctx, obs: Obstacle, theme: Theme) {
   ctx.restore();
 }
 
-function drawBrokenColumn(ctx: Ctx, obs: Obstacle, theme: Theme) {
+export function drawBrokenColumn(ctx: Ctx, obs: Obstacle, theme: Theme) {
   // Avbruten antik kolonn (rom). Mork kontur + skuggad sida - utan dem
   // smalter den ljusa stenen ihop med Colosseums ljusa mark/bakgrund.
   const x = obs.x + obs.w * 0.15;
@@ -1835,7 +1839,7 @@ function drawBrokenColumn(ctx: Ctx, obs: Obstacle, theme: Theme) {
   ctx.restore();
 }
 
-function drawObstacle(ctx: Ctx, obs: Obstacle, theme: Theme) {
+export function drawObstacle(ctx: Ctx, obs: Obstacle, theme: Theme) {
   if (obs.type === "platform") {
     ctx.fillStyle = theme.platform;
     ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
@@ -1874,7 +1878,7 @@ function drawObstacle(ctx: Ctx, obs: Obstacle, theme: Theme) {
       }
     }
   } else {
-    // Gemensamma matt for farodesignerna. Varje tema har sin egen fara och
+    // Gemensamma matt for farodesignerna. Varje theme har sin egen fara och
     // ALLA ritas med en kontrasterande kontur sa de syns mot bakgrunden.
     const sx = obs.x,
       sy = obs.y,
@@ -2054,7 +2058,7 @@ function drawObstacle(ctx: Ctx, obs: Obstacle, theme: Theme) {
         break;
       }
       case "dino": {
-        // Boklyfta klor ur marken
+        // Boklyfta klor ur ground
         ctx.save();
         ctx.fillStyle = "#efe3c0";
         ctx.strokeStyle = "#2a1c08";
@@ -2225,7 +2229,7 @@ function drawObstacle(ctx: Ctx, obs: Obstacle, theme: Theme) {
         break;
       }
       case "steppe": {
-        // Mammutbetar ur marken
+        // Mammutbetar ur ground
         ctx.save();
         ctx.fillStyle = "#f0e8d0";
         ctx.strokeStyle = "#3a3226";
@@ -3361,7 +3365,7 @@ function drawObstacle(ctx: Ctx, obs: Obstacle, theme: Theme) {
         break;
       }
       case "shadow": {
-        // Skugghand som griper ur marken
+        // Skugghand som griper ur ground
         ctx.save();
         ctx.lineCap = "round";
         const fingers = [

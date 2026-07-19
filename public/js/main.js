@@ -1,4 +1,14 @@
 "use strict";
+import { Minimotor } from "minimotor";
+import { THEMES } from "./themes.js";
+import { currentThemeIndex, level, resetGame } from "./world.js";
+import { canvas, viewW, viewH, safeLeft, safeTop } from "./stage.js";
+import { game, getScore } from "./state.js";
+import { drawAmbientParticles, drawGround } from "./render-helpers.js";
+import { drawScenery } from "./scenery.js";
+import { drawObstacle, drawCoin, drawPlayer, drawFloatingTexts } from "./sprites.js";
+import { update } from "./update.js";
+import "./input.js";
 function drawUI(ctx, theme) {
     // HUD:en skjuts in innanfor safe area (iPhone-notchen sitter till
     // vanster/uppe beroende pa hur mobilen halls).
@@ -9,22 +19,22 @@ function drawUI(ctx, theme) {
     ctx.shadowColor = "rgba(0,0,0,0.8)";
     ctx.shadowBlur = 4;
     ctx.font = "bold 20px 'Segoe UI', Arial, sans-serif";
-    ctx.fillText("Poäng: " + getScore(), hx, hy + 30);
+    ctx.fillText("Points: " + getScore(), hx, hy + 30);
     ctx.font = "14px 'Segoe UI', Arial, sans-serif";
-    ctx.fillText("Bästa: " + best, hx, hy + 50);
+    ctx.fillText("Bästa: " + game.best, hx, hy + 50);
     ctx.font = "13px 'Segoe UI', Arial, sans-serif";
     ctx.fillText("#" + (currentThemeIndex() + 1) + " " + theme.name, hx, hy + 70);
     ctx.restore();
-    if (state === "ready") {
-        overlayText(ctx, "Tryck MELLANSLAG eller skärmen", "för att starta");
+    if (game.state === "ready") {
+        overlayText(ctx, "Tryck MELLANSLAG eller skärmen", "för att start");
     }
-    else if (state === "gameover") {
-        overlayText(ctx, "Du dog! Poäng: " + getScore(), "Mellanslag/skärm för att starta om");
+    else if (game.state === "gameover") {
+        overlayText(ctx, "Du dog! Points: " + getScore(), "Mellanslag/skärm för att start om");
     }
     // Tidsbaserad (inte frame-raknad) sa annonsen visas lika lange pa alla
-    // skarmar. Ligger en bit upp pa skarmen sa den inte skymmer spelaren
-    // och hindren mitt i bild.
-    const announceLeft = themeAnnounceUntil - performance.now();
+    // skarmar. Ligger en bit upp pa skarmen sa den inte skymmer player
+    // och obstacles mitt i bild.
+    const announceLeft = level.announceUntil - performance.now();
     if (announceLeft > 0) {
         const announceY = Math.max(safeTop + 90, viewH * 0.24);
         const alpha = Math.min(1, announceLeft / 500);
@@ -54,14 +64,14 @@ function overlayText(ctx, text, subtext) {
     ctx.restore();
 }
 function draw() {
-    const ctx = Engine.ctx;
+    const ctx = Minimotor.Engine.ctx;
     const themeIndex = currentThemeIndex();
     const theme = THEMES[themeIndex];
-    if (appliedThemeIndex !== themeIndex) {
-        appliedThemeIndex = themeIndex;
+    if (level.appliedIndex !== themeIndex) {
+        level.appliedIndex = themeIndex;
         canvas.style.background = theme.bg;
-        if (state === "playing") {
-            themeAnnounceUntil = performance.now() + 2500;
+        if (game.state === "playing") {
+            level.announceUntil = performance.now() + 2500;
         }
     }
     ctx.clearRect(0, 0, viewW, viewH);
@@ -69,15 +79,15 @@ function draw() {
     drawAmbientParticles(ctx, theme, t);
     drawScenery(ctx, theme, t);
     drawGround(ctx, theme);
-    for (const obs of obstacles)
+    for (const obs of game.obstacles)
         drawObstacle(ctx, obs, theme);
-    for (const c of coins)
+    for (const c of game.coins)
         drawCoin(ctx, c, theme, t);
     drawPlayer(ctx);
     drawFloatingTexts(ctx);
     drawUI(ctx, theme);
     // Loggan visas bara pa startskarmen
-    const showLogo = state === "ready";
+    const showLogo = game.state === "ready";
     if (showLogo !== logoVisible) {
         logoVisible = showLogo;
         logoEl.classList.toggle("hidden", !showLogo);
@@ -86,4 +96,4 @@ function draw() {
 const logoEl = document.getElementById("logo");
 let logoVisible = true;
 resetGame();
-Engine.start(update, draw);
+Minimotor.Engine.start(update, draw);

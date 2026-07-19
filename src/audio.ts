@@ -1,54 +1,18 @@
-"use strict";
+import { Minimotor } from "minimotor";
+import type { SongSection } from "./types.js";
 
-// ---------- Ljud ----------
-let audioCtx: AudioContext | null = null;
-
-function ensureAudio() {
-  if (!audioCtx) {
-    audioCtx = new (
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-    )();
-  }
-  if (audioCtx!.state === "suspended") {
-    audioCtx!.resume();
-  }
-  return audioCtx;
-}
-
-// Alla ljudeffekter gar via denna: ljud far ALDRIG kunna krascha spelet
-// (t.ex. nar AudioContext saknas eller blockeras av webblasaren). Ett kastat
-// fel har skulle annars bubbla upp genom update() och stoppa hela game-loopen.
-function playSfx(build: (ctx: AudioContext, now: number) => void) {
-  try {
-    const ctx = ensureAudio();
-    build(ctx, ctx.currentTime);
-  } catch (e) {
-    /* tyst - hellre inget ljud an ett fruset spel */
-  }
-}
+// Motorns ljudstod (Minimotor.Audio) skoter AudioContext, schemalaggning,
+// volym och paus vid dold flik. Har definieras bara spelets eget material:
+// laten (melodier, ackord, arrangemang) och ljudeffekterna.
+const audio = Minimotor.Audio;
 
 // ---------- Bakgrundsmusik (procedurell, upbeat, laag volym) ----------
-let musicOn = true;
-try {
-  musicOn = localStorage.getItem("hoppspelet_music") !== "off";
-} catch (e) {}
-let musicGain: GainNode | null = null;
-let musicStarted = false;
-let musicStep = 0;
-let musicTimer: number | null = null;
-let musicNextNoteTime = 0;
 const MUSIC_VOL = 0.05;
 const STEP_MS = 145;
-// Web Audio-schemalaggning: timern vacker oss ofta, men noterna bokas i
-// forvag mot audioCtx!.currentTime. Da spelar melodin jamnt aven om timers
-// jittrar, och den hackar inte sonder om intervallet skulle stypas.
-const SCHED_AHEAD_S = 0.2;
-const SCHED_INTERVAL_MS = 60;
 
 // Halvtonssteg fran C5 (523.25 Hz). Ett steg ar en attondel (~103 BPM),
 // en takt ar 8 steg. Laten ar byggd av 8-takterssektioner (vers, varierad
-// vers, refrang, brygga) som tillsammans ger ~65 s musik innan den borjar
+// vers, refrang, brygga) som tillsammans ger ~65 s music innan den borjar
 // om - och vartannat varv byter vers/refrang klangfarg, sa i praktiken
 // upprepas ingenting pa drygt tva minuter.
 const C5 = 523.25;
@@ -372,65 +336,9 @@ const SONG: SongSection[] = [
 ];
 const TOTAL_STEPS = SONG.length * SECTION_STEPS;
 
-function playMusicNote(freq: number, dur: number, type: OscillatorType, vol: number, when: number) {
-  const osc = audioCtx!.createOscillator();
-  const g = audioCtx!.createGain();
-  osc.type = type;
-  osc.frequency.value = freq;
-  g.gain.setValueAtTime(0, when);
-  g.gain.linearRampToValueAtTime(vol, when + 0.015);
-  g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
-  osc.connect(g).connect(musicGain!);
-  osc.start(when);
-  osc.stop(when + dur + 0.02);
-}
-
-// Trummorna syntas: bastrumman ar en sjunkande sinuston, hi-hat och virvel
-// ar filtrerat brus fran en aterandvand brusbuffer.
-let noiseBuffer: AudioBuffer | null = null;
-function getNoiseBuffer() {
-  if (!noiseBuffer) {
-    const len = Math.floor(audioCtx!.sampleRate * 0.2);
-    noiseBuffer = audioCtx!.createBuffer(1, len, audioCtx!.sampleRate);
-    const data = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
-  }
-  return noiseBuffer;
-}
-
-function playKick(when: number) {
-  const osc = audioCtx!.createOscillator();
-  const g = audioCtx!.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(150, when);
-  osc.frequency.exponentialRampToValueAtTime(45, when + 0.1);
-  g.gain.setValueAtTime(0.9, when);
-  g.gain.exponentialRampToValueAtTime(0.0001, when + 0.22);
-  osc.connect(g).connect(musicGain!);
-  osc.start(when);
-  osc.stop(when + 0.25);
-}
-
-function playNoiseHit(
-  when: number,
-  dur: number,
-  vol: number,
-  filterType: BiquadFilterType,
-  freq: number,
-) {
-  const src = audioCtx!.createBufferSource();
-  src.buffer = getNoiseBuffer();
-  const f = audioCtx!.createBiquadFilter();
-  f.type = filterType;
-  f.frequency.value = freq;
-  const g = audioCtx!.createGain();
-  g.gain.setValueAtTime(vol, when);
-  g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
-  src.connect(f).connect(g).connect(musicGain!);
-  src.start(when);
-  src.stop(when + dur + 0.02);
-}
-
+// Instrumenten (not, bastrumma, brustrumma) kommer fran motorn -
+// trummorna syntas dar: bastrumman ar en sjunkande sinuston, hi-hat och
+// virvel ar filtrerat brus fran en ateranvand brusbuffer.
 function scheduleMusicStep(step: number, when: number) {
   const pass = Math.floor(step / TOTAL_STEPS);
   const s = step % TOTAL_STEPS;
@@ -451,118 +359,77 @@ function scheduleMusicStep(step: number, when: number) {
 
   const note = sec.mel[stepInSec];
   if (note !== null) {
-    playMusicNote(semi(note), sec.longNotes ? 0.5 : 0.2, lead, leadVol, when);
+    audio.music.note(semi(note), sec.longNotes ? 0.5 : 0.2, lead, leadVol, when);
   }
 
   // Bas: rot pa slag 1, kvint pa slag 3, upptakt mot nasta takt i fullt komp
   if (beat === 0) {
-    playMusicNote(semi(root), 0.42, "sine", 0.9, when);
+    audio.music.note(semi(root), 0.42, "sine", 0.9, when);
   } else if (beat === 4) {
-    playMusicNote(semi(root + 7), 0.3, "sine", 0.7, when);
+    audio.music.note(semi(root + 7), 0.3, "sine", 0.7, when);
   } else if (beat === 7 && sec.drums === 2) {
-    playMusicNote(semi(root + 12), 0.12, "sine", 0.4, when);
+    audio.music.note(semi(root + 12), 0.12, "sine", 0.4, when);
   }
 
   // Ackordstotar pa offbeats i de tatare sektionerna
   const stab = sec.stabs && (beat === 3 || beat === 7);
   if (stab) {
-    playMusicNote(semi(root + 12), 0.1, "square", 0.1, when);
-    playMusicNote(semi(root + 12 + third), 0.1, "square", 0.08, when);
+    audio.music.note(semi(root + 12), 0.1, "square", 0.1, when);
+    audio.music.note(semi(root + 12 + third), 0.1, "square", 0.08, when);
   }
 
   // Mjuk ackordplatta i bryggan
   if (sec.pad && beat === 0) {
     const barDur = (STEP_MS / 1000) * STEPS_PER_BAR;
-    playMusicNote(semi(root + 12), barDur, "sine", 0.16, when);
-    playMusicNote(semi(root + 12 + third), barDur, "sine", 0.12, when);
-    playMusicNote(semi(root + 19), barDur, "sine", 0.1, when);
+    audio.music.note(semi(root + 12), barDur, "sine", 0.16, when);
+    audio.music.note(semi(root + 12 + third), barDur, "sine", 0.12, when);
+    audio.music.note(semi(root + 19), barDur, "sine", 0.1, when);
   }
 
   // Trummor
   if (sec.drums >= 1) {
-    if (beat === 0 || beat === 4) playKick(when);
+    if (beat === 0 || beat === 4) audio.music.kick(when);
     if (beat % 2 === 1 && !stab) {
-      playNoiseHit(when, beat === 7 ? 0.06 : 0.035, beat === 7 ? 0.16 : 0.1, "highpass", 6000);
+      audio.music.noiseHit(
+        when,
+        beat === 7 ? 0.06 : 0.035,
+        beat === 7 ? 0.16 : 0.1,
+        "highpass",
+        6000,
+      );
     }
   } else if (beat === 3 || beat === 7) {
-    playNoiseHit(when, 0.03, 0.06, "highpass", 7000);
+    audio.music.noiseHit(when, 0.03, 0.06, "highpass", 7000);
   }
   if (sec.drums === 2 && (beat === 2 || beat === 6)) {
-    playNoiseHit(when, 0.12, 0.22, "bandpass", 1800);
-    playMusicNote(180, 0.1, "triangle", 0.3, when);
+    audio.music.noiseHit(when, 0.12, 0.22, "bandpass", 1800);
+    audio.music.note(180, 0.1, "triangle", 0.3, when);
   }
 }
 
-function musicSchedulerTick() {
-  if (!audioCtx || !musicGain) return;
-  // Om klockan hunnit ifatt (t.ex. efter suspend) - hoppa fram i stallet
-  // for att boka en storm av forsenade noter.
-  if (musicNextNoteTime < audioCtx!.currentTime) {
-    musicNextNoteTime = audioCtx!.currentTime + 0.05;
-  }
-  while (musicNextNoteTime < audioCtx!.currentTime + SCHED_AHEAD_S) {
-    scheduleMusicStep(musicStep, musicNextNoteTime);
-    musicStep++;
-    musicNextNoteTime += STEP_MS / 1000;
-  }
+// Startar motorns musikspelare med spelets lat. Anropas vid forsta
+// anvandarinteraktionen (webblasare kraver en gest for att lasa upp audio).
+export function startMusic() {
+  audio.music.start({
+    volume: MUSIC_VOL,
+    stepMs: STEP_MS,
+    storageKey: "hoppspelet_music",
+    schedule: scheduleMusicStep,
+  });
 }
 
-function stopMusicScheduler() {
-  if (musicTimer !== null) {
-    clearInterval(musicTimer);
-    musicTimer = null;
-  }
+export function isMusicOn() {
+  return audio.music.on;
 }
 
-function startMusicScheduler() {
-  if (musicTimer !== null || !musicStarted) return;
-  musicNextNoteTime = 0; // nollstall sa forsta ticket borjar "nu"
-  musicSchedulerTick();
-  musicTimer = setInterval(musicSchedulerTick, SCHED_INTERVAL_MS);
-}
-
-function startMusic() {
-  if (musicStarted) return;
-  // Ljud far ALDRIG kunna blockera spelet - svalj alla fel (t.ex. om AudioContext
-  // saknas eller blockeras av webblasaren).
-  try {
-    ensureAudio();
-    musicGain = audioCtx!.createGain();
-    musicGain!.gain.value = musicOn ? MUSIC_VOL : 0;
-    musicGain!.connect(audioCtx!.destination);
-    musicStarted = true;
-    startMusicScheduler();
-  } catch (e) {
-    musicStarted = true; // forsok inte igen varje bildruta
-  }
-}
-
-// Pausa schemalaggningen nar fliken ar dold: spelet star anda stilla (rAF
-// pausas) och bakgrundsflikar stryper timers sa melodin skulle hacka sonder.
-document.addEventListener("visibilitychange", function () {
-  if (document.hidden) {
-    stopMusicScheduler();
-  } else {
-    startMusicScheduler();
-  }
-});
-
-function setMusicOn(on: boolean) {
-  musicOn = on;
-  try {
-    localStorage.setItem("hoppspelet_music", on ? "on" : "off");
-  } catch (e) {}
-  if (musicGain) {
-    const now = audioCtx!.currentTime;
-    musicGain!.gain.cancelScheduledValues(now);
-    musicGain!.gain.setTargetAtTime(on ? MUSIC_VOL : 0, now, 0.05);
-  }
+export function setMusicOn(on: boolean) {
+  audio.music.setOn(on);
   const btn = document.getElementById("musicMute");
   if (btn) btn.textContent = on ? "🔊" : "🔇";
 }
 
-function playJumpSound() {
-  playSfx(function (ctx, now) {
+export function playJumpSound() {
+  audio.playSfx(function (ctx, now) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "square";
@@ -579,8 +446,8 @@ function playJumpSound() {
   });
 }
 
-function playDeathSound() {
-  playSfx(function (ctx, now) {
+export function playDeathSound() {
+  audio.playSfx(function (ctx, now) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "sawtooth";
@@ -594,8 +461,8 @@ function playDeathSound() {
   });
 }
 
-function playCoinSound() {
-  playSfx(function (ctx, now) {
+export function playCoinSound() {
+  audio.playSfx(function (ctx, now) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "sine";

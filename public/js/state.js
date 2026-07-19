@@ -1,32 +1,33 @@
-"use strict";
-// ---------- Spelet ----------
-const canvas = document.getElementById("game");
-Engine.init(canvas);
-// Logisk spelyta i CSS-pixlar. Canvasens backing store ar DPR ganger
-// storre (satts i resizeCanvas) sa spelet blir skarpt pa mobil-/retina-
-// skarmar - all spellogik och rendering raknar i viewW/viewH.
-let viewW = 0;
-let viewH = 0;
-let DPR = 1;
-// Safe area-insets i CSS-pixlar (iPhone-notch m.m.), lasta i resizeCanvas.
-let safeLeft = 0;
-let safeTop = 0;
-const GRAVITY = 0.7;
-const JUMP_FORCE = -13.5;
-const PLAYER_X = 150;
-const PLAYER_SIZE = 36;
-let GROUND_Y = 0;
-let state = "ready"; // ready | playing | gameover
-let speed = 6;
-let distance = 0;
-let best = 0;
+// ---------- Speltillstånd ----------
+// Canvas och allt skärmrelaterat bor i stage.ts; här bor bara rundans
+// tillstånd. Allt föränderligt ligger i `game`-objektet: ES-modulers
+// imports är read-only-bindningar, men egenskaper på ett exporterat objekt
+// får gärna muteras från andra moduler.
+export const GRAVITY = 0.7;
+export const JUMP_FORCE = -13.5;
+export const PLAYER_X = 150;
+export const PLAYER_SIZE = 36;
+export const game = {
+    state: "ready", // ready | playing | gameover
+    speed: 6,
+    distance: 0,
+    best: 0,
+    spawnTimer: 0,
+    nextSpawnAt: 0,
+    coinScore: 0,
+    coinSpawnTimer: 0,
+    coinNextSpawnAt: 0,
+    obstacles: [],
+    coins: [],
+    floatingTexts: [],
+};
 try {
-    best = parseInt(localStorage.getItem("hoppspelet_best") || "0", 10) || 0;
+    game.best = parseInt(localStorage.getItem("hoppspelet_best") || "0", 10) || 0;
 }
-catch (e) { }
-let spawnTimer = 0;
-let nextSpawnAt = 0;
-const player = {
+catch {
+    /* localStorage kan saknas (privat läge m.m.) - då är bästa bara 0 */
+}
+export const player = {
     x: PLAYER_X,
     y: 0,
     w: PLAYER_SIZE,
@@ -35,12 +36,6 @@ const player = {
     onGround: true,
     rotation: 0,
 };
-let obstacles = [];
-let coins = [];
-let coinScore = 0;
-let coinSpawnTimer = 0;
-let coinNextSpawnAt = 0;
-let floatingTexts = [];
-function getScore() {
-    return Math.floor(distance / 10) + coinScore;
+export function getScore() {
+    return Math.floor(game.distance / 10) + game.coinScore;
 }

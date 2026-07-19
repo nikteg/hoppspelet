@@ -1,5 +1,9 @@
 "use strict";
-function drawScenery(ctx, theme, t) {
+import { viewW, viewH, GROUND_Y } from "./stage.js";
+import { drawBird, drawDriftingClouds, drawFallingStreaks, drawFirework, drawFish, drawFloatingIsland, drawFlutterfly, drawGroundProp, drawHangingVine, drawIceberg, drawJaggedSilhouette, drawLantern, drawPillar, drawRainbow, drawShootingStar, drawSwayingTree, drawTowerRow, drawWavingBanner, } from "./render-helpers.js";
+import { drawGearSpike } from "./sprites.js";
+import { game } from "./state.js";
+export function drawScenery(ctx, theme, t) {
     switch (theme.key) {
         case "lava": {
             drawJaggedSilhouette(ctx, GROUND_Y - 30, 50, 140, 220, "rgba(20,6,8,0.9)", 0.05);
@@ -157,7 +161,7 @@ function drawScenery(ctx, theme, t) {
                 const vx = viewW * (0.45 + i * 0.18);
                 drawHangingVine(ctx, vx, 0, 70 + i * 20, t, i * 2, "rgba(30,60,15,0.6)");
             }
-            // Blommor pa marken
+            // Blommor pa ground
             drawGroundProp(ctx, Math.max(380, viewW * 0.5), GROUND_Y, "flower", "rgba(255,120,160,0.7)");
             drawGroundProp(ctx, Math.max(460, viewW * 0.58), GROUND_Y, "flower", "rgba(255,220,80,0.7)");
             break;
@@ -187,7 +191,7 @@ function drawScenery(ctx, theme, t) {
                 const ibx = viewW * (0.4 + i * 0.35);
                 drawIceberg(ctx, ibx, GROUND_Y - 5, 90 + i * 30, 55 + i * 15, "rgba(210,235,245,0.55)");
             }
-            // Pingviner som vaggar pa marken
+            // Pingviner som vaggar pa ground
             for (let i = 0; i < 2; i++) {
                 const pgx = Math.max(400, viewW * (0.5 + i * 0.1));
                 const bob = Math.sin(t * 4 + i) * 2;
@@ -354,7 +358,7 @@ function drawScenery(ctx, theme, t) {
         }
         case "neon": {
             const spacing = 130;
-            const scroll = distance * 0.06;
+            const scroll = game.distance * 0.06;
             const offset = scroll % spacing;
             // Byggnadens hojd och fonstermonster seedas med dess VARLDSKOLUMN
             // (bx + colBase), inte skarmplatsen - annars byter alla hus form och
@@ -432,7 +436,7 @@ function drawScenery(ctx, theme, t) {
             // Gravstenar
             drawGroundProp(ctx, Math.max(400, viewW * 0.48), GROUND_Y, "tombstone", "rgba(60,60,65,0.7)");
             drawGroundProp(ctx, Math.max(460, viewW * 0.55), GROUND_Y, "tombstone", "rgba(60,60,65,0.7)");
-            // Dimma langs marken
+            // Dimma langs ground
             ctx.save();
             ctx.globalAlpha = 0.2;
             ctx.fillStyle = "#a8c9a8";
@@ -713,7 +717,7 @@ function drawScenery(ctx, theme, t) {
                 ctx.fill();
                 ctx.restore();
             }
-            // Pumpor och svampar pa marken
+            // Pumpor och svampar pa ground
             drawGroundProp(ctx, Math.max(400, viewW * 0.46), GROUND_Y, "pumpkin", "#d9720f");
             drawGroundProp(ctx, Math.max(460, viewW * 0.53), GROUND_Y, "mushroom", "#c94a3a");
             drawGroundProp(ctx, Math.max(520, viewW * 0.6), GROUND_Y, "mushroom", "#e8dcc0");
@@ -767,13 +771,13 @@ function drawScenery(ctx, theme, t) {
         }
         case "crystal": {
             drawJaggedSilhouette(ctx, GROUND_Y - 15, 50, 140, 200, "rgba(30,10,60,0.6)", 0.045);
-            // Jattekristaller som reser sig ur marken, glodande
+            // Jattekristaller som reser sig ur ground, glodande
             const cCols = ["#5ff2e0", "#a06fff", "#ff6fd0"];
             // Antalet skalar med skarmbredden - fast 5 st lamnade hogra halvan tom
             // pa breda skarmar.
             const nCrystals = Math.ceil(viewW / 160) + 1;
             for (let i = 0; i < nCrystals; i++) {
-                const cx = i * 160 + 80 - ((distance * 0.06) % 160);
+                const cx = i * 160 + 80 - ((game.distance * 0.06) % 160);
                 if (cx < -60 || cx > viewW + 60)
                     continue;
                 const h = 70 + (i % 3) * 55;
@@ -839,7 +843,7 @@ function drawScenery(ctx, theme, t) {
             for (let layer = 0; layer < 2; layer++) {
                 const col = layer === 0 ? "rgba(40,70,25,0.4)" : "rgba(60,100,35,0.6)";
                 const spacing = 34 + layer * 8;
-                const off = (distance * (0.03 + layer * 0.03)) % spacing;
+                const off = (game.distance * (0.03 + layer * 0.03)) % spacing;
                 ctx.save();
                 ctx.strokeStyle = col;
                 ctx.lineWidth = 7 - layer * 2;
@@ -874,7 +878,7 @@ function drawScenery(ctx, theme, t) {
             const coralCols = ["rgba(255,110,150,0.6)", "rgba(255,180,90,0.6)", "rgba(180,120,255,0.6)"];
             const nCorals = Math.ceil(viewW / 150) + 1; // tack hela bredden
             for (let i = 0; i < nCorals; i++) {
-                const cx = i * 150 + 50 - ((distance * 0.05) % 150);
+                const cx = i * 150 + 50 - ((game.distance * 0.05) % 150);
                 ctx.save();
                 ctx.strokeStyle = coralCols[i % 3];
                 ctx.lineWidth = 6;
@@ -1029,11 +1033,11 @@ function drawScenery(ctx, theme, t) {
             ctx.ellipse(viewW * 0.7, GROUND_Y + 10, 18, 30, 0, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
-            // Salt-polygonmonster pa marken
+            // Salt-polygonmonster pa ground
             ctx.save();
             ctx.strokeStyle = "rgba(180,190,190,0.3)";
             ctx.lineWidth = 1;
-            const po = (distance * 0.5) % 60;
+            const po = (game.distance * 0.5) % 60;
             for (let x = -po; x < viewW; x += 60) {
                 ctx.beginPath();
                 ctx.moveTo(x, GROUND_Y + 20);
@@ -1207,7 +1211,7 @@ function drawScenery(ctx, theme, t) {
             // Sjunkna ruiner: pelare i olika hojd (antal efter skarmbredd)
             const nPillars = Math.ceil(viewW / 150) + 1;
             for (let k = 0; k < nPillars; k++) {
-                const cx = k * 150 + 60 - ((distance * 0.05) % 150);
+                const cx = k * 150 + 60 - ((game.distance * 0.05) % 150);
                 drawPillar(ctx, cx, GROUND_Y, 20, 60 + (k % 3) * 40, "rgba(30,80,90,0.55)", "rgba(40,100,110,0.6)");
             }
             // Ljusstralar uppifran vattenytan
@@ -1282,7 +1286,7 @@ function drawScenery(ctx, theme, t) {
             const gx = Math.max(360, viewW * 0.62);
             ctx.fillStyle = "rgba(50,34,16,0.5)";
             ctx.fillRect(gx - 10, 0, 20, GROUND_Y);
-            // Jatteklot/leksak pa marken
+            // Jatteklot/leksak pa ground
             ctx.fillStyle = "rgba(200,60,60,0.5)";
             ctx.beginPath();
             ctx.arc(viewW * 0.2, GROUND_Y - 40, 40, 0, Math.PI * 2);
@@ -1404,7 +1408,7 @@ function drawScenery(ctx, theme, t) {
             ctx.save();
             ctx.strokeStyle = "rgba(0,255,200,0.12)";
             ctx.lineWidth = 1;
-            const go = (distance * 0.3) % 40;
+            const go = (game.distance * 0.3) % 40;
             for (let x = -go; x < viewW; x += 40) {
                 ctx.beginPath();
                 ctx.moveTo(x, GROUND_Y * 0.5);
@@ -1423,7 +1427,7 @@ function drawScenery(ctx, theme, t) {
             ctx.save();
             ctx.strokeStyle = "rgba(0,255,204,0.4)";
             ctx.lineWidth = 1.5;
-            const scroll3 = distance * 0.05;
+            const scroll3 = game.distance * 0.05;
             const so = scroll3 % 90;
             const colBase3 = Math.floor(scroll3 / 90) * 90; // stabil form vid wrap
             for (let bx = -90; bx < viewW; bx += 90) {
@@ -1469,12 +1473,12 @@ function drawScenery(ctx, theme, t) {
                 ctx.stroke();
                 ctx.restore();
             }
-            // (Det snurrande kugghjulet vid marken ar borttaget: det drog blicken
-            // fran riktiga hinder och kunde sjalv misstas for ett.)
+            // (Det snurrande kugghjulet vid ground ar borttaget: det drog blicken
+            // fran riktiga obstacle och kunde sjalv misstas for ett.)
             break;
         }
         case "ufo": {
-            // Flera ufon, ett med dragande ljusstrale mot marken
+            // Flera ufon, ett med dragande ljusstrale mot ground
             for (let k = 0; k < 2; k++) {
                 const ux = k === 0 ? viewW * 0.3 + Math.sin(t) * 30 : ((t * 30) % (viewW + 200)) - 100;
                 const uy = viewH * (0.3 + k * 0.15);
@@ -1510,7 +1514,7 @@ function drawScenery(ctx, theme, t) {
                 }
                 ctx.restore();
             }
-            // Sadescirkel-monster pa marken
+            // Sadescirkel-monster pa ground
             ctx.save();
             ctx.strokeStyle = "rgba(120,255,150,0.3)";
             ctx.lineWidth = 2;
@@ -1831,7 +1835,7 @@ function drawScenery(ctx, theme, t) {
             ctx.restore();
             drawTowerRow(ctx, GROUND_Y, "rgba(15,12,20,0.7)", 0.025, 100);
             const spacing2 = 140;
-            const scroll2 = distance * 0.05;
+            const scroll2 = game.distance * 0.05;
             const offset2 = scroll2 % spacing2;
             // Seedas med varldskolumnen sa husen inte byter form/fonster vid wrap
             const colBase2 = Math.floor(scroll2 / spacing2) * spacing2;
@@ -1912,7 +1916,7 @@ function drawScenery(ctx, theme, t) {
             // Lyktslingor upptill
             ctx.save();
             for (let i = 0; i < 12; i++) {
-                const lx = i * 110 + 40 - ((distance * 0.03) % 110);
+                const lx = i * 110 + 40 - ((game.distance * 0.03) % 110);
                 drawLantern(ctx, lx, 30 + Math.sin(i) * 8, ["rgba(255,90,90,0.9)", "rgba(90,180,255,0.9)", "rgba(255,224,102,0.9)"][i % 3], t, i);
             }
             ctx.restore();
@@ -1967,7 +1971,7 @@ function drawScenery(ctx, theme, t) {
                 "rgba(90,110,50,0.5)",
                 "rgba(130,100,40,0.5)",
             ];
-            const shelfScroll = distance * 0.05;
+            const shelfScroll = game.distance * 0.05;
             const so = shelfScroll % 26;
             const shelfBase = Math.floor(shelfScroll / 26) * 26; // stabila bokfarger vid wrap
             for (let bx = -26; bx < viewW; bx += 26) {
@@ -2323,7 +2327,7 @@ function drawScenery(ctx, theme, t) {
         case "artgallery": {
             // Vaggmalningar/tavlor i ramar pa vaggen + spotlights
             const colors3 = ["#ff5a5a", "#5ab4ff", "#ffe066", "#6fce7a", "#a06fff"];
-            const paintScroll = distance * 0.05;
+            const paintScroll = game.distance * 0.05;
             const fo = paintScroll % 160;
             // Tavlans motiv foljer sin varldskolumn sa den inte byter utseende
             // varje gang offseten slar runt.

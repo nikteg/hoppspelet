@@ -5,12 +5,14 @@ poäng byter banan tema (60+ teman).
 
 ## Spela lokalt
 
-Dubbelklicka på `public/index.html`. Ingen server behövs.
+Spelet använder ES-moduler med en importmap, så du måste servera
+filerna — `file://` fungerar inte. Enklast:
 
-> JS-filerna i `public/js/` kompileras från TypeScript-källan i `src/` men
-> laddas som vanliga skript (inte `type="module"`) eftersom webbläsare
-> blockerar ES-modul-import från `file://`. Ordningen på `<script>`-taggarna
-> i `index.html` är därför viktig.
+```bash
+npx serve public
+```
+
+Öppna `http://localhost:3000` i webbläsaren.
 
 ## Utveckla
 
@@ -20,15 +22,15 @@ workspace-paket.
 
 ```bash
 pnpm install        # hämtar typescript, oxlint, oxfmt + länkar minimotor
-pnpm run build      # kompilerar motorn -> public/engine.js, spelet -> public/js/
+pnpm run build      # kompilerar motorn -> public/minimotor/, spelet -> public/js/
 pnpm run dev:all    # watch-läge för både motor och spel
 pnpm run dev        # watch-läge för bara spelet (tsc --watch)
 pnpm run verify     # tsc --noEmit + oxlint + oxfmt --check parallellt
 pnpm run format     # oxfmt .
 ```
 
-De kompilerade filerna (`public/engine.js`, `public/js/*.js`) checkas in, så
-att Docker-bygget (som bara kopierar `public/`) fungerar utan node/pnpm.
+De kompilerade filerna (`public/minimotor/*.js`, `public/js/*.js`) checkas in,
+så att Docker-bygget (som bara kopierar `public/`) fungerar utan node/pnpm.
 Kör alltså `pnpm run build` innan deploy.
 
 ## Hosta med Docker (Portainer)
@@ -84,8 +86,9 @@ packages/
 public/
   index.html          Skal + startsida + skriptordning + SW-registrering
   styles.css          All CSS
-  engine.js           Kompilerad Minimotor (byggs från packages/minimotor)
+  minimotor/          Kompilerad Minimotor (byggs från packages/minimotor)
   js/                 Kompilerat spel (byggs från src/)
   sw.js               Service worker (cache-first offline)
   manifest.webmanifest
+  importmap            `type="importmap"` i index.html pekar på minimotor/index.js
 ```

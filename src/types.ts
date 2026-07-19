@@ -1,11 +1,9 @@
-// Delade typer for hela spelet. Alla kallfiler ar klassiska script (ingen
-// modulgrans - exakt som nar de laddas via <script>-taggar), sa typerna
-// har ar globala. Motortyperna (Engine, Rect, rectsOverlap) kommer fran
-// packages/minimotor/engine.d.ts.
+// Delade typer för game. Motortyperna (Engine, Rect, rectsOverlap)
+// importeras direkt från "minimotor" där de behövs.
 
-type Ctx = CanvasRenderingContext2D;
+export type Ctx = CanvasRenderingContext2D;
 
-interface ThemeHazard {
+export interface ThemeHazard {
   top: string;
   mid: string;
   bottom: string;
@@ -13,7 +11,7 @@ interface ThemeHazard {
   dot: string;
 }
 
-interface Theme {
+export interface Theme {
   name: string;
   key: string;
   bg: string;
@@ -31,9 +29,9 @@ interface Theme {
   particleColor: string;
 }
 
-type ObstacleType = "spike" | "platform" | "ceiling";
+export type ObstacleType = "spike" | "platform" | "ceiling";
 
-interface Obstacle {
+export interface Obstacle {
   type: ObstacleType;
   x: number;
   y: number;
@@ -41,7 +39,7 @@ interface Obstacle {
   h: number;
 }
 
-interface Coin {
+export interface Coin {
   x: number;
   y: number;
   r: number;
@@ -49,7 +47,7 @@ interface Coin {
   collected: boolean;
 }
 
-interface FloatingText {
+export interface FloatingText {
   x: number;
   y: number;
   text: string;
@@ -57,7 +55,7 @@ interface FloatingText {
   maxLife: number;
 }
 
-interface AmbientParticle {
+export interface AmbientParticle {
   x: number;
   y: number;
   size: number;
@@ -66,16 +64,16 @@ interface AmbientParticle {
   phase: number;
 }
 
-type GameState = "ready" | "playing" | "gameover";
+export type GameState = "ready" | "playing" | "gameover";
 
-// Offscreen-canvas for forrenderade mynt: logisk storlek i CSS-pixlar vid
-// sidan av backing storens fysiska upplosning (DPR-skalad).
-interface SpriteCanvas extends HTMLCanvasElement {
+// Offscreen-canvas för förrenderade coins: logisk storlek i CSS-pixlar vid
+// sidan av backing storens fysiska resolution (DPR-skalad).
+export interface SpriteCanvas extends HTMLCanvasElement {
   logicalSize: number;
 }
 
 // En 8-takterssektion i den procedurella bakgrundsmusiken (se audio.ts).
-interface SongSection {
+export interface SongSection {
   mel: (number | null)[];
   prog: number[][];
   lead: OscillatorType;

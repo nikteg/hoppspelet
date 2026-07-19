@@ -1,5 +1,5 @@
 "use strict";
-const Engine = {
+export const Engine = {
     canvas: null,
     ctx: null,
     onUpdate: null,
@@ -22,7 +22,7 @@ const Engine = {
     start(update, draw) {
         this.onUpdate = update;
         this.onDraw = draw;
-        this.loop = this.loop.bind(this); // bind en gang i stallet for varje frame
+        this.loop = this.loop.bind(this); // bind once instead of every frame
         requestAnimationFrame(this.loop);
     },
     loop(time) {
@@ -38,8 +38,8 @@ const Engine = {
         }
         let elapsed = time - this.lastTime;
         this.lastTime = time;
-        // Efter t.ex. en flikvaxling kan elapsed vara enormt - hoppa inte ikapp,
-        // det skulle ge en storm av updates (och orattvis dod).
+        // After e.g. a tab switch elapsed can be huge - don't catch up,
+        // it would cause a storm of updates (and unfair death).
         if (elapsed > 250)
             elapsed = 250;
         this.frameScale = elapsed / this.STEP_MS;
@@ -52,6 +52,6 @@ const Engine = {
         requestAnimationFrame(this.loop);
     },
 };
-function rectsOverlap(a, b) {
+export function rectsOverlap(a, b) {
     return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }

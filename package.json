@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "pnpm run build:engine && pnpm run build:game",
-    "build:engine": "tsc -p packages/minimotor --outDir public",
+    "build:engine": "tsc -p packages/minimotor --outDir public/minimotor",
     "build:game": "tsc",
     "dev": "tsc --watch",
     "dev:game": "tsc --watch",
-    "dev:engine": "tsc -p packages/minimotor --outDir public --watch",
+    "dev:engine": "tsc -p packages/minimotor --outDir public/minimotor --watch",
     "dev:all": "pnpm -r --parallel --include-workspace-root run \"/^dev:(game|engine)$/\"",
     "lint": "oxlint",
     "format": "oxfmt .",

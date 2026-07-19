@@ -1,8 +1,5 @@
 "use strict";
-// ---------- Teman ----------
-// Var 1000:e poäng byts hela banans utseende. Fysiken/kollisionen är alltid densamma,
-// bara färger, former och bakgrundspartiklar ändras.
-const THEMES = [
+export const THEMES = [
     {
         name: "Lavagrottan",
         key: "lava",
@@ -1380,6 +1377,3 @@ const THEMES = [
         particleColor: "rgba(255,255,255,0.85)",
     },
 ];
-let debugThemeOverride = null; // satt av pil-knapparna for att bläddra fritt bland teman
-let levelOffset = 0; // vilken niva den aktuella omgangen startar pa
-let pendingLevelOffset = 0; // niva som nasta omgang ska starta pa (satts vid dod)

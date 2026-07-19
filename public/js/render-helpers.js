@@ -1,28 +1,31 @@
 "use strict";
-function drawGround(ctx, theme) {
+import { Minimotor } from "minimotor";
+import { GROUND_Y, viewW, viewH, DPR, ambientParticles } from "./stage.js";
+import { game } from "./state.js";
+export function drawGround(ctx, theme) {
     // Kontrastband: mork gradient som tonar in mot marknivan, ritad OVER
-    // sceneriet men UNDER hinder/mynt/spelare (de ritas efter drawGround).
-    // Gor att spelobjekten syns tydligt aven i ljusa teman som Saltoknen.
+    // sceneriet men UNDER obstacle/coins/player (de ritas efter drawGround).
+    // Gor att spelobjekten syns tydligt aven i ljusa themes som Saltoknen.
     const bandH = 180;
     const band = ctx.createLinearGradient(0, GROUND_Y - bandH, 0, GROUND_Y);
     band.addColorStop(0, "rgba(0,0,0,0)");
     band.addColorStop(1, "rgba(0,0,0,0.32)");
     ctx.fillStyle = band;
     ctx.fillRect(0, GROUND_Y - bandH, viewW, bandH);
-    // Marken (sten/sand/is beroende på tema)
+    // Marken (sten/sand/is beroende på theme)
     ctx.fillStyle = theme.groundColor;
     ctx.fillRect(0, GROUND_Y, viewW, viewH - GROUND_Y);
-    // Textur i marken, rör sig med spelet för känsla av fart
+    // Textur i ground, rör sig med game för känsla av fart
     ctx.fillStyle = theme.crackColor;
     const stripeWidth = 46;
-    const offset = Math.floor(distance) % stripeWidth;
+    const offset = Math.floor(game.distance) % stripeWidth;
     for (let x = -offset; x < viewW; x += stripeWidth) {
         ctx.fillRect(x, GROUND_Y + 14, stripeWidth * 0.4, viewH - GROUND_Y - 14);
     }
-    // Glödande "hazard-remsa" rakt under markytan - rent visuellt, påverkar inte spelet.
-    // Lava, bioluminescent rev, gyllene nektar, sprickande is eller alien-energi beroende på tema.
+    // Glödande "hazard-remsa" rakt under ground - rent visuellt, påverkar inte game.
+    // Lava, bioluminescent rev, gyllene nektar, sprickande is eller alien-energi beroende på theme.
     // Remsan med sin dyra shadowBlur-glow forrenderas till en offscreen-canvas
-    // per tema/bredd; per frame ar det bara tva drawImage-anrop.
+    // per theme/width; per frame ar det bara tva drawImage-anrop.
     const hazardH = 12;
     const t = performance.now() / 250;
     const glow = 0.5 + Math.sin(t) * 0.5;
@@ -35,11 +38,11 @@ function drawGround(ctx, theme) {
     ctx.globalAlpha = glow * 0.4;
     ctx.drawImage(strip, 0, GROUND_Y - 2 - HAZARD_PAD, viewW, stripH);
     ctx.restore();
-    // Glödande partiklar i remsan. Sin-seedas med varldskoordinaten (inte
+    // Glödande particles i remsan. Sin-seedas med varldskoordinaten (inte
     // skarmpositionen), annars hoppar guppet varje gang offseten slar runt.
     ctx.fillStyle = theme.hazard.dot;
     const dotSpacing = 90;
-    const dotScroll = Math.floor(distance * 1.4);
+    const dotScroll = Math.floor(game.distance * 1.4);
     const dOffset = dotScroll % dotSpacing;
     for (let x = -dOffset; x < viewW; x += dotSpacing) {
         const bob = Math.sin(t + x + dotScroll) * 2;
@@ -50,7 +53,7 @@ function drawGround(ctx, theme) {
     // Glödande kristaller inbäddade i berget, för lite färgpop mot stenen
     if (theme.crystalColor) {
         const crystalSpacing = 150;
-        const crScroll = Math.floor(distance * 0.7);
+        const crScroll = Math.floor(game.distance * 0.7);
         const crOffset = crScroll % crystalSpacing;
         ctx.save();
         ctx.shadowColor = theme.crystalColor;
@@ -73,7 +76,7 @@ function drawGround(ctx, theme) {
 const HAZARD_PAD = 26; // utrymme for glowen ovanfor/under remsan
 let hazardStripCache = null;
 let hazardStripKey = "";
-function getHazardStrip(theme) {
+export function getHazardStrip(theme) {
     const key = theme.key + ":" + viewW + ":" + DPR;
     if (hazardStripKey !== key) {
         const hazardH = 12;
@@ -99,11 +102,11 @@ function getHazardStrip(theme) {
     }
     return hazardStripCache;
 }
-function drawAmbientParticles(ctx, theme, t) {
+export function drawAmbientParticles(ctx, theme, t) {
     // Partiklarna flyttas i rit-steget (inte update) sa de lever aven pa
     // start-/gameover-skarmen. Skala med frameScale sa farten blir densamma
     // pa 120+ Hz-skarmar som pa 60 Hz.
-    const fs = Engine.frameScale;
+    const fs = Minimotor.Engine.frameScale;
     for (const p of ambientParticles) {
         switch (theme.particle) {
             case "bubbles":
@@ -148,8 +151,8 @@ function drawAmbientParticles(ctx, theme, t) {
         ctx.globalAlpha = 1;
     }
 }
-function drawJaggedSilhouette(ctx, baseY, peakMin, peakMax, spacing, color, offsetFactor) {
-    const scroll = distance * offsetFactor;
+export function drawJaggedSilhouette(ctx, baseY, peakMin, peakMax, spacing, color, offsetFactor) {
+    const scroll = game.distance * offsetFactor;
     const offset = scroll % spacing;
     // Toppens hojd seedas med varldskolumnen (inte skarmplatsen) - annars
     // byter alla berg form varje gang offseten slar runt.
@@ -169,7 +172,7 @@ function drawJaggedSilhouette(ctx, baseY, peakMin, peakMax, spacing, color, offs
     ctx.closePath();
     ctx.fill();
 }
-function drawShootingStar(ctx, t, cycle, seedOffset, color, y0, y1) {
+export function drawShootingStar(ctx, t, cycle, seedOffset, color, y0, y1) {
     const phase = ((t + seedOffset) % cycle) / cycle;
     if (phase > 0.15)
         return;
@@ -192,7 +195,7 @@ function drawShootingStar(ctx, t, cycle, seedOffset, color, y0, y1) {
     ctx.stroke();
     ctx.restore();
 }
-function drawFish(ctx, x, y, size, color, t, phase) {
+export function drawFish(ctx, x, y, size, color, t, phase) {
     const wob = Math.sin(t * 3 + phase) * 3;
     ctx.save();
     ctx.translate(x, y + wob);
@@ -209,7 +212,7 @@ function drawFish(ctx, x, y, size, color, t, phase) {
     ctx.fill();
     ctx.restore();
 }
-function drawBird(ctx, x, y, size, t, phase, color) {
+export function drawBird(ctx, x, y, size, t, phase, color) {
     const flap = Math.sin(t * 6 + phase) * 0.5;
     ctx.save();
     ctx.translate(x, y);
@@ -221,7 +224,7 @@ function drawBird(ctx, x, y, size, t, phase, color) {
     ctx.stroke();
     ctx.restore();
 }
-function drawFlutterfly(ctx, x, y, size, t, phase, color) {
+export function drawFlutterfly(ctx, x, y, size, t, phase, color) {
     const wingOpen = 0.3 + Math.abs(Math.sin(t * 8 + phase)) * 0.7;
     ctx.save();
     ctx.translate(x, y + Math.sin(t * 2 + phase) * 4);
@@ -242,7 +245,7 @@ function drawFlutterfly(ctx, x, y, size, t, phase, color) {
     ctx.fillRect(-1, -size * 0.35, 2, size * 0.7);
     ctx.restore();
 }
-function drawHangingVine(ctx, x, topY, len, t, phase, color) {
+export function drawHangingVine(ctx, x, topY, len, t, phase, color) {
     ctx.save();
     ctx.strokeStyle = color;
     ctx.lineWidth = 3;
@@ -259,7 +262,7 @@ function drawHangingVine(ctx, x, topY, len, t, phase, color) {
     ctx.stroke();
     ctx.restore();
 }
-function drawIceberg(ctx, x, y, w, h, color) {
+export function drawIceberg(ctx, x, y, w, h, color) {
     ctx.save();
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -271,7 +274,7 @@ function drawIceberg(ctx, x, y, w, h, color) {
     ctx.fill();
     ctx.restore();
 }
-function drawRainbow(ctx, cx, baseY, radius) {
+export function drawRainbow(ctx, cx, baseY, radius) {
     const colors = ["#ff5a5a", "#ffb84a", "#ffe24a", "#6fce7a", "#5ab4ff", "#a06fff"];
     ctx.save();
     ctx.globalAlpha = 0.35;
@@ -285,14 +288,14 @@ function drawRainbow(ctx, cx, baseY, radius) {
     }
     ctx.restore();
 }
-function drawFallingStreaks(ctx, t, canvasW, canvasH, count, color, speed, streakLen) {
+export function drawFallingStreaks(ctx, t, canvasW, canvasH, count, color, speed, streakLen) {
     ctx.save();
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     for (let i = 0; i < count; i++) {
         const seed = i * 137.5;
         const x = (seed * 3.1) % canvasW;
-        const y = (((t * speed + seed) * 4) % (canvasH + 40)) - 20;
+        const y = (((t * game.speed + seed) * 4) % (canvasH + 40)) - 20;
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineTo(x - streakLen * 0.3, y + streakLen);
@@ -300,7 +303,7 @@ function drawFallingStreaks(ctx, t, canvasW, canvasH, count, color, speed, strea
     }
     ctx.restore();
 }
-function drawGroundProp(ctx, x, groundY, type, color) {
+export function drawGroundProp(ctx, x, groundY, type, color) {
     ctx.save();
     ctx.fillStyle = color;
     switch (type) {
@@ -354,7 +357,7 @@ function drawGroundProp(ctx, x, groundY, type, color) {
     ctx.restore();
 }
 // ---------- Storslagna dekorations-hjalpare ----------
-function drawCloud(ctx, x, y, scale, color) {
+export function drawCloud(ctx, x, y, scale, color) {
     ctx.save();
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -365,15 +368,15 @@ function drawCloud(ctx, x, y, scale, color) {
     ctx.restore();
 }
 // Parallax-lager av moln som glider forbi langsamt
-function drawDriftingClouds(ctx, t, color, count, yBase, scale, speed) {
+export function drawDriftingClouds(ctx, t, color, count, yBase, scale, speed) {
     for (let i = 0; i < count; i++) {
         const span = viewW + 300;
-        const x = (((i * span) / count + t * speed) % span) - 150;
+        const x = (((i * span) / count + t * game.speed) % span) - 150;
         const y = yBase + (i % 2) * 40 * scale;
         drawCloud(ctx, x, y, scale * (0.7 + (i % 3) * 0.2), color);
     }
 }
-function drawPillar(ctx, x, groundY, w, h, color, capColor) {
+export function drawPillar(ctx, x, groundY, w, h, color, capColor) {
     ctx.save();
     ctx.fillStyle = color;
     ctx.fillRect(x - w / 2, groundY - h, w, h);
@@ -391,7 +394,7 @@ function drawPillar(ctx, x, groundY, w, h, color, capColor) {
     ctx.fillRect(x - w / 2 - 5, groundY - 6, w + 10, 6);
     ctx.restore();
 }
-function drawFloatingIsland(ctx, x, y, w, topColor, rockColor, t) {
+export function drawFloatingIsland(ctx, x, y, w, topColor, rockColor, t) {
     const bob = Math.sin(t * 0.6 + x) * 4;
     ctx.save();
     ctx.translate(0, bob);
@@ -408,7 +411,7 @@ function drawFloatingIsland(ctx, x, y, w, topColor, rockColor, t) {
     ctx.fill();
     ctx.restore();
 }
-function drawBalloon(ctx, x, y, r, color) {
+export function drawBalloon(ctx, x, y, r, color) {
     ctx.save();
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -422,7 +425,7 @@ function drawBalloon(ctx, x, y, r, color) {
     ctx.stroke();
     ctx.restore();
 }
-function drawSwayingTree(ctx, x, groundY, trunkH, crownR, trunkColor, crownColor, t, seed) {
+export function drawSwayingTree(ctx, x, groundY, trunkH, crownR, trunkColor, crownColor, t, seed) {
     ctx.save();
     ctx.translate(x, groundY);
     ctx.rotate(Math.sin(t * 0.4 + seed) * 0.02);
@@ -439,7 +442,7 @@ function drawSwayingTree(ctx, x, groundY, trunkH, crownR, trunkColor, crownColor
     ctx.fill();
     ctx.restore();
 }
-function drawWavingBanner(ctx, x, topY, w, h, color, t, seed) {
+export function drawWavingBanner(ctx, x, topY, w, h, color, t, seed) {
     ctx.save();
     ctx.strokeStyle = "rgba(0,0,0,0.5)";
     ctx.lineWidth = 2;
@@ -460,7 +463,7 @@ function drawWavingBanner(ctx, x, topY, w, h, color, t, seed) {
     ctx.fill();
     ctx.restore();
 }
-function drawFirework(ctx, cx, cy, t, cycle, seed, color) {
+export function drawFirework(ctx, cx, cy, t, cycle, seed, color) {
     const phase = ((t + seed) % cycle) / cycle;
     if (phase > 0.4)
         return;
@@ -485,7 +488,7 @@ function drawFirework(ctx, cx, cy, t, cycle, seed, color) {
     }
     ctx.restore();
 }
-function drawLantern(ctx, x, y, color, t, seed) {
+export function drawLantern(ctx, x, y, color, t, seed) {
     ctx.save();
     ctx.globalAlpha = 0.5 + 0.3 * (0.5 + Math.sin(t * 2 + seed) * 0.5);
     ctx.shadowColor = color;
@@ -497,9 +500,9 @@ function drawLantern(ctx, x, y, color, t, seed) {
     ctx.restore();
 }
 // Silhuett av flera byggnader/torn som en stad langt bort
-function drawTowerRow(ctx, baseY, color, offsetFactor, seed) {
+export function drawTowerRow(ctx, baseY, color, offsetFactor, seed) {
     const spacing = 90;
-    const scroll = distance * offsetFactor;
+    const scroll = game.distance * offsetFactor;
     const offset = scroll % spacing;
     // Byggnadernas form seedas med varldskolumnen sa staden inte byter
     // skepnad varje gang offseten slar runt.

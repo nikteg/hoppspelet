@@ -14,5 +14,5 @@
     // annan, sa no-unused-vars skulle flagga allt.
     "no-unused-vars": "off"
   },
-  "ignorePatterns": ["public/", "packages/"]
+  "ignorePatterns": ["public/", "packages/", "tools/"]
 }
