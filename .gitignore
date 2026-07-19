@@ -1,4 +1,7 @@
 node_modules/
-# Motorn byggs fran packages/minimotor av pnpm prepare i workspace.
-# .js-filerna checkas in sa att Docker fungerar utan node/pnpm.
+build/
+# The engine is built from packages/minimotor by pnpm prepare in workspace.
+# .js files are checked in so Docker works without node/pnpm.
 public/minimotor/*.d.ts
+public/js/*.d.ts
+public/js/worlds/
