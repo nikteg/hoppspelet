@@ -29,7 +29,7 @@ export const game = {
 try {
   game.best = parseInt(localStorage.getItem("hoppspelet_best") || "0", 10) || 0;
 } catch {
-  /* localStorage kan saknas (privat läge m.m.) - då är bästa bara 0 */
+  /* localStorage may be unavailable (private mode etc.) - best stays 0 */
 }
 
 export const player = {

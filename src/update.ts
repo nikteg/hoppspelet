@@ -5,9 +5,9 @@ import { GROUND_Y } from "./stage.js";
 import { die, spawnObstacle, spawnCoins } from "./gameplay.js";
 import { playCoinSound } from "./audio.js";
 
-// Fartkapp: hindrar bade omojlig svarighetsgrad och "tunnling" - vid extrem
-// fart kan ett smalt obstacle annars passera rakt genom player hitbox
-// mellan tva uppdateringar utan att kollisionen upptacks.
+// Speed cap: prevents both impossible difficulty and "tunneling" - at extreme
+// speed a narrow obstacle could otherwise pass straight through the player hitbox
+// between two updates without the collision being detected.
 const MAX_SPEED = 22;
 
 export function update() {
@@ -25,8 +25,8 @@ export function update() {
 
   let floor = GROUND_Y;
   let crashed = false;
-  // Samma marginal som dodliga obstacle far (nedan), sa att en pixelsnudd
-  // mot plattformens framkant inte dodar - kanns orattvist annars.
+  // Same margin as deadly obstacles get (below), so that a pixel graze
+  // against the platform's front edge doesn't kill - feels unfair otherwise.
   const sideMargin = 6;
 
   for (const obs of game.obstacles) {
@@ -42,7 +42,7 @@ export function update() {
       player.x + player.w - sideMargin > obs.x &&
       player.x + sideMargin < obs.x + obs.w
     ) {
-      // Sprang in i plattformens sida/undersida
+      // Ran into the side/underside of the platform
       crashed = true;
     }
   }
@@ -68,13 +68,13 @@ export function update() {
     player.rotation = 0;
   }
 
-  // Flytta obstacle
+  // Move obstacles
   for (const obs of game.obstacles) {
     obs.x -= game.speed;
   }
   game.obstacles = game.obstacles.filter((o) => o.x + o.w > -10);
 
-  // Spawna nya obstacle
+  // Spawn new obstacles
   game.spawnTimer++;
   if (game.spawnTimer >= game.nextSpawnAt) {
     spawnObstacle();

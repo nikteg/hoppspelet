@@ -5,9 +5,9 @@ import { game } from "./state.js";
 import type { Ctx, Theme } from "./types.js";
 
 export function drawGround(ctx: Ctx, theme: Theme) {
-  // Kontrastband: mork gradient som tonar in mot marknivan, ritad OVER
-  // sceneriet men UNDER obstacle/coins/player (de ritas efter drawGround).
-  // Gor att spelobjekten syns tydligt aven i ljusa themes som Saltoknen.
+  // Contrast band: dark gradient that fades in toward ground level, drawn OVER
+  // the scenery but UNDER obstacle/coins/player (they are drawn after drawGround).
+  // Makes game objects visible even in bright themes like Saltoknen.
   const bandH = 180;
   const band = ctx.createLinearGradient(0, GROUND_Y - bandH, 0, GROUND_Y);
   band.addColorStop(0, "rgba(0,0,0,0)");
@@ -29,23 +29,23 @@ export function drawGround(ctx: Ctx, theme: Theme) {
 
   // Glowing "hazard strip" right below ground - purely visual, doesn't affect gameplay.
   // Lava, bioluminescent reef, golden nectar, cracking ice or alien energy depending on theme.
-  // Remsan med sin dyra shadowBlur-glow forrenderas till en offscreen-canvas
-  // per theme/width; per frame ar det bara tva drawImage-anrop.
+  // The strip with its expensive shadowBlur-glow is pre-rendered to an offscreen-canvas
+  // per theme/width; per frame it's just two drawImage calls.
   const hazardH = 12;
   const t = performance.now() / 250;
   const glow = 0.5 + Math.sin(t) * 0.5;
   const strip = getHazardStrip(theme);
   const stripH = hazardH + HAZARD_PAD * 2;
   ctx.drawImage(strip, 0, GROUND_Y - 2 - HAZARD_PAD, viewW, stripH);
-  // "Pulsen": rita glowlagret en gang till med varierande alpha sa remsan
-  // lyser starkare och svagare, som originalets pulserande shadowBlur.
+  // "Pulse": draw the glow layer once more with varying alpha so the strip
+  // glows brighter and weaker, like the original's pulsing shadowBlur.
   ctx.save();
   ctx.globalAlpha = glow * 0.4;
   ctx.drawImage(strip, 0, GROUND_Y - 2 - HAZARD_PAD, viewW, stripH);
   ctx.restore();
 
   // Glowing particles in the strip. Sin-seeded with world coordinate (not
-  // skarmpositionen), annars hoppar guppet varje gang offseten slar runt.
+  // screen position), otherwise the bob jumps every time the offset wraps.
   ctx.fillStyle = theme.hazard.dot;
   const dotSpacing = 90;
   const dotScroll = Math.floor(game.distance * 1.4);
@@ -80,8 +80,8 @@ export function drawGround(ctx: Ctx, theme: Theme) {
   }
 }
 
-// ---------- Forrenderad hazard-remsa ----------
-const HAZARD_PAD = 26; // utrymme for glowen ovanfor/under remsan
+// ---------- Pre-rendered hazard strip ----------
+const HAZARD_PAD = 26; // room for the glow above/below the strip
 let hazardStripCache: HTMLCanvasElement | null = null;
 let hazardStripKey = "";
 
@@ -90,14 +90,14 @@ export function getHazardStrip(theme: Theme) {
   if (hazardStripKey !== key) {
     const hazardH = 12;
     const off = document.createElement("canvas");
-    // Bakas i DPR-upplosning (logiken raknar i CSS-pixlar) sa remsan ar
-    // skarp aven pa retinaskarmar.
+    // Baked at DPR resolution (logic counts in CSS pixels) so the strip is
+    // sharp even on retina screens.
     off.width = Math.max(1, Math.ceil(viewW * DPR));
     off.height = Math.ceil((hazardH + HAZARD_PAD * 2) * DPR);
     const octx = off.getContext("2d")!;
     octx.scale(DPR, DPR);
-    // Remsan ritas pa y=GROUND_Y-2 men gradienten spande GROUND_Y±hazardH i
-    // originalet - samma forhallande har (rekt-toppen ligger 10px in i gradienten).
+    // Strip is drawn at y=GROUND_Y-2 but the gradient spans GROUND_Y-hazardH in
+    // the original - same relationship here (rect top lies 10px into the gradient).
     const grad = octx.createLinearGradient(
       0,
       HAZARD_PAD - (hazardH - 2),
@@ -118,9 +118,9 @@ export function getHazardStrip(theme: Theme) {
 }
 
 export function drawAmbientParticles(ctx: Ctx, theme: Theme, t: number) {
-  // Partiklarna flyttas i rit-steget (inte update) sa de lever aven pa
-  // start-/gameover-skarmen. Skala med frameScale sa farten blir densamma
-  // pa 120+ Hz-skarmar som pa 60 Hz.
+  // Particles are moved in the draw step (not update) so they are alive even on
+  // the start/gameover screen. Scale with frameScale so the speed stays the same
+  // on 120+ Hz screens as on 60 Hz.
   const fs = Minimotor.Engine.frameScale;
   for (const p of ambientParticles) {
     switch (theme.particle) {
@@ -176,8 +176,8 @@ export function drawJaggedSilhouette(
 ) {
   const scroll = game.distance * offsetFactor;
   const offset = scroll % spacing;
-  // Toppens hojd seedas med varldskolumnen (inte skarmplatsen) - annars
-  // byter alla berg form varje gang offseten slar runt.
+  // The peak's height is seeded with the world column (not the screen position) - otherwise
+  // all mountains change shape every time the offset wraps.
   const colBase = Math.floor(scroll / spacing) * spacing;
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -243,7 +243,7 @@ export function drawFish(
   ctx.beginPath();
   ctx.ellipse(0, 0, size, size * 0.45, 0, 0, Math.PI * 2);
   ctx.fill();
-  // Stjart pekar bakat (at hoger) eftersom fisken simmar at vanster, som allt annat i banan
+  // Tail points backward (to the right) since the fish swims leftward, like everything else on the track
   ctx.beginPath();
   ctx.moveTo(size, 0);
   ctx.lineTo(size * 1.7, -size * 0.55);
@@ -435,7 +435,7 @@ export function drawGroundProp(ctx: Ctx, x: number, groundY: number, type: strin
   ctx.restore();
 }
 
-// ---------- Storslagna dekorations-hjalpare ----------
+// ---------- Grand decoration helpers ----------
 export function drawCloud(ctx: Ctx, x: number, y: number, scale: number, color: string) {
   ctx.save();
   ctx.fillStyle = color;
@@ -447,7 +447,7 @@ export function drawCloud(ctx: Ctx, x: number, y: number, scale: number, color: 
   ctx.restore();
 }
 
-// Parallax-lager av moln som glider forbi langsamt
+// Parallax layers of clouds that drift by slowly
 export function drawDriftingClouds(
   ctx: Ctx,
   t: number,
@@ -477,7 +477,7 @@ export function drawPillar(
   ctx.save();
   ctx.fillStyle = color;
   ctx.fillRect(x - w / 2, groundY - h, w, h);
-  // rafflor
+  // fluting
   ctx.strokeStyle = "rgba(0,0,0,0.15)";
   ctx.lineWidth = 2;
   for (let i = 1; i < 4; i++) {
@@ -644,7 +644,7 @@ export function drawLantern(
   ctx.restore();
 }
 
-// Silhuett av flera byggnader/torn som en stad langt bort
+// Silhouette of several buildings/towers like a city far away
 export function drawTowerRow(
   ctx: Ctx,
   baseY: number,
@@ -655,8 +655,8 @@ export function drawTowerRow(
   const spacing = 90;
   const scroll = game.distance * offsetFactor;
   const offset = scroll % spacing;
-  // Byggnadernas form seedas med varldskolumnen sa staden inte byter
-  // skepnad varje gang offseten slar runt.
+  // The buildings' shapes are seeded with the world column so the city doesn't change
+  // appearance every time the offset wraps.
   const colBase = Math.floor(scroll / spacing) * spacing;
   ctx.save();
   ctx.fillStyle = color;
@@ -666,7 +666,7 @@ export function drawTowerRow(
     const h = 60 + Math.abs(Math.sin(wc * 0.03)) * 120;
     const w = spacing * (0.4 + Math.abs(Math.sin(wc * 0.07)) * 0.25);
     ctx.fillRect(x, baseY - h, w, h);
-    // spira ibland
+    // spire sometimes
     if (Math.sin(wc * 0.05) > 0.5) {
       ctx.beginPath();
       ctx.moveTo(x, baseY - h);

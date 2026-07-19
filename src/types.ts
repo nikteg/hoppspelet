@@ -72,7 +72,7 @@ export interface SpriteCanvas extends HTMLCanvasElement {
   logicalSize: number;
 }
 
-// En 8-takterssektion i den procedurella bakgrundsmusiken (se audio.ts).
+// An 8-bar section in the procedural background music (see audio.ts).
 export interface SongSection {
   mel: (number | null)[];
   prog: number[][];

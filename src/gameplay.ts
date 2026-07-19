@@ -12,15 +12,15 @@ function jump() {
   }
 }
 
-// Kort sparr efter doden sa att en player som hamrar hopp-knappen inte
-// rakar start om innan hen ens sett poangskarmen.
+// Brief lock after death so a player hammering the jump button doesn't
+// accidentally restart before even seeing the score screen.
 let diedAt = 0;
 const RESTART_LOCK_MS = 600;
 
 export function die() {
   if (game.state === "gameover") return;
-  // Kom ihag vilken niva man dog pa sa nasta omgang starts dar (fast med 0 poang).
-  // Appliceras forst vid omstart (resetGame) sa gameover-skarmen visar ratt theme.
+  // Remember which level you died on so the next round starts there (but with 0 points).
+  // Applied only on reset (resetGame) so the game over screen shows the correct theme.
   level.pending = currentThemeIndex();
   game.state = "gameover";
   diedAt = performance.now();
@@ -40,41 +40,41 @@ function hasCoinNear(x1: number, x2: number) {
 
 export function spawnObstacle() {
   const spawnX = viewW + 20;
-  // Spawna inget ovanpa en redan utlagd myntbage - annars lockas player
-  // rakt in i en fara som dok upp efter att coins placerades.
+  // Don't spawn on top of an already placed coin arc - otherwise the player is lured
+  // straight into a hazard that appeared after coins were placed.
   if (hasCoinNear(spawnX, spawnX + 150)) return;
 
   // Random type: spike (jump over), platform (jump onto) or ceiling block (must go under)
   let r = Math.random();
   if (r >= 0.8) {
-    // Takblock kraver att man springer LAGT. Ett obstacle tatt FORE ett
-    // takblock ar omojligt att passera: hopp-bagen over spiken/plattformen
-    // nar in i takblockets zon och man hinner aldrig ner igen (ett helt
-    // hopp tar ~39 steg men minsta spawn-avstand ar 35). Krav darfor fri
-    // mark motsvarande ett helt hopp plus marginal fore varje takblock,
-    // annars spawnas nagot annat i stallet.
+    // Ceiling blocks require the player to run LOW. An obstacle right BEFORE a
+    // ceiling block is impossible to pass: the jump arc over the spike/platform
+    // reaches the ceiling block's zone and you never have time to get back down (a full
+    // jump takes ~39 steps but the minimum spawn distance is 35). Therefore require clear
+    // ground equivalent to a full jump plus margin before every ceiling block,
+    // otherwise spawn something else instead.
     const clearPx = 55 * game.speed;
     for (const obs of game.obstacles) {
       if (obs.x + obs.w > spawnX - clearPx) {
-        r = obs.type === "platform" ? 0.7 : 0.3; // plattform resp. spik i stallet
+        r = obs.type === "platform" ? 0.7 : 0.3; // platform or spike instead
         break;
       }
     }
   }
 
   if (r < 0.55) {
-    // Faror (spik / kottatande vaxt) har alltid samma storlek
+    // Hazards (spike / carnivorous plant) always have the same size
     const w = 34;
     const h = 44;
     game.obstacles.push({ type: "spike", x: spawnX, y: GROUND_Y - h, w: w, h: h });
   } else if (r < 0.8) {
-    // Plattformar far fortfarande variera (de ar inte faror)
+    // Platforms still get to vary (they are not hazards)
     const w = 90 + Math.random() * 90;
     const platformHeight = 55 + Math.random() * 55;
     const topY = GROUND_Y - platformHeight;
     game.obstacles.push({ type: "platform", x: spawnX, y: topY, w: w, h: GROUND_Y - topY });
   } else {
-    // Takblock (fara) har alltid samma storlek och hojd over ground
+    // Ceiling blocks (hazard) always have the same size and height above ground
     const w = 100;
     const bottomY = GROUND_Y - PLAYER_SIZE - 38;
     game.obstacles.push({ type: "ceiling", x: spawnX, y: 0, w: w, h: bottomY });
@@ -104,8 +104,8 @@ export function spawnCoins() {
   }
 }
 
-// Startsidan ska bort vid forsta speltryck - oavsett om det ar Spela-knappen,
-// mellanslag eller ett tryck pa skarmen.
+// The landing page should go away on first game press - whether it's the Play button,
+// spacebar or a tap on the screen.
 function hideLanding() {
   const el = document.getElementById("landing");
   if (el && el.style.display !== "none") el.style.display = "none";
@@ -113,7 +113,7 @@ function hideLanding() {
 
 export function handleAction() {
   hideLanding();
-  startMusic(); // starts music vid forsta anvandarinteraktion (browsers kraver en gest)
+  startMusic(); // starts music on first user interaction (browsers require a gesture)
   if (game.state === "ready") {
     game.state = "playing";
     resetGame();

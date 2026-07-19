@@ -1,28 +1,28 @@
 import { Minimotor } from "minimotor";
 import type { SongSection } from "./types.js";
 
-// Motorns ljudstod (Minimotor.Audio) skoter AudioContext, schemalaggning,
-// volym och paus vid dold flik. Har definieras bara spelets eget material:
-// laten (melodier, ackord, arrangemang) och ljudeffekterna.
+// The engine's audio support (Minimotor.Audio) handles AudioContext, scheduling,
+// volume and pause on hidden tab. Here we define only the game's own material:
+// the song (melodies, chords, arrangement) and the sound effects.
 const audio = Minimotor.Audio;
 
-// ---------- Bakgrundsmusik (procedurell, upbeat, laag volym) ----------
+// ---------- Background music (procedural, upbeat, low volume) ----------
 const MUSIC_VOL = 0.05;
 const STEP_MS = 145;
 
-// Halvtonssteg fran C5 (523.25 Hz). Ett steg ar en attondel (~103 BPM),
-// en takt ar 8 steg. Laten ar byggd av 8-takterssektioner (vers, varierad
-// vers, refrang, brygga) som tillsammans ger ~65 s music innan den borjar
-// om - och vartannat varv byter vers/refrang klangfarg, sa i praktiken
-// upprepas ingenting pa drygt tva minuter.
+// Semitone steps from C5 (523.25 Hz). One step is an eighth note (~103 BPM),
+// one bar is 8 steps. The song is built from 8-bar sections (verse, varied
+// verse, chorus, bridge) which together produce ~65 s of music before it starts
+// over - and every other loop the verse/chorus swap timbre, so in practice
+// nothing repeats for over two minutes.
 const C5 = 523.25;
 const semi = (n: number) => C5 * Math.pow(2, n / 12);
 const STEPS_PER_BAR = 8;
-const SECTION_STEPS = 64; // 8 takter a 8 steg
+const SECTION_STEPS = 64; // 8 bars of 8 steps
 
-// Melodier: halvtonssteg fran C5, _ = paus. Allt i C-dur.
+// Melodies: semitone steps from C5, _ = rest. All in C major.
 const _ = null;
-// Vers - lugn, stigande arpeggiokontur
+// Verse - calm, rising arpeggio contour
 const MEL_A = [
   0,
   _,
@@ -89,7 +89,7 @@ const MEL_A = [
   11,
   _, // F  G
 ];
-// Versvariation - tatare "svar" pa versen
+// Verse variation - denser "response" to the verse
 const MEL_A2 = [
   16,
   14,
@@ -156,7 +156,7 @@ const MEL_A2 = [
   14,
   _, // F  G
 ];
-// Refrang - hogre lage, mer driv
+// Chorus - higher register, more drive
 const MEL_B = [
   12,
   _,
@@ -223,7 +223,7 @@ const MEL_B = [
   19,
   _, // C  G
 ];
-// Brygga - gles och drommande
+// Bridge - sparse and dreamy
 const MEL_C = [
   9,
   _,
@@ -291,7 +291,7 @@ const MEL_C = [
   _, // F  G
 ];
 
-// Ackord per takt: [basrot (halvtoner fran C5, oktaven under), ters (4=dur, 3=moll)]
+// Chords per bar: [bass root (halftones from C5, octave below), third (4=major, 3=minor)]
 const PROG_A = [
   [-12, 4],
   [-15, 3],
@@ -323,8 +323,8 @@ const PROG_C = [
   [-17, 4],
 ]; // Am Em F G x2
 
-// Arrangemanget: vers, vers', refrang, vers', brygga, refrang, vers (utro).
-// drums: 0 = bara mjuka ticks, 1 = bastrumma + hi-hat, 2 = fullt komp med virvel.
+// Arrangement: verse, verse', chorus, verse', bridge, chorus, verse (outro).
+// drums: 0 = soft ticks only, 1 = kick + hi-hat, 2 = full groove with snare.
 const SONG: SongSection[] = [
   { mel: MEL_A, prog: PROG_A, lead: "triangle", leadVol: 0.5, drums: 1 },
   { mel: MEL_A2, prog: PROG_A, lead: "triangle", leadVol: 0.5, drums: 1, stabs: true },
@@ -336,9 +336,9 @@ const SONG: SongSection[] = [
 ];
 const TOTAL_STEPS = SONG.length * SECTION_STEPS;
 
-// Instrumenten (not, bastrumma, brustrumma) kommer fran motorn -
-// trummorna syntas dar: bastrumman ar en sjunkande sinuston, hi-hat och
-// virvel ar filtrerat brus fran en ateranvand brusbuffer.
+// The instruments (note, kick, noise drum) come from the engine -
+// the drums are synthesized there: the kick is a descending sine tone, hi-hat and
+// snare are filtered noise from a reused noise buffer.
 function scheduleMusicStep(step: number, when: number) {
   const pass = Math.floor(step / TOTAL_STEPS);
   const s = step % TOTAL_STEPS;
@@ -349,7 +349,7 @@ function scheduleMusicStep(step: number, when: number) {
   const root = sec.prog[bar][0];
   const third = sec.prog[bar][1];
 
-  // Vartannat varv byter vers och refrang klangfarg med varandra
+  // Every other loop, verse and chorus swap timbre with each other
   let lead = sec.lead;
   let leadVol = sec.leadVol;
   if (pass % 2 === 1 && sec.lead !== "sine") {
@@ -362,7 +362,7 @@ function scheduleMusicStep(step: number, when: number) {
     audio.music.note(semi(note), sec.longNotes ? 0.5 : 0.2, lead, leadVol, when);
   }
 
-  // Bas: rot pa slag 1, kvint pa slag 3, upptakt mot nasta takt i fullt komp
+  // Bass: root on beat 1, fifth on beat 3, upbeat to next bar in full groove
   if (beat === 0) {
     audio.music.note(semi(root), 0.42, "sine", 0.9, when);
   } else if (beat === 4) {
@@ -371,14 +371,14 @@ function scheduleMusicStep(step: number, when: number) {
     audio.music.note(semi(root + 12), 0.12, "sine", 0.4, when);
   }
 
-  // Ackordstotar pa offbeats i de tatare sektionerna
+  // Chord stabs on offbeats in the denser sections
   const stab = sec.stabs && (beat === 3 || beat === 7);
   if (stab) {
     audio.music.note(semi(root + 12), 0.1, "square", 0.1, when);
     audio.music.note(semi(root + 12 + third), 0.1, "square", 0.08, when);
   }
 
-  // Mjuk ackordplatta i bryggan
+  // Soft chord pad in the bridge
   if (sec.pad && beat === 0) {
     const barDur = (STEP_MS / 1000) * STEPS_PER_BAR;
     audio.music.note(semi(root + 12), barDur, "sine", 0.16, when);
@@ -386,7 +386,7 @@ function scheduleMusicStep(step: number, when: number) {
     audio.music.note(semi(root + 19), barDur, "sine", 0.1, when);
   }
 
-  // Trummor
+  // Drums
   if (sec.drums >= 1) {
     if (beat === 0 || beat === 4) audio.music.kick(when);
     if (beat % 2 === 1 && !stab) {
@@ -407,8 +407,8 @@ function scheduleMusicStep(step: number, when: number) {
   }
 }
 
-// Startar motorns musikspelare med spelets lat. Anropas vid forsta
-// anvandarinteraktionen (webblasare kraver en gest for att lasa upp audio).
+// Starts the engine's music player with the game's song. Called on first
+// user interaction (browsers require a gesture to unlock audio).
 export function startMusic() {
   audio.music.start({
     volume: MUSIC_VOL,
@@ -433,8 +433,8 @@ export function playJumpSound() {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "square";
-    // Liten slumpvariation sa hoppet inte later exakt likadant varje gang
-    const detune = 0.94 + Math.random() * 0.12; // ±6 % tonhojd
+    // Small random variation so the jump doesn't sound exactly the same every time
+    const detune = 0.94 + Math.random() * 0.12; // ±6 % pitch variation
     const dur = 0.16 + Math.random() * 0.05;
     osc.frequency.setValueAtTime(280 * detune, now);
     osc.frequency.exponentialRampToValueAtTime(620 * detune, now + dur * 0.7);

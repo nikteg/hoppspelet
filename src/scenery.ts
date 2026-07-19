@@ -58,7 +58,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.fill();
       ctx.restore();
 
-      // Mindre avlagsen vulkan i bakgrunden
+      // A more distant volcano in the background
       const smallVolcX = viewW * 0.4;
       ctx.fillStyle = "rgba(15,5,8,0.7)";
       ctx.beginPath();
@@ -68,7 +68,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.closePath();
       ctx.fill();
 
-      // Glodande aska/stendebris som driver nedat
+      // Glowing ash/stone debris drifting downward
       for (let i = 0; i < 5; i++) {
         const cycle = 12;
         const localT = (t * 0.4 + i * 2.2) % cycle;
@@ -98,7 +98,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       }
       ctx.restore();
 
-      // Simmande fiskstim i olika djup
+      // Swimming schools of fish at different depths
       for (let i = 0; i < 4; i++) {
         const spd = 12 + i * 5;
         const x = viewW + 80 - ((t * spd + i * 260) % (viewW + 300));
@@ -108,7 +108,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
 
       drawJaggedSilhouette(ctx, GROUND_Y - 10, 20, 55, 150, "rgba(6,40,45,0.85)", 0.06);
 
-      // Manetflockar som svavar
+      // Jellyfish drifting
       for (let i = 0; i < 2; i++) {
         const jx = viewW * (0.35 + i * 0.4);
         const jy = viewH * 0.3 + Math.sin(t * 0.7 + i) * 30;
@@ -151,7 +151,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     case "jungle": {
       drawJaggedSilhouette(ctx, GROUND_Y - 20, 60, 170, 240, "rgba(10,30,8,0.85)", 0.045);
 
-      // Flygande faglar
+      // Flying birds
       for (let i = 0; i < 3; i++) {
         const spd = 20 + i * 8;
         const x = ((t * spd + i * 300) % (viewW + 200)) - 100;
@@ -159,7 +159,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         drawBird(ctx, x, y, 8, t, i * 3);
       }
 
-      // Svajande tempeltrad (placerad langt fran figurens fasta position)
+      // Swaying jungle tree (placed far from the character's fixed position)
       ctx.save();
       const tx = Math.max(320, viewW * 0.3);
       const ty = GROUND_Y - 90;
@@ -175,7 +175,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.fill();
       ctx.restore();
 
-      // Fjarilar
+      // Butterflies
       const butterflyColors = [
         "rgba(255,140,60,0.8)",
         "rgba(140,200,255,0.8)",
@@ -187,13 +187,13 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         drawFlutterfly(ctx, bx2, by2, 7, t, i * 4, butterflyColors[i]);
       }
 
-      // Hangande rankor fran overkanten
+      // Hanging vines from the top edge
       for (let i = 0; i < 3; i++) {
         const vx = viewW * (0.45 + i * 0.18);
         drawHangingVine(ctx, vx, 0, 70 + i * 20, t, i * 2, "rgba(30,60,15,0.6)");
       }
 
-      // Blommor pa ground
+      // Flowers on the ground
       drawGroundProp(ctx, Math.max(380, viewW * 0.5), GROUND_Y, "flower", "rgba(255,120,160,0.7)");
       drawGroundProp(ctx, Math.max(460, viewW * 0.58), GROUND_Y, "flower", "rgba(255,220,80,0.7)");
       break;
@@ -217,13 +217,13 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       drawShootingStar(ctx, t, 26, 4, "rgba(255,255,255,0.95)", viewH * 0.1, viewH * 0.35);
       drawJaggedSilhouette(ctx, GROUND_Y - 10, 70, 190, 210, "rgba(180,220,240,0.5)", 0.05);
 
-      // Isberg som flyter forbi i fjarran
+      // Icebergs floating by in the distance
       for (let i = 0; i < 2; i++) {
         const ibx = viewW * (0.4 + i * 0.35);
         drawIceberg(ctx, ibx, GROUND_Y - 5, 90 + i * 30, 55 + i * 15, "rgba(210,235,245,0.55)");
       }
 
-      // Pingviner som vaggar pa ground
+      // Penguins wobbling on the ground
       for (let i = 0; i < 2; i++) {
         const pgx = Math.max(400, viewW * (0.5 + i * 0.1));
         const bob = Math.sin(t * 4 + i) * 2;
@@ -237,13 +237,13 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.beginPath();
         ctx.ellipse(0, -12, 5, 10, 0, 0, Math.PI * 2);
         ctx.fill();
-        // Ogon
+        // Eyes
         ctx.fillStyle = "#0a1418";
         ctx.beginPath();
         ctx.arc(-2.5, -22, 1.2, 0, Math.PI * 2);
         ctx.arc(2.5, -22, 1.2, 0, Math.PI * 2);
         ctx.fill();
-        // Orange nabb
+        // Orange beak
         ctx.fillStyle = "#f5a623";
         ctx.beginPath();
         ctx.moveTo(0, -20);
@@ -274,7 +274,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.restore();
       drawShootingStar(ctx, t, 20, 0, "rgba(220,200,255,0.95)", viewH * 0.05, viewH * 0.4);
 
-      // Avlagsen rymdstation
+      // Distant space station
       ctx.save();
       const stX = viewW * 0.45;
       const stY = viewH * 0.12;
@@ -285,7 +285,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.fillRect(stX + 18, stY - 3, 12, 6);
       ctx.restore();
 
-      // Asteroidbalte som driver forbi
+      // Asteroid belt drifting by
       for (let i = 0; i < 5; i++) {
         const spd = 6 + (i % 3) * 3;
         const ax = viewW + 40 - ((t * spd + i * 180) % (viewW + 200));
@@ -318,7 +318,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.closePath();
       ctx.fill();
 
-      // Kamelkaravan som vandrar i fjarran
+      // Camel caravan wandering in the distance
       ctx.save();
       ctx.fillStyle = "rgba(90,55,20,0.6)";
       for (let i = 0; i < 3; i++) {
@@ -346,7 +346,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       }
       ctx.restore();
 
-      // Oas med palmer langt bort
+      // Oasis with palms far away
       const oasisX = viewW * 0.2;
       ctx.fillStyle = "rgba(80,50,15,0.6)";
       ctx.fillRect(oasisX - 2, GROUND_Y - 45, 4, 45);
@@ -374,7 +374,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
 
       drawRainbow(ctx, viewW * 0.72, viewH * 0.55, 90);
 
-      // Avlagset luftskepp
+      // Distant airship
       const airX = viewW * 0.3 + Math.sin(t * 0.3) * 20;
       const airY = viewH * 0.2;
       ctx.save();
@@ -399,9 +399,9 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       const spacing = 130;
       const scroll = game.distance * 0.06;
       const offset = scroll % spacing;
-      // Byggnadens hojd och fonstermonster seedas med dess VARLDSKOLUMN
-      // (bx + colBase), inte skarmplatsen - annars byter alla hus form och
-      // fonster varje gang offseten slar runt (och fonstren "blinkar").
+      // The building's height and window pattern are seeded with its WORLD COLUMN
+      // (bx + colBase), not the screen position - otherwise all buildings change shape and
+      // windows every time the offset wraps (and the windows "blink").
       const colBase = Math.floor(scroll / spacing) * spacing;
       for (let bx = -spacing; bx < viewW + spacing; bx += spacing) {
         const x = bx - offset;
@@ -425,7 +425,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         }
       }
 
-      // Flygande bilar
+      // Flying cars
       for (let i = 0; i < 3; i++) {
         const spd2 = 25 + i * 10;
         const cx3 = ((t * spd2 + i * 260) % (viewW + 100)) - 50;
@@ -466,7 +466,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.closePath();
       ctx.fill();
 
-      // Fladdermoss
+      // Bats
       for (let i = 0; i < 4; i++) {
         const spd = 15 + i * 6;
         const bx3 = ((t * spd + i * 220) % (viewW + 100)) - 50;
@@ -474,11 +474,11 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         drawBird(ctx, bx3, by3, 7, t, i * 5, "rgba(10,10,15,0.8)");
       }
 
-      // Gravstenar
+      // Tombstones
       drawGroundProp(ctx, Math.max(400, viewW * 0.48), GROUND_Y, "tombstone", "rgba(60,60,65,0.7)");
       drawGroundProp(ctx, Math.max(460, viewW * 0.55), GROUND_Y, "tombstone", "rgba(60,60,65,0.7)");
 
-      // Dimma langs ground
+      // Fog along the ground
       ctx.save();
       ctx.globalAlpha = 0.2;
       ctx.fillStyle = "#a8c9a8";
@@ -510,7 +510,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.lineTo(shipX, shipY - 55);
       ctx.stroke();
 
-      // Ett andra, mindre skepp langre bort
+      // A second, smaller ship further back
       const ship2X = viewW * 0.4;
       const ship2Y = GROUND_Y - 25;
       ctx.save();
@@ -525,7 +525,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.fill();
       ctx.restore();
 
-      // Korpar som flyger
+      // Ravens flying
       for (let i = 0; i < 2; i++) {
         const spd = 18 + i * 6;
         const rx = ((t * spd + i * 300) % (viewW + 100)) - 50;
@@ -533,7 +533,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         drawBird(ctx, rx, ry, 7, t, i * 4, "rgba(10,10,10,0.7)");
       }
 
-      // Byhus vid fjorden
+      // Village huts by the fjord
       const villageX = viewW * 0.2;
       ctx.fillStyle = "rgba(40,30,20,0.6)";
       ctx.fillRect(villageX - 20, GROUND_Y - 30, 40, 30);
@@ -560,7 +560,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.closePath();
       ctx.fill();
 
-      // Pterodaktyler som flyger over dalen
+      // Pterodactyls flying over the valley
       for (let i = 0; i < 2; i++) {
         const spd = 22 + i * 8;
         const px2 = ((t * spd + i * 320) % (viewW + 100)) - 50;
@@ -568,7 +568,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         drawBird(ctx, px2, py2, 13, t, i * 3, "rgba(30,25,10,0.7)");
       }
 
-      // Ormbunkar i forgrunden
+      // Ferns in the foreground
       for (let i = 0; i < 3; i++) {
         const fx2 = Math.max(360, viewW * (0.4 + i * 0.08));
         ctx.save();
@@ -605,7 +605,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
 
       drawRainbow(ctx, viewW * 0.25, viewH * 0.6, 80);
 
-      // Gumdrop-kullar
+      // Gumdrop hills
       drawGroundProp(
         ctx,
         Math.max(400, viewW * 0.46),
@@ -628,7 +628,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         "rgba(150,180,255,0.7)",
       );
 
-      // Fallande godisstrossel
+      // Falling candy sprinkles
       drawFallingStreaks(ctx, t, viewW, viewH, 20, "rgba(255,255,255,0.4)", 25, 6);
       break;
     }
@@ -656,7 +656,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       drawGearSpike(ctx, { x: -22, y: -22, w: 44, h: 44 });
       ctx.restore();
 
-      // Flygande dronare med blinkande ljus
+      // Flying drones with blinking lights
       for (let i = 0; i < 2; i++) {
         const spd = 20 + i * 10;
         const dx2 = ((t * spd + i * 300) % (viewW + 100)) - 50;
@@ -672,7 +672,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.restore();
       }
 
-      // Elektriska gnistbagar pa fasaden
+      // Electric arc flashes on the facade
       const arcCycle = 3;
       const arcPhase = (t % arcCycle) / arcCycle;
       if (arcPhase < 0.15) {
@@ -722,7 +722,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.closePath();
       ctx.fill();
 
-      // Masar som flyger
+      // Seagulls flying
       for (let i = 0; i < 3; i++) {
         const spd = 18 + i * 7;
         const gx2 = ((t * spd + i * 260) % (viewW + 100)) - 50;
@@ -730,10 +730,10 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         drawBird(ctx, gx2, gy2, 7, t, i * 4, "rgba(255,255,255,0.75)");
       }
 
-      // Skattkista pa stranden
+      // Treasure chest on the beach
       drawGroundProp(ctx, Math.max(400, viewW * 0.45), GROUND_Y, "chest", "rgba(90,55,20,0.7)");
 
-      // Avlagsen o med palm
+      // Distant island with palm tree
       const islandX = viewW * 0.22;
       ctx.fillStyle = "rgba(180,160,100,0.5)";
       ctx.beginPath();
@@ -770,7 +770,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.fill();
       ctx.restore();
 
-      // Ytterligare tva svajande trad i olika storlekar
+      // Two more swaying trees in different sizes
       const extraTrees = [
         { x: Math.max(420, viewW * 0.5), h: 70, r: 38, color: "rgba(220,140,50,0.7)" },
         { x: Math.max(500, viewW * 0.58), h: 55, r: 30, color: "rgba(180,90,40,0.7)" },
@@ -792,7 +792,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.restore();
       }
 
-      // Pumpor och svampar pa ground
+      // Pumpkins and mushrooms on the ground
       drawGroundProp(ctx, Math.max(400, viewW * 0.46), GROUND_Y, "pumpkin", "#d9720f");
       drawGroundProp(ctx, Math.max(460, viewW * 0.53), GROUND_Y, "mushroom", "#c94a3a");
       drawGroundProp(ctx, Math.max(520, viewW * 0.6), GROUND_Y, "mushroom", "#e8dcc0");
@@ -800,7 +800,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     }
     case "savanna": {
       drawJaggedSilhouette(ctx, GROUND_Y - 10, 30, 70, 200, "rgba(60,45,15,0.5)", 0.05);
-      // Stor lagt staende sol med varmedis
+      // Big low-hanging sun with heat shimmer
       ctx.save();
       ctx.shadowColor = "rgba(255,220,140,0.8)";
       ctx.shadowBlur = 30;
@@ -809,7 +809,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.arc(viewW * 0.78, viewH * 0.22, 34, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      // Faglar i V-formation
+      // Birds in V-formation
       for (let i = 0; i < 5; i++) {
         const spd = 14;
         const lead = ((t * spd) % (viewW + 200)) - 100;
@@ -817,7 +817,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         const by2 = viewH * 0.16 + Math.abs(i - 2) * 12;
         drawBird(ctx, bx2, by2, 8, t, i, "rgba(40,30,15,0.7)");
       }
-      // Akaciatrad med platt krona
+      // Acacia trees with flat canopies
       for (let k = 0; k < 2; k++) {
         const ax = Math.max(340, viewW * (0.55 + k * 0.2));
         ctx.save();
@@ -833,7 +833,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.fill();
         ctx.restore();
       }
-      // Giraffsilhuett
+      // Giraffe silhouette
       const gx = viewW * 0.35;
       ctx.fillStyle = "rgba(50,35,15,0.55)";
       ctx.fillRect(gx, GROUND_Y - 70, 8, 70);
@@ -846,10 +846,10 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     }
     case "crystal": {
       drawJaggedSilhouette(ctx, GROUND_Y - 15, 50, 140, 200, "rgba(30,10,60,0.6)", 0.045);
-      // Jattekristaller som reser sig ur ground, glodande
+      // Giant crystals rising from the ground, glowing
       const cCols = ["#5ff2e0", "#a06fff", "#ff6fd0"];
-      // Antalet skalar med skarmbredden - fast 5 st lamnade hogra halvan tom
-      // pa breda skarmar.
+      // The count scales with screen width - a fixed 5 left the right half empty
+      // on wide screens.
       const nCrystals = Math.ceil(viewW / 160) + 1;
       for (let i = 0; i < nCrystals; i++) {
         const cx = i * 160 + 80 - ((game.distance * 0.06) % 160);
@@ -875,7 +875,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     }
     case "bog": {
       drawJaggedSilhouette(ctx, GROUND_Y - 10, 40, 90, 220, "rgba(15,25,10,0.6)", 0.04);
-      // Doda knotiga trad
+      // Dead twisted trees
       for (let k = 0; k < 3; k++) {
         const tx = Math.max(320, viewW * (0.3 + k * 0.25));
         ctx.save();
@@ -903,7 +903,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
           "rgba(20,40,10,0.5)",
         );
       }
-      // Glodande irrblossmoln (antal efter skarmbredd)
+      // Glowing will-o'-wisp clouds (count based on screen width)
       const nWisps = Math.ceil(viewW / 220) + 1;
       for (let i = 0; i < nWisps; i++) {
         drawLantern(
@@ -928,7 +928,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "bamboo": {
-      // Tata bamburor i flera parallax-lager
+      // Dense bamboo stalks in multiple parallax layers
       for (let layer = 0; layer < 2; layer++) {
         const col = layer === 0 ? "rgba(40,70,25,0.4)" : "rgba(60,100,35,0.6)";
         const spacing = 34 + layer * 8;
@@ -956,7 +956,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
           "rgba(255,255,255,0.7)",
         );
       }
-      // Pandasilhuett vid en bambustam
+      // Panda silhouette by a bamboo stalk
       const px = viewW * 0.4;
       ctx.fillStyle = "rgba(240,240,240,0.5)";
       ctx.beginPath();
@@ -971,9 +971,9 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     }
     case "reef": {
       drawJaggedSilhouette(ctx, GROUND_Y - 5, 15, 45, 130, "rgba(255,150,180,0.4)", 0.06);
-      // Korallformationer pa botten
+      // Coral formations on the seabed
       const coralCols = ["rgba(255,110,150,0.6)", "rgba(255,180,90,0.6)", "rgba(180,120,255,0.6)"];
-      const nCorals = Math.ceil(viewW / 150) + 1; // tack hela bredden
+      const nCorals = Math.ceil(viewW / 150) + 1; // cover the full width
       for (let i = 0; i < nCorals; i++) {
         const cx = i * 150 + 50 - ((game.distance * 0.05) % 150);
         ctx.save();
@@ -1011,7 +1011,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     case "steppe": {
       drawJaggedSilhouette(ctx, GROUND_Y - 15, 40, 110, 240, "rgba(80,90,90,0.45)", 0.03);
       drawJaggedSilhouette(ctx, GROUND_Y - 15, 30, 70, 200, "rgba(60,70,70,0.5)", 0.05);
-      // Ullig mammut
+      // Woolly mammoth
       const mx = Math.max(360, viewW * 0.62);
       ctx.fillStyle = "rgba(70,55,40,0.65)";
       ctx.beginPath();
@@ -1022,7 +1022,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.fill();
       ctx.fillRect(mx - 20, GROUND_Y - 20, 8, 20);
       ctx.fillRect(mx + 12, GROUND_Y - 20, 8, 20);
-      // Snabel + bete
+      // Trunk + tusk
       ctx.strokeStyle = "rgba(70,55,40,0.65)";
       ctx.lineWidth = 7;
       ctx.lineCap = "round";
@@ -1048,7 +1048,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.lineTo(vx + 60, GROUND_Y);
       ctx.closePath();
       ctx.fill();
-      // Rok + lavafontan
+      // Smoke + lava fountain
       for (let i = 0; i < 4; i++) {
         const cyc = 12;
         const p = ((t * 0.5 + i * 3) % cyc) / cyc;
@@ -1068,7 +1068,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.arc(vx, GROUND_Y - 128, 10, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      // Palmer pa stranden
+      // Palm trees on the beach
       for (let k = 0; k < 2; k++) {
         const px2 = viewW * (0.2 + k * 0.12);
         ctx.strokeStyle = "rgba(40,25,10,0.6)";
@@ -1087,7 +1087,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "canopy": {
-      // Tak av lovverk upptill + solstralar
+      // Ceiling of foliage up top + sunbeams
       ctx.save();
       ctx.fillStyle = "rgba(10,40,10,0.6)";
       ctx.fillRect(0, 0, viewW, 60);
@@ -1097,7 +1097,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.fill();
       }
       ctx.restore();
-      // Solstralar ner genom lovverket
+      // Sunbeams down through the foliage
       ctx.save();
       ctx.globalAlpha = 0.12;
       ctx.fillStyle = "#fff6c0";
@@ -1130,7 +1130,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     }
     case "saltflat": {
       drawJaggedSilhouette(ctx, GROUND_Y - 5, 10, 25, 260, "rgba(150,170,170,0.35)", 0.03);
-      // Spegelblank yta med reflekterad sol
+      // Mirror-like surface with reflected sun
       ctx.save();
       ctx.shadowColor = "rgba(255,240,220,0.6)";
       ctx.shadowBlur = 25;
@@ -1146,7 +1146,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.ellipse(viewW * 0.7, GROUND_Y + 10, 18, 30, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      // Salt-polygonmonster pa ground
+      // Salt polygon pattern on the ground
       ctx.save();
       ctx.strokeStyle = "rgba(180,190,190,0.3)";
       ctx.lineWidth = 1;
@@ -1164,7 +1164,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     }
     case "mangrove": {
       drawJaggedSilhouette(ctx, GROUND_Y - 15, 50, 150, 200, "rgba(10,25,15,0.6)", 0.045);
-      // Mangrovetrad med rotben ovan vattenlinjen
+      // Mangrove tree with prop roots above the waterline
       for (let k = 0; k < 2; k++) {
         const mx = Math.max(340, viewW * (0.4 + k * 0.25));
         ctx.save();
@@ -1195,7 +1195,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     }
     case "dragon": {
       drawJaggedSilhouette(ctx, GROUND_Y - 20, 60, 170, 210, "rgba(20,5,5,0.7)", 0.045);
-      // Flygande drake med slagande vingar och eldstrale
+      // Flying dragon with beating wings and fire breath
       const dgx = ((t * 30) % (viewW + 300)) - 150;
       const dgy = viewH * 0.25 + Math.sin(t) * 20;
       ctx.save();
@@ -1209,14 +1209,14 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.quadraticCurveTo(dgx - 20, dgy - 30 - wf * 20, dgx - 40, dgy);
       ctx.quadraticCurveTo(dgx - 20, dgy + 6, dgx, dgy);
       ctx.fill();
-      // Lang hals + huvud
+      // Long neck + head
       ctx.strokeStyle = "rgba(20,5,5,0.8)";
       ctx.lineWidth = 6;
       ctx.beginPath();
       ctx.moveTo(dgx + 22, dgy - 2);
       ctx.lineTo(dgx + 42, dgy - 10);
       ctx.stroke();
-      // Eldstrale
+      // Fire breath
       if (Math.sin(t * 2) > 0.6) {
         ctx.save();
         ctx.globalAlpha = 0.7;
@@ -1236,7 +1236,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     case "fairy": {
       drawJaggedSilhouette(ctx, GROUND_Y - 15, 50, 140, 200, "rgba(40,20,60,0.5)", 0.045);
       drawRainbow(ctx, viewW * 0.7, viewH * 0.6, 70);
-      // Lysande svampar och stora glodande sporer
+      // Glowing mushrooms and large glowing spores
       for (let k = 0; k < 3; k++) {
         const mx = viewW * (0.2 + k * 0.28);
         ctx.save();
@@ -1249,7 +1249,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.fill();
         ctx.restore();
       }
-      // Svavande alvor (lysande prickar med sla)
+      // Floating fairies (glowing dots with trail)
       for (let i = 0; i < 6; i++) {
         const fx = ((t * 8 + i * 130) % (viewW + 60)) - 30;
         const fy = viewH * 0.4 + Math.sin(t * 2 + i) * 40;
@@ -1260,7 +1260,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     case "troll": {
       drawJaggedSilhouette(ctx, GROUND_Y - 25, 110, 240, 260, "rgba(15,20,24,0.55)", 0.03);
       drawJaggedSilhouette(ctx, GROUND_Y - 25, 90, 220, 230, "rgba(20,25,28,0.7)", 0.045);
-      // Stenbro over en klyfta
+      // Stone bridge over a chasm
       const bx = viewW * 0.6;
       ctx.save();
       ctx.strokeStyle = "rgba(30,38,42,0.8)";
@@ -1269,7 +1269,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.arc(bx, GROUND_Y + 30, 70, Math.PI * 1.15, Math.PI * 1.85);
       ctx.stroke();
       ctx.restore();
-      // Sovande troll (rund sten med ogon)
+      // Sleeping troll (round stone with eyes)
       const trx = viewW * 0.3;
       ctx.fillStyle = "rgba(45,55,60,0.7)";
       ctx.beginPath();
@@ -1286,7 +1286,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       drawJaggedSilhouette(ctx, GROUND_Y - 10, 20, 55, 220, "rgba(255,255,255,0.35)", 0.05);
       drawRainbow(ctx, viewW * 0.3, viewH * 0.55, 85);
       drawDriftingClouds(ctx, t, "rgba(255,245,255,0.5)", 3, viewH * 0.2, 1, 5);
-      // Enhorning pa en kulle
+      // Unicorn on a hill
       const ux = viewW * 0.68;
       ctx.save();
       ctx.fillStyle = "rgba(255,255,255,0.7)";
@@ -1305,7 +1305,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.moveTo(ux - 24, GROUND_Y - 42);
       ctx.lineTo(ux - 28, GROUND_Y - 56);
       ctx.stroke();
-      // Man i regnbagsfarg
+      // Mane in rainbow colors
       ctx.strokeStyle = "rgba(255,150,220,0.7)";
       ctx.lineWidth = 4;
       ctx.beginPath();
@@ -1328,7 +1328,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     }
     case "atlantis": {
       drawJaggedSilhouette(ctx, GROUND_Y - 15, 60, 160, 210, "rgba(5,20,30,0.7)", 0.045);
-      // Sjunkna ruiner: pelare i olika hojd (antal efter skarmbredd)
+      // Sunken ruins: pillars at different heights (count based on screen width)
       const nPillars = Math.ceil(viewW / 150) + 1;
       for (let k = 0; k < nPillars; k++) {
         const cx = k * 150 + 60 - ((game.distance * 0.05) % 150);
@@ -1342,7 +1342,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
           "rgba(40,100,110,0.6)",
         );
       }
-      // Ljusstralar uppifran vattenytan
+      // Light rays from the water surface above
       ctx.save();
       ctx.globalAlpha = 0.08;
       ctx.fillStyle = "#aef0ff";
@@ -1366,7 +1366,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     }
     case "witch": {
       drawJaggedSilhouette(ctx, GROUND_Y - 20, 70, 190, 210, "rgba(20,10,25,0.7)", 0.045);
-      // Full gron mane
+      // Full green moon
       ctx.save();
       ctx.shadowColor = "rgba(150,255,120,0.7)";
       ctx.shadowBlur = 20;
@@ -1375,7 +1375,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.arc(viewW * 0.78, viewH * 0.2, 24, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      // Flygande haxa pa kvast over manen
+      // Flying witch on broomstick across the moon
       const hx = ((t * 24) % (viewW + 200)) - 100;
       const hy = viewH * 0.22 + Math.sin(t * 1.5) * 12;
       ctx.save();
@@ -1410,7 +1410,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "giant": {
-      // Gigantiska stovel- och bordsben som forsvinner uppat
+      // Giant boot and table legs disappearing upward
       for (let k = 0; k < 2; k++) {
         const lx = viewW * (0.35 + k * 0.4);
         ctx.fillStyle = "rgba(60,40,20,0.6)";
@@ -1418,11 +1418,11 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.fillStyle = "rgba(75,52,28,0.6)";
         ctx.fillRect(lx - 30, 0, 12, GROUND_Y);
       }
-      // Enormt bordsben mitt bak
+      // Enormous table leg in the back middle
       const gx = Math.max(360, viewW * 0.62);
       ctx.fillStyle = "rgba(50,34,16,0.5)";
       ctx.fillRect(gx - 10, 0, 20, GROUND_Y);
-      // Jatteklot/leksak pa ground
+      // Giant ball/toy on the ground
       ctx.fillStyle = "rgba(200,60,60,0.5)";
       ctx.beginPath();
       ctx.arc(viewW * 0.2, GROUND_Y - 40, 40, 0, Math.PI * 2);
@@ -1431,7 +1431,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     }
     case "phoenix": {
       drawJaggedSilhouette(ctx, GROUND_Y - 20, 60, 160, 220, "rgba(60,15,10,0.6)", 0.045);
-      // Stor fenix mitt i bild med glodande vingar
+      // Giant phoenix centered with glowing wings
       const fx = viewW * 0.72;
       const fy = viewH * 0.28;
       const wf = Math.sin(t * 3) * 0.5;
@@ -1450,19 +1450,19 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.quadraticCurveTo(fx + 50, fy - 30 - wf * 30, fx + 70, fy + 20);
       ctx.quadraticCurveTo(fx + 30, fy + 10, fx, fy);
       ctx.fill();
-      // Stjart av eld
+      // Tail of fire
       ctx.beginPath();
       ctx.moveTo(fx, fy + 18);
       ctx.quadraticCurveTo(fx - 10, fy + 55, fx, fy + 75);
       ctx.quadraticCurveTo(fx + 10, fy + 55, fx, fy + 18);
       ctx.fill();
       ctx.restore();
-      // Fallande glodande fjadrar
+      // Falling glowing feathers
       drawFallingStreaks(ctx, t, viewW, viewH, 12, "rgba(255,160,70,0.5)", 20, 10);
       break;
     }
     case "moonbase": {
-      // Stor jord som stiger over horisonten
+      // Large Earth rising over the horizon
       ctx.save();
       ctx.shadowColor = "rgba(80,140,220,0.5)";
       ctx.shadowBlur = 24;
@@ -1476,7 +1476,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.arc(viewW * 0.75 + 12, viewH * 0.2 + 8, 8, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      // Kupolbaser med antenner
+      // Dome bases with antennas
       for (let k = 0; k < 2; k++) {
         const bx = viewW * (0.3 + k * 0.35);
         ctx.fillStyle = "rgba(150,160,175,0.6)";
@@ -1494,7 +1494,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.arc(bx + 30, GROUND_Y - 47, 3, 0, Math.PI * 2);
         ctx.fill();
       }
-      // Sma kratrar
+      // Small craters
       for (let i = 0; i < 4; i++) {
         ctx.fillStyle = "rgba(120,125,135,0.4)";
         ctx.beginPath();
@@ -1505,7 +1505,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     }
     case "mars": {
       drawJaggedSilhouette(ctx, GROUND_Y - 10, 25, 60, 230, "rgba(80,25,15,0.5)", 0.04);
-      // Tva manar
+      // Two moons
       ctx.save();
       ctx.fillStyle = "rgba(180,140,120,0.6)";
       ctx.beginPath();
@@ -1513,7 +1513,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.arc(viewW * 0.82, viewH * 0.24, 7, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      // Landad rover
+      // Landed rover
       const rx = viewW * 0.35;
       ctx.fillStyle = "rgba(200,190,180,0.6)";
       ctx.fillRect(rx - 16, GROUND_Y - 16, 32, 10);
@@ -1528,7 +1528,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.moveTo(rx, GROUND_Y - 16);
       ctx.lineTo(rx + 8, GROUND_Y - 30);
       ctx.stroke();
-      // Dammvirvel
+      // Dust devil
       ctx.save();
       ctx.globalAlpha = 0.15;
       ctx.fillStyle = "#c86a4a";
@@ -1540,7 +1540,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "cyber": {
-      // Rutnat + neonstadssilhuett + regnande datastrommar
+      // Grid + neon city silhouette + raining data streams
       ctx.save();
       ctx.strokeStyle = "rgba(0,255,200,0.12)";
       ctx.lineWidth = 1;
@@ -1559,13 +1559,13 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       }
       ctx.restore();
       drawTowerRow(ctx, GROUND_Y, "rgba(5,25,25,0.85)", 0.05, 40);
-      // Neonkonturer pa nagra torn
+      // Neon contours on some towers
       ctx.save();
       ctx.strokeStyle = "rgba(0,255,204,0.4)";
       ctx.lineWidth = 1.5;
       const scroll3 = game.distance * 0.05;
       const so = scroll3 % 90;
-      const colBase3 = Math.floor(scroll3 / 90) * 90; // stabil form vid wrap
+      const colBase3 = Math.floor(scroll3 / 90) * 90; // stable shape on wrap
       for (let bx = -90; bx < viewW; bx += 90) {
         const x = bx - so;
         const h = 60 + Math.abs(Math.sin((bx + colBase3) * 0.03)) * 120;
@@ -1577,7 +1577,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "time": {
-      // Flera svavande urverk i olika storlek + drivande romerska siffror
+      // Multiple floating clocks in different sizes + drifting roman numerals
       const clocks = [
         { x: 0.75, y: 0.25, r: 44 },
         { x: 0.35, y: 0.18, r: 26 },
@@ -1611,12 +1611,12 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.stroke();
         ctx.restore();
       }
-      // (Det snurrande kugghjulet vid ground ar borttaget: det drog blicken
-      // fran riktiga obstacle och kunde sjalv misstas for ett.)
+      // (The spinning gear at the ground was removed: it drew attention
+      // from real obstacles and could itself be mistaken for one.)
       break;
     }
     case "ufo": {
-      // Flera ufon, ett med dragande ljusstrale mot ground
+      // Multiple UFOs, one with a tractor beam toward the ground
       for (let k = 0; k < 2; k++) {
         const ux = k === 0 ? viewW * 0.3 + Math.sin(t) * 30 : ((t * 30) % (viewW + 200)) - 100;
         const uy = viewH * (0.3 + k * 0.15);
@@ -1642,7 +1642,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.beginPath();
         ctx.arc(ux, uy - 7, 14, Math.PI, 0);
         ctx.fill();
-        // Blinkande lampor under
+        // Blinking lights underneath
         for (let i = -2; i <= 2; i++) {
           ctx.globalAlpha = 0.4 + 0.4 * (0.5 + Math.sin(t * 4 + i) * 0.5);
           ctx.fillStyle = "rgba(180,255,120,0.9)";
@@ -1652,7 +1652,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         }
         ctx.restore();
       }
-      // Sadescirkel-monster pa ground
+      // Crop circle pattern on the ground
       ctx.save();
       ctx.strokeStyle = "rgba(120,255,150,0.3)";
       ctx.lineWidth = 2;
@@ -1663,7 +1663,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "junk": {
-      // Drivande vrakdelar + ett stort trasigt rymdskepp
+      // Drifting wreckage + a large broken spaceship
       const sx = viewW * 0.65;
       ctx.save();
       ctx.fillStyle = "rgba(80,75,65,0.6)";
@@ -1688,7 +1688,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     }
     case "whalegrave": {
       drawJaggedSilhouette(ctx, GROUND_Y - 10, 30, 70, 220, "rgba(10,20,30,0.6)", 0.04);
-      // Stort valskelett: ryggrad + revben som en katedral
+      // Giant whale skeleton: spine + ribs like a cathedral
       const wx = Math.max(360, viewW * 0.55);
       ctx.save();
       ctx.strokeStyle = "rgba(170,170,155,0.5)";
@@ -1706,13 +1706,13 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.quadraticCurveTo(rx + 6, GROUND_Y - rh, rx + 14, GROUND_Y);
         ctx.stroke();
       }
-      // Skalle
+      // Skull
       ctx.fillStyle = "rgba(170,170,155,0.45)";
       ctx.beginPath();
       ctx.ellipse(wx - 95, GROUND_Y - 14, 24, 14, 0.3, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      // Enstaka bubblor uppat
+      // Occasional bubbles rising
       for (let i = 0; i < 3; i++) {
         const bx = i * 200 + 60 - ((t * 6) % 200);
         const by = GROUND_Y - ((t * 20 + i * 80) % GROUND_Y);
@@ -1727,7 +1727,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "mermaid": {
-      // Snackskalspalats med torn
+      // Seashell palace with towers
       const px = viewW * 0.62;
       ctx.save();
       ctx.fillStyle = "rgba(255,200,235,0.5)";
@@ -1742,7 +1742,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.fill();
       }
       ctx.restore();
-      // Ljusstralar
+      // Light rays
       ctx.save();
       ctx.globalAlpha = 0.08;
       ctx.fillStyle = "#bff0ff";
@@ -1765,7 +1765,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "egypt": {
-      // Tre pyramider i djup + sfinx + het sol
+      // Three pyramids in depth + sphinx + scorching sun
       ctx.save();
       ctx.shadowColor = "rgba(255,230,160,0.8)";
       ctx.shadowBlur = 24;
@@ -1788,7 +1788,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.lineTo(px + p.s * 0.7, GROUND_Y);
         ctx.closePath();
         ctx.fill();
-        // solbelyst sida
+        // sunlit side
         ctx.fillStyle = "rgba(255,230,170,0.15)";
         ctx.beginPath();
         ctx.moveTo(px, GROUND_Y - p.s);
@@ -1797,7 +1797,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.closePath();
         ctx.fill();
       }
-      // Sfinx
+      // Sphinx
       const sfx = viewW * 0.2;
       ctx.fillStyle = "rgba(90,60,25,0.6)";
       ctx.fillRect(sfx - 30, GROUND_Y - 24, 60, 24);
@@ -1805,7 +1805,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "sakura": {
-      // Flera korsbarstrad + pagod + fallande kronblad
+      // Multiple cherry trees + pagoda + falling petals
       for (let k = 0; k < 2; k++) {
         const tx2 = viewW * (0.45 + k * 0.28);
         ctx.save();
@@ -1836,7 +1836,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.closePath();
         ctx.fill();
       }
-      // Fallande kronblad
+      // Falling petals
       for (let i = 0; i < 14; i++) {
         const seed = i * 90;
         const x = ((seed * 2.3) % viewW) + Math.sin(t + i) * 20;
@@ -1852,7 +1852,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "rome": {
-      // Colosseum-bage + pelarrad
+      // Colosseum archways + colonnade
       const rx = Math.max(360, viewW * 0.62);
       ctx.fillStyle = "rgba(200,170,120,0.6)";
       ctx.fillRect(rx - 80, GROUND_Y - 90, 160, 90);
@@ -1865,7 +1865,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
           ctx.fillRect(rx - 76 + i * 32, GROUND_Y - 30 - row * 34, 4, 30);
         }
       }
-      // Fristaende pelare framfor
+      // Free-standing pillars in front
       drawPillar(
         ctx,
         viewW * 0.25,
@@ -1887,20 +1887,20 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "medieval": {
-      // Borg med flera torn + vajande flaggor
+      // Castle with multiple towers + waving banners
       const cx2 = viewW * 0.6;
       ctx.fillStyle = "rgba(90,80,60,0.65)";
       ctx.fillRect(cx2 - 60, GROUND_Y - 90, 120, 90);
       for (let k = -1; k <= 1; k += 2) {
         ctx.fillRect(cx2 + k * 60 - 10, GROUND_Y - 120, 20, 120);
-        // tinnar
+        // merlons
         for (let i = 0; i < 3; i++) ctx.fillRect(cx2 + k * 60 - 10 + i * 8, GROUND_Y - 128, 5, 8);
       }
-      // tinnar pa mittdelen
+      // merlons on the middle section
       for (let i = 0; i < 7; i++) ctx.fillRect(cx2 - 56 + i * 16, GROUND_Y - 98, 8, 8);
       drawWavingBanner(ctx, cx2 - 60, GROUND_Y - 120, 22, 14, "rgba(200,60,60,0.6)", t, 0);
       drawWavingBanner(ctx, cx2 + 60, GROUND_Y - 120, 22, 14, "rgba(60,90,200,0.6)", t, 2);
-      // Marknadstalt framfor
+      // Market tent in front
       ctx.fillStyle = "rgba(180,80,60,0.5)";
       ctx.beginPath();
       ctx.moveTo(viewW * 0.22 - 30, GROUND_Y);
@@ -1911,17 +1911,17 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "aztec": {
-      // Stegpyramid + djungel runt + eldskal
+      // Step pyramid + surrounding jungle + fire bowls
       const ax = viewW * 0.62;
       ctx.fillStyle = "rgba(60,80,35,0.7)";
       for (let i = 0; i < 5; i++) {
         const w = 130 - i * 22;
         ctx.fillRect(ax - w / 2, GROUND_Y - 22 - i * 24, w, 24);
       }
-      // trappa
+      // stairs
       ctx.fillStyle = "rgba(40,55,20,0.6)";
       ctx.fillRect(ax - 8, GROUND_Y - 120, 16, 120);
-      // eldskalar overst
+      // fire bowls on top
       ctx.save();
       ctx.shadowColor = "rgba(255,140,40,0.9)";
       ctx.shadowBlur = 12;
@@ -1945,7 +1945,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "westtown": {
-      // Rad av saloon-fasader + kaktusar + tumbleweed
+      // Row of saloon facades + cacti + tumbleweed
       const facades = [
         { x: 0.55, w: 90, h: 70 },
         { x: 0.7, w: 70, h: 90 },
@@ -1955,7 +1955,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         const fx = viewW * f.x;
         ctx.fillStyle = "rgba(80,50,25,0.65)";
         ctx.fillRect(fx - f.w / 2, GROUND_Y - f.h, f.w, f.h);
-        // falskt hogt tak
+        // false high roof
         ctx.beginPath();
         ctx.moveTo(fx - f.w / 2 - 6, GROUND_Y - f.h);
         ctx.lineTo(fx, GROUND_Y - f.h - 16);
@@ -1965,7 +1965,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.fillStyle = "rgba(120,90,50,0.5)";
         ctx.fillRect(fx - f.w / 2, GROUND_Y - f.h * 0.4, f.w, 4);
       }
-      // Kaktus
+      // Cactus
       ctx.fillStyle = "rgba(50,90,40,0.6)";
       const kx = viewW * 0.22;
       ctx.fillRect(kx - 4, GROUND_Y - 40, 8, 40);
@@ -1988,7 +1988,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "citynight": {
-      // Tva parallax-lager av skyskrapor med lysande fonster + fullmane
+      // Two parallax layers of skyscrapers with lit windows + full moon
       ctx.save();
       ctx.fillStyle = "rgba(220,220,210,0.5)";
       ctx.beginPath();
@@ -1999,7 +1999,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       const spacing2 = 140;
       const scroll2 = game.distance * 0.05;
       const offset2 = scroll2 % spacing2;
-      // Seedas med varldskolumnen sa husen inte byter form/fonster vid wrap
+      // Seeded with world column so buildings don't change shape/windows on wrap
       const colBase2 = Math.floor(scroll2 / spacing2) * spacing2;
       for (let bx3 = -spacing2; bx3 < viewW + spacing2; bx3 += spacing2) {
         const x = bx3 - offset2;
@@ -2021,7 +2021,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "carnival": {
-      // Pariserhjul + tivolital + lyktslingor
+      // Ferris wheel + carnival tent + string lights
       const fx2 = viewW * 0.68,
         fy2 = viewH * 0.38,
         fr = 50;
@@ -2040,7 +2040,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.moveTo(0, 0);
         ctx.lineTo(Math.cos(a) * fr, Math.sin(a) * fr);
         ctx.stroke();
-        // gondoler
+        // gondolas
         ctx.fillStyle = ["#ff5a5a", "#5ab4ff", "#ffe066", "#6fce7a"][i % 4];
         ctx.beginPath();
         ctx.arc(Math.cos(a) * fr, Math.sin(a) * fr, 5, 0, Math.PI * 2);
@@ -2048,7 +2048,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       }
       ctx.restore();
       ctx.restore();
-      // Stod
+      // Supports
       ctx.strokeStyle = "rgba(120,110,90,0.5)";
       ctx.lineWidth = 4;
       ctx.beginPath();
@@ -2056,7 +2056,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.lineTo(fx2, fy2);
       ctx.lineTo(fx2 + 20, GROUND_Y);
       ctx.stroke();
-      // Tivolital
+      // Carnival tent
       const tx = viewW * 0.25;
       for (let k = -1; k <= 1; k += 2) {
         ctx.fillStyle = k < 0 ? "rgba(230,80,90,0.55)" : "rgba(240,240,240,0.5)";
@@ -2074,7 +2074,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
           ctx.restore();
         } else ctx.fill();
       }
-      // Lyktslingor upptill
+      // String lights up top
       ctx.save();
       for (let i = 0; i < 12; i++) {
         const lx = i * 110 + 40 - ((game.distance * 0.03) % 110);
@@ -2091,7 +2091,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "circus": {
-      // Stort randigt cirkustalt med flaggor + akrobat pa lina
+      // Large striped circus tent with flags + acrobat on a wire
       const cx3 = viewW * 0.6;
       ctx.save();
       ctx.fillStyle = "rgba(220,220,220,0.6)";
@@ -2107,7 +2107,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       }
       ctx.restore();
       drawWavingBanner(ctx, cx3, GROUND_Y - 122, 18, 10, "rgba(255,224,102,0.8)", t, 0);
-      // Sidotorn
+      // Side towers
       for (let k = -1; k <= 1; k += 2) {
         ctx.fillStyle = "rgba(200,60,70,0.5)";
         ctx.beginPath();
@@ -2117,7 +2117,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.closePath();
         ctx.fill();
       }
-      // Lindansare langt fram
+      // Tightrope walker in front
       ctx.strokeStyle = "rgba(0,0,0,0.4)";
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -2132,7 +2132,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "library": {
-      // Vaggar av bokhyllor bakom + svavande bocker + stege
+      // Walls of bookshelves in back + floating books + ladder
       const shelfCols = [
         "rgba(120,50,40,0.5)",
         "rgba(50,80,110,0.5)",
@@ -2141,7 +2141,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ];
       const shelfScroll = game.distance * 0.05;
       const so = shelfScroll % 26;
-      const shelfBase = Math.floor(shelfScroll / 26) * 26; // stabila bokfarger vid wrap
+      const shelfBase = Math.floor(shelfScroll / 26) * 26; // stable book colors on wrap
       for (let bx = -26; bx < viewW; bx += 26) {
         const x = bx - so;
         const wcol = bx + shelfBase;
@@ -2151,10 +2151,10 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
           ctx.fillRect(x, GROUND_Y - 40 - row * 62 - bh + 60, 20, bh);
         }
       }
-      // Horisontella hyllplan
+      // Horizontal shelves
       ctx.fillStyle = "rgba(50,30,15,0.5)";
       for (let row = 0; row < 4; row++) ctx.fillRect(0, GROUND_Y - 40 - row * 62, viewW, 5);
-      // Svavande bocker
+      // Floating books
       for (let i = 0; i < 4; i++) {
         const bx = ((t * (10 + i * 3) + i * 200) % (viewW + 60)) - 30;
         const by = viewH * 0.3 + Math.sin(t + i) * 20;
@@ -2174,7 +2174,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "toyroom": {
-      // Byggklossar, snurra, studsboll och en nallesilhuett
+      // Building blocks, spinning top, bouncy ball and a teddy bear silhouette
       const colors2 = ["#ff5a5a", "#5ab4ff", "#ffe066", "#6fce7a", "#ff8ad0"];
       for (let i = 0; i < 6; i++) {
         ctx.fillStyle = colors2[i % 5];
@@ -2184,7 +2184,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.lineWidth = 1;
         ctx.strokeRect(bx, GROUND_Y - 26 - (i % 3) * 26, 24, 26);
       }
-      // Snurra
+      // Spinning top
       ctx.save();
       ctx.translate(viewW * 0.25, GROUND_Y - 16);
       ctx.rotate(t * 6);
@@ -2196,7 +2196,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.closePath();
       ctx.fill();
       ctx.restore();
-      // Studsande boll
+      // Bouncy ball
       const ballx = viewW * 0.4;
       const bally = GROUND_Y - Math.abs(Math.sin(t * 3)) * 90 - 10;
       ctx.fillStyle = "rgba(90,180,255,0.8)";
@@ -2207,7 +2207,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
     }
     case "storm": {
       drawJaggedSilhouette(ctx, GROUND_Y - 15, 60, 160, 220, "rgba(10,15,25,0.7)", 0.045);
-      // Morka valvande moln
+      // Dark rolling clouds
       drawDriftingClouds(ctx, t, "rgba(30,35,50,0.6)", 4, viewH * 0.15, 1.3, 8);
       const flashCycle = 5;
       const fp = (t % flashCycle) / flashCycle;
@@ -2217,7 +2217,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, viewW, viewH);
         ctx.restore();
-        // Blixt-zigzag
+        // Lightning zigzag
         ctx.save();
         ctx.strokeStyle = "rgba(255,255,220,0.9)";
         ctx.lineWidth = 2;
@@ -2234,7 +2234,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "tornado": {
-      // Stor virvlande tromb + kringflygande skrap
+      // Large swirling tornado + flying debris
       const tx3 = viewW * 0.6;
       ctx.save();
       ctx.fillStyle = "rgba(80,75,55,0.4)";
@@ -2255,7 +2255,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.stroke();
       }
       ctx.restore();
-      // Kringflygande skrap
+      // Flying debris
       for (let i = 0; i < 5; i++) {
         const a = t * 3 + i * 1.3;
         const dx = tx3 + Math.cos(a) * (40 + i * 6);
@@ -2270,7 +2270,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "fog": {
-      // Flera dimlager + spokiga tradsilhuetter som skymtar
+      // Multiple fog layers + ghostly tree silhouettes peeking through
       for (let k = 0; k < 3; k++) {
         const tx = viewW * (0.25 + k * 0.28);
         ctx.save();
@@ -2303,17 +2303,17 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "pizzeria": {
-      // Pizzeria-fasad med neonskylt + rykande skorsten + flygande pizza
+      // Pizzeria facade with neon sign + smoking chimney + flying pizza
       const px2 = viewW * 0.6;
       ctx.fillStyle = "rgba(150,90,40,0.6)";
       ctx.fillRect(px2 - 60, GROUND_Y - 80, 120, 80);
-      // Randig markis
+      // Striped awning
       for (let s = -60; s < 60; s += 20) {
         ctx.fillStyle =
           Math.floor((s + 60) / 20) % 2 === 0 ? "rgba(200,50,50,0.6)" : "rgba(240,240,240,0.6)";
         ctx.fillRect(px2 + s, GROUND_Y - 50, 20, 14);
       }
-      // Neonskylt
+      // Neon sign
       ctx.save();
       ctx.shadowColor = "rgba(255,90,90,0.9)";
       ctx.shadowBlur = 10;
@@ -2321,7 +2321,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.lineWidth = 3;
       ctx.strokeRect(px2 - 26, GROUND_Y - 74, 52, 18);
       ctx.restore();
-      // Rykande skorsten
+      // Smoking chimney
       for (let i = 0; i < 3; i++) {
         const cyc = (t * 0.5 + i * 2.5) % 9;
         const p3 = cyc / 9;
@@ -2333,7 +2333,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.fill();
         ctx.restore();
       }
-      // Flygande pizza-skiva
+      // Flying pizza slice
       const pzx = ((t * 40) % (viewW + 80)) - 40;
       ctx.save();
       ctx.translate(pzx, viewH * 0.25);
@@ -2352,7 +2352,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "orchard": {
-      // Rad av frukttrad + fallande blad + korg med frukt
+      // Row of fruit trees + falling leaves + basket of fruit
       for (let i = 0; i < 3; i++) {
         const ox = viewW * (0.45 + i * 0.18);
         ctx.save();
@@ -2377,7 +2377,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         }
         ctx.restore();
       }
-      // Fallande blad
+      // Falling leaves
       for (let i = 0; i < 10; i++) {
         const seed = i * 80;
         const x = ((seed * 2.1) % viewW) + Math.sin(t + i) * 18;
@@ -2393,11 +2393,11 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "icecream": {
-      // Glasstrutar och en stor glassmaskin + strossel
+      // Ice cream cones and a big ice cream machine + sprinkles
       const ix2 = viewW * 0.6;
       ctx.fillStyle = "rgba(255,255,255,0.6)";
       ctx.fillRect(ix2 - 45, GROUND_Y - 80, 90, 80);
-      // Tre virvlade glassklickar pa taket
+      // Three swirled scoops on the roof
       const flav = ["rgba(255,150,200,0.7)", "rgba(150,220,255,0.7)", "rgba(180,255,180,0.7)"];
       for (let k = -1; k <= 1; k++) {
         ctx.fillStyle = flav[k + 1];
@@ -2411,7 +2411,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.closePath();
         ctx.fill();
       }
-      // Stralkastare-strossel
+      // Spotlight sprinkles
       drawFallingStreaks(ctx, t, viewW, viewH, 22, "rgba(255,160,200,0.5)", 22, 6);
       break;
     }
@@ -2443,7 +2443,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "beach": {
-      // Palmer, sol, segelbat pa vagorna, sandslott
+      // Palm trees, sun, sailboat on waves, sandcastle
       ctx.save();
       ctx.shadowColor = "rgba(255,240,180,0.7)";
       ctx.shadowBlur = 24;
@@ -2467,7 +2467,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
           ctx.fill();
         }
       }
-      // Segelbat
+      // Sailboat
       const bx = ((t * 14) % (viewW + 100)) - 50;
       ctx.fillStyle = "rgba(255,255,255,0.7)";
       ctx.beginPath();
@@ -2478,13 +2478,13 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.fill();
       ctx.fillStyle = "rgba(120,70,40,0.7)";
       ctx.fillRect(bx - 12, viewH * 0.42, 30, 5);
-      // Sandslott
+      // Sandcastle
       ctx.fillStyle = "rgba(220,190,130,0.7)";
       const scx = viewW * 0.4;
       ctx.fillRect(scx - 20, GROUND_Y - 20, 40, 20);
       ctx.fillRect(scx - 24, GROUND_Y - 28, 8, 8);
       ctx.fillRect(scx + 16, GROUND_Y - 28, 8, 8);
-      // Vagor
+      // Waves
       ctx.save();
       ctx.globalAlpha = 0.2;
       ctx.strokeStyle = "#ffffff";
@@ -2500,7 +2500,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "newyear": {
-      // Stadssiluett + fyrverkerier + fallande gnistor
+      // City silhouette + fireworks + falling sparks
       drawTowerRow(ctx, GROUND_Y, "rgba(20,15,35,0.7)", 0.03, 20);
       drawFirework(ctx, viewW * 0.3, viewH * 0.25, t, 5, 0, "rgba(255,120,190,0.95)");
       drawFirework(ctx, viewW * 0.6, viewH * 0.2, t, 5, 2.2, "rgba(120,220,255,0.95)");
@@ -2510,12 +2510,12 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "artgallery": {
-      // Vaggmalningar/tavlor i ramar pa vaggen + spotlights
+      // Wall paintings/canvases in frames on the wall + spotlights
       const colors3 = ["#ff5a5a", "#5ab4ff", "#ffe066", "#6fce7a", "#a06fff"];
       const paintScroll = game.distance * 0.05;
       const fo = paintScroll % 160;
-      // Tavlans motiv foljer sin varldskolumn sa den inte byter utseende
-      // varje gang offseten slar runt.
+      // The painting's motif follows its world column so it doesn't change appearance
+      // every time the offset wraps.
       const paintBase = Math.floor(paintScroll / 160);
       for (let bx = -160; bx < viewW + 160; bx += 160) {
         const x = bx - fo;
@@ -2548,7 +2548,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "disco": {
-      // Discokula med roterande ljusstralar + rutig dansgolv-glow
+      // Disco ball with rotating light rays + checkered dancefloor glow
       const dx3 = viewW * 0.5,
         dy3 = viewH * 0.22,
         dr = 26;
@@ -2566,7 +2566,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
         ctx.fill();
         ctx.restore();
       }
-      // Kula
+      // Ball
       ctx.save();
       ctx.translate(dx3, dy3);
       ctx.rotate(t * 0.5);
@@ -2581,7 +2581,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
             ctx.fillRect(rx, ry, 5, 5);
         }
       ctx.restore();
-      // Blinkande dansgolvsrutor
+      // Blinking dancefloor tiles
       ctx.save();
       ctx.globalAlpha = 0.12;
       for (let gx = 0; gx < viewW; gx += 50) {
@@ -2592,10 +2592,10 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "shadow": {
-      // Enfargat: lager av svarta silhuetter mot vitt ljus + ensam siluettfigur
+      // Monochrome: layers of black silhouettes against white light + lone silhouette figure
       drawJaggedSilhouette(ctx, GROUND_Y - 15, 100, 240, 260, "rgba(0,0,0,0.4)", 0.02);
       drawJaggedSilhouette(ctx, GROUND_Y - 15, 60, 170, 210, "rgba(0,0,0,0.7)", 0.05);
-      // Doda trad i siluett
+      // Dead trees in silhouette
       for (let k = 0; k < 3; k++) {
         const tx = viewW * (0.25 + k * 0.28);
         ctx.save();
@@ -2616,7 +2616,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       break;
     }
     case "dream": {
-      // Svavande oar, drivande moln, sovande mane och stjarnstoft
+      // Floating islands, drifting clouds, sleeping moon and stardust
       drawDriftingClouds(ctx, t, "rgba(255,255,255,0.4)", 4, viewH * 0.25, 1.1, 4);
       for (let k = 0; k < 3; k++) {
         drawFloatingIsland(
@@ -2629,7 +2629,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
           t + k,
         );
       }
-      // Sovande mane
+      // Sleeping moon
       const cx4 = viewW * 0.72,
         cy4 = viewH * 0.22;
       ctx.save();
@@ -2648,7 +2648,7 @@ export function drawScenery(ctx: Ctx, theme: Theme, t: number) {
       ctx.beginPath();
       ctx.arc(cx4 + 8, cy4 - 2, 5, 0.2, Math.PI - 0.2);
       ctx.stroke();
-      // Stjarnstoft-stig
+      // Stardust trail
       for (let i = 0; i < 20; i++) {
         const sx = ((i * 90 + t * 20) % (viewW + 40)) - 20;
         const sy = viewH * 0.4 + Math.sin(i + t) * 40;

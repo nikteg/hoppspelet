@@ -23,10 +23,10 @@ export function drawStarShape(ctx: Ctx, cx: number, cy: number, outerR: number, 
   ctx.closePath();
 }
 
-// Mynten forrenderas till en offscreen-canvas per theme (motiven ar statiska
-// - snurret ar bara en x-skalning vid ritning). Da betalar vi shadowBlur och
-// gradienter EN gang per theme i stallet for per coins och frame, och kan
-// darfor kosta pa oss detaljerade motiv.
+// Coins are pre-rendered to an offscreen-canvas per theme (the designs are static
+// - the spin is just an x-scale at draw time). That way we pay for shadowBlur and
+// gradients ONCE per theme instead of per coin and frame, so we can
+// afford detailed designs.
 const coinSpriteCache = new Map<string, SpriteCanvas>();
 
 export function getCoinSprite(theme: Theme, r: number) {
@@ -34,8 +34,8 @@ export function getCoinSprite(theme: Theme, r: number) {
   let sprite = coinSpriteCache.get(key);
   if (!sprite) {
     sprite = document.createElement("canvas") as SpriteCanvas;
-    const size = Math.ceil(r * 5); // plats for glow och former utanfor radien
-    // Bakas i DPR-upplosning, annars blir coins suddiga pa retinaskarmar.
+    const size = Math.ceil(r * 5); // room for glow and shapes outside the radius
+    // Baked at DPR resolution, otherwise coins become blurry on retina screens.
     sprite.width = Math.ceil(size * DPR);
     sprite.height = Math.ceil(size * DPR);
     sprite.logicalSize = size;
@@ -59,9 +59,9 @@ export function drawCoin(ctx: Ctx, coin: Coin, theme: Theme, t: number) {
   ctx.restore();
 }
 
-// Ritar sjalva myntmotivet centrerat kring (0,0). Kors ENDAST mot
-// offscreen-canvasen i getCoinSprite, sa composite-tricks (t.ex.
-// destination-out for manskaran) ar sakra har.
+// Draws the actual coin design centered at (0,0). Called ONLY against
+// the offscreen-canvas in getCoinSprite, so composite tricks (e.g.
+// destination-out for the crescent moon) are safe here.
 export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
   switch (theme.key) {
     case "ocean":
@@ -86,8 +86,8 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       bananaGrad.addColorStop(0, "#fff2a8");
       bananaGrad.addColorStop(0.5, "#ffd93d");
       bananaGrad.addColorStop(1, "#e2a92b");
-      // Skarformad kropp: ytterbage + flackare innerbage - tjock pa mitten
-      // och avsmalnande mot tipparna, som en riktig banan.
+      // Curved body: outer curve + flatter inner curve - thick in the middle
+      // and tapering toward the tips, like a real banana.
       ctx.fillStyle = bananaGrad;
       ctx.beginPath();
       ctx.moveTo(-r * 1.15, r * 0.55);
@@ -100,14 +100,14 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       ctx.strokeStyle = "rgba(140,90,10,0.8)";
       ctx.lineWidth = 1.2;
       ctx.stroke();
-      // Ridge-linje langs mitten for lite djup
+      // Ridge line along the middle for a bit of depth
       ctx.strokeStyle = "rgba(150,100,10,0.5)";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(-r * 0.9, r * 0.32);
       ctx.quadraticCurveTo(0, -r * 0.95, r * 0.9, -r * 0.36);
       ctx.stroke();
-      // Ljus glans langs ovansidan
+      // Bright highlight along the top side
       ctx.strokeStyle = "rgba(255,255,255,0.55)";
       ctx.lineWidth = r * 0.12;
       ctx.lineCap = "round";
@@ -115,7 +115,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       ctx.moveTo(-r * 0.45, -r * 0.35);
       ctx.quadraticCurveTo(-r * 0.05, -r * 0.75, r * 0.45, -r * 0.65);
       ctx.stroke();
-      // Stjalk i ena anden, brun tipp i andra
+      // Stem at one end, brown tip at the other
       ctx.strokeStyle = "#6b4a1f";
       ctx.lineWidth = r * 0.16;
       ctx.lineCap = "round";
@@ -293,7 +293,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     case "lava":
     case "volcanoisland": {
-      // Glodande magmaklump med mork, sprucken skorpa
+      // Glowing magma lump with dark, cracked crust
       ctx.save();
       ctx.shadowColor = "rgba(255,140,40,0.9)";
       ctx.shadowBlur = 14;
@@ -320,7 +320,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
     }
     case "pirate":
     case "atlantis": {
-      // Dublon - blank hos piraterna, argad/patinerad i det sjunkna Atlantis
+      // Doubloon - shiny for pirates, tarnished/patinated in sunken Atlantis
       const gold = theme.key === "pirate";
       ctx.save();
       ctx.shadowColor = gold ? "rgba(255,210,80,0.9)" : "rgba(90,220,230,0.8)";
@@ -346,7 +346,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
     }
     case "savanna":
     case "aztec": {
-      // Solskiva med stralar; aztek-varianten far ett praglat ansikte
+      // Sun disk with rays; the Aztec variant gets an embossed face
       const az = theme.key === "aztec";
       ctx.save();
       ctx.shadowColor = "rgba(255,220,90,0.9)";
@@ -377,7 +377,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
     }
     case "crystal":
     case "fairy": {
-      // Slipad adelsten med vita facettlinjer
+      // Faceted gemstone with white facet lines
       const col = theme.key === "crystal" ? "#5ff2e0" : "#ffe08a";
       ctx.save();
       ctx.shadowColor = col;
@@ -405,7 +405,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
     case "bog":
     case "mangrove":
     case "fog": {
-      // Irrbloss - sjalvlysande klot med liten svans
+      // Will-o'-wisp - self-illuminating orb with a small tail
       const col = theme.key === "fog" ? "rgba(220,235,225,0.95)" : "rgba(170,255,140,0.95)";
       ctx.save();
       ctx.shadowColor = col;
@@ -427,7 +427,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
     }
     case "bamboo":
     case "canopy": {
-      // Blad med mittnerv
+      // Leaf with center vein
       ctx.save();
       ctx.shadowColor = "rgba(200,255,150,0.8)";
       ctx.shadowBlur = 8;
@@ -448,7 +448,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
     }
     case "reef":
     case "mermaid": {
-      // Snacka med rafflor
+      // Shell with grooves
       ctx.save();
       ctx.shadowColor = "rgba(255,200,225,0.9)";
       ctx.shadowBlur = 10;
@@ -470,7 +470,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "steppe": {
-      // Barnstenklump med urtidsinsekt
+      // Amber lump with prehistoric insect
       ctx.save();
       ctx.shadowColor = "rgba(255,190,90,0.8)";
       ctx.shadowBlur = 10;
@@ -489,7 +489,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "saltflat": {
-      // Vita saltkristaller i tva facetter
+      // White salt crystals in two facets
       ctx.save();
       ctx.shadowColor = "rgba(255,255,255,0.9)";
       ctx.shadowBlur = 10;
@@ -507,7 +507,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "dragon": {
-      // Eldslaga med het karna
+      // Fire flame with hot core
       ctx.save();
       ctx.shadowColor = "rgba(255,110,40,0.9)";
       ctx.shadowBlur = 14;
@@ -529,7 +529,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "phoenix": {
-      // Glodande fenixfjader
+      // Glowing phoenix feather
       ctx.save();
       ctx.rotate(0.5);
       ctx.shadowColor = "rgba(255,170,60,0.9)";
@@ -560,7 +560,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "troll": {
-      // Runsten
+      // Runestone
       ctx.save();
       ctx.shadowColor = "rgba(180,220,220,0.7)";
       ctx.shadowBlur = 8;
@@ -587,7 +587,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "unicorn": {
-      // Vit stjarna med rosa inre kontur och pastellglow
+      // White star with pink inner outline and pastel glow
       ctx.save();
       ctx.shadowColor = "rgba(255,190,230,0.95)";
       ctx.shadowBlur = 14;
@@ -602,7 +602,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "witch": {
-      // Trolldrycksflaska med bubbla
+      // Potion bottle with bubble
       ctx.save();
       ctx.shadowColor = "rgba(140,230,90,0.9)";
       ctx.shadowBlur = 12;
@@ -623,7 +623,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
     }
     case "giant":
     case "mars": {
-      // Kantig klump - guldnugget hos jatten, rod malmsten pa Mars
+      // Angular chunk - gold nugget for the giant, red ore on Mars
       const gold = theme.key === "giant";
       ctx.save();
       ctx.shadowColor = gold ? "rgba(255,220,120,0.9)" : "rgba(255,150,90,0.8)";
@@ -647,7 +647,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "moonbase": {
-      // Fullmane med kratrar
+      // Full moon with craters
       ctx.save();
       ctx.shadowColor = "rgba(220,230,255,0.8)";
       ctx.shadowBlur = 10;
@@ -665,7 +665,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "cyber": {
-      // Kretskortschip med ben och lysande karna
+      // Circuit board chip with legs and glowing core
       ctx.save();
       ctx.shadowColor = "rgba(0,255,200,0.9)";
       ctx.shadowBlur = 12;
@@ -688,7 +688,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "time": {
-      // Timglas med rinnande sand
+      // Hourglass with flowing sand
       ctx.save();
       ctx.shadowColor = "rgba(255,220,150,0.9)";
       ctx.shadowBlur = 10;
@@ -723,7 +723,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "ufo": {
-      // Litet tefat med kupol och lampor
+      // Small saucer with dome and lights
       ctx.save();
       ctx.shadowColor = "rgba(140,255,160,0.9)";
       ctx.shadowBlur = 12;
@@ -745,7 +745,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "junk": {
-      // Sexkantig mutter
+      // Hexagonal nut
       ctx.save();
       ctx.shadowColor = "rgba(240,210,170,0.7)";
       ctx.shadowBlur = 8;
@@ -768,7 +768,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "whalegrave": {
-      // Korslagt ben
+      // Crossed bone
       ctx.save();
       ctx.rotate(-0.6);
       ctx.shadowColor = "rgba(200,230,255,0.6)";
@@ -792,7 +792,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "egypt": {
-      // Ankh i guld
+      // Ankh in gold
       ctx.save();
       ctx.shadowColor = "rgba(255,220,120,0.9)";
       ctx.shadowBlur = 10;
@@ -813,7 +813,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
     }
     case "sakura":
     case "spring": {
-      // Blomma med fem kronblad
+      // Flower with five petals
       const petal = theme.key === "sakura" ? "#ffb0c8" : "#fff6e8";
       const center = theme.key === "sakura" ? "#ff7a9a" : "#ffd94a";
       ctx.save();
@@ -842,7 +842,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "rome": {
-      // Denar med lagerkrans
+      // Denarius with laurel wreath
       ctx.save();
       ctx.shadowColor = "rgba(240,230,210,0.8)";
       ctx.shadowBlur = 8;
@@ -871,7 +871,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "medieval": {
-      // Riddarskold med kors
+      // Knight's shield with cross
       ctx.save();
       ctx.shadowColor = "rgba(230,220,190,0.7)";
       ctx.shadowBlur = 8;
@@ -896,7 +896,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "westtown": {
-      // Sheriffstjarna
+      // Sheriff's star
       ctx.save();
       ctx.shadowColor = "rgba(255,210,130,0.9)";
       ctx.shadowBlur = 10;
@@ -912,7 +912,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "citynight": {
-      // Varmt gatlyktesken med ljusflare
+      // Warm streetlamp glow with light flare
       ctx.save();
       ctx.shadowColor = "rgba(255,200,110,0.95)";
       ctx.shadowBlur = 16;
@@ -935,7 +935,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "carnival": {
-      // Rosa ballong med glans och snore
+      // Pink balloon with highlight and string
       ctx.save();
       ctx.shadowColor = "rgba(255,150,230,0.9)";
       ctx.shadowBlur = 10;
@@ -958,7 +958,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
     }
     case "circus":
     case "beach": {
-      // Randig boll (rod/vit pa cirkusen, flerfargars badboll pa stranden)
+      // Striped ball (red/white at the circus, multicolor beach ball at the beach)
       const cols =
         theme.key === "circus"
           ? ["#e0325c", "#ffffff"]
@@ -982,7 +982,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "library": {
-      // Bok med guldtitel
+      // Book with gold title
       ctx.save();
       ctx.rotate(-0.15);
       ctx.shadowColor = "rgba(230,210,160,0.7)";
@@ -1002,7 +1002,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "toyroom": {
-      // Tarning
+      // Die
       ctx.save();
       ctx.rotate(0.2);
       ctx.shadowColor = "rgba(255,255,255,0.8)";
@@ -1026,7 +1026,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "storm": {
-      // Blixt
+      // Lightning bolt
       ctx.save();
       ctx.shadowColor = "rgba(255,230,120,0.95)";
       ctx.shadowBlur = 14;
@@ -1044,7 +1044,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "tornado": {
-      // Fylld virveltratt med vindband och kringflygande skrap
+      // Filled vortex funnel with wind bands and flying debris
       ctx.save();
       ctx.shadowColor = "rgba(230,225,170,0.8)";
       ctx.shadowBlur = 8;
@@ -1088,7 +1088,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "pizzeria": {
-      // Pizzaslice med salami
+      // Pizza slice with pepperoni
       ctx.save();
       ctx.rotate(0.3);
       ctx.shadowColor = "rgba(255,180,90,0.8)";
@@ -1120,7 +1120,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "orchard": {
-      // Rott apple med blad
+      // Red apple with leaf
       ctx.save();
       ctx.shadowColor = "rgba(255,140,140,0.8)";
       ctx.shadowBlur = 10;
@@ -1143,7 +1143,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "icecream": {
-      // Glasstrut med jordgubbskula
+      // Ice cream cone with strawberry scoop
       ctx.save();
       ctx.shadowColor = "rgba(255,200,225,0.8)";
       ctx.shadowBlur = 8;
@@ -1174,7 +1174,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "newyear": {
-      // Tomtebloss-stjarna med rosa gnistor
+      // Sparkler star with pink sparks
       ctx.save();
       ctx.shadowColor = "rgba(255,220,120,0.95)";
       ctx.shadowBlur = 14;
@@ -1194,7 +1194,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "artgallery": {
-      // Malarpalett med fargklickar
+      // Painter's palette with paint dabs
       ctx.save();
       ctx.shadowColor = "rgba(200,100,255,0.7)";
       ctx.shadowBlur = 8;
@@ -1222,7 +1222,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "disco": {
-      // Discokula med speglande rutor
+      // Disco ball with mirrored tiles
       ctx.save();
       ctx.shadowColor = "rgba(255,255,255,0.95)";
       ctx.shadowBlur = 14;
@@ -1252,7 +1252,7 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "shadow": {
-      // Morkt coins med skarp vit kontur - passar den svartvita varlden
+      // Dark coin with sharp white outline - fits the black-and-white world
       ctx.save();
       ctx.shadowColor = "rgba(255,255,255,0.95)";
       ctx.shadowBlur = 12;
@@ -1269,8 +1269,8 @@ export function drawCoinDesign(ctx: Ctx, r: number, theme: Theme) {
       break;
     }
     case "dream": {
-      // Manskara med liten stjarna (destination-out ar sakert har -
-      // designen ritas alltid mot sin egen offscreen-canvas)
+      // Crescent moon with a small star (destination-out is safe here -
+      // the design is always drawn against its own offscreen-canvas)
       ctx.save();
       ctx.shadowColor = "rgba(255,240,255,0.9)";
       ctx.shadowBlur = 12;
@@ -1371,14 +1371,14 @@ export function drawSeaUrchin(ctx: Ctx, obs: Obstacle) {
 export function drawVenusTrap(ctx: Ctx, obs: Obstacle) {
   const cx = obs.x + obs.w / 2;
   const groundY = obs.y + obs.h;
-  const headY = obs.y + obs.h * 0.42; // dar de gapande kaftarna sitter
+  const headY = obs.y + obs.h * 0.42; // where the gaping jaws sit
   const lobeR = obs.w * 0.52;
   const gape = 0.42; // hur mycket munnen gapar (radianer fran mittlinjen)
-  // Latt "andning"/tuggning sa vaxten kanns levande
+  // Gentle "breathing"/chewing so the plant feels alive
   const chew = Math.sin(performance.now() / 220 + obs.x * 0.05) * 0.12;
   const openAngle = gape + Math.max(0, chew);
 
-  // ---- Stjalk med ett par blad ----
+  // ---- Stem with a couple of leaves ----
   ctx.save();
   ctx.strokeStyle = "#2f6b22";
   ctx.lineWidth = obs.w * 0.16;
@@ -1404,7 +1404,7 @@ export function drawVenusTrap(ctx: Ctx, obs: Obstacle) {
   }
   ctx.restore();
 
-  // ---- Tva gapande kaftlober ----
+  // ---- Two gaping jaw lobes ----
   // Varje lob ar en halvellips som roterats ut fran mittlinjen (uppat).
   for (const side of [-1, 1]) {
     ctx.save();
@@ -1450,7 +1450,7 @@ export function drawVenusTrap(ctx: Ctx, obs: Obstacle) {
     ctx.restore();
   }
 
-  // Liten glodande "lockbete"-droppe i mitten av munnen
+  // Small glowing "lure" droplet in the middle of the mouth
   ctx.fillStyle = "rgba(255,240,150,0.8)";
   ctx.beginPath();
   ctx.arc(cx, headY - lobeR * 0.35, obs.w * 0.06, 0, Math.PI * 2);
@@ -1458,7 +1458,7 @@ export function drawVenusTrap(ctx: Ctx, obs: Obstacle) {
 }
 
 export function drawIcicleCluster(ctx: Ctx, obs: Obstacle) {
-  // Morkbla kontur - istapparna ar nastan vita, precis som isens mark
+  // Dark blue outline - the icicles are almost white, just like the ice ground
   ctx.save();
   ctx.strokeStyle = "#1f4a6a";
   ctx.lineWidth = 1.8;
@@ -1479,7 +1479,7 @@ export function drawIcicleCluster(ctx: Ctx, obs: Obstacle) {
 }
 
 export function drawAsteroidChunk(ctx: Ctx, obs: Obstacle) {
-  // Ljus kontur + kratrar - stenen ar nastan lika mork som rymdmarken
+  // Light outline + craters - the rock is almost as dark as the space ground
   ctx.save();
   ctx.strokeStyle = "#b8b8cf";
   ctx.lineWidth = 1.8;
@@ -1502,8 +1502,8 @@ export function drawAsteroidChunk(ctx: Ctx, obs: Obstacle) {
 }
 
 export function drawCactus(ctx: Ctx, obs: Obstacle) {
-  // Saguarokaktus: rundade armar (tjocka streck med runda andar), ribbor,
-  // taggar och en blomma pa toppen. Mork kontur ger tydlighet mot sanden.
+  // Saguaro cactus: rounded arms (thick lines with round ends), ribs,
+  // spines and a flower on top. Dark outline gives clarity against the sand.
   const cx = obs.x + obs.w / 2;
   const bot = obs.y + obs.h;
   ctx.save();
@@ -1550,7 +1550,7 @@ export function drawCactus(ctx: Ctx, obs: Obstacle) {
   ctx.moveTo(cx + 2, bot - 2);
   ctx.lineTo(cx + 2, obs.y + 12);
   ctx.stroke();
-  // Taggar
+  // Spines
   ctx.strokeStyle = "#ffdf9b";
   ctx.lineWidth = 1.3;
   ctx.beginPath();
@@ -1581,7 +1581,7 @@ export function drawCactus(ctx: Ctx, obs: Obstacle) {
 }
 
 export function drawLollipop(ctx: Ctx, obs: Obstacle) {
-  // Stor snurrklubba pa pinne (candy)
+  // Big swirly lollipop on a stick (candy)
   const cx = obs.x + obs.w / 2;
   const R = obs.w * 0.48;
   const cy = obs.y + R + 2;
@@ -1620,8 +1620,8 @@ export function drawLollipop(ctx: Ctx, obs: Obstacle) {
 }
 
 export function drawGearSpike(ctx: Ctx, obs: Rect) {
-  // Kugghjul med varmgul kant och navring - stalgratt smalter annars in
-  // i fabrikens morka mark.
+  // Gear with warm-yellow edge and hub ring - steel gray otherwise blends
+  // into the factory's dark ground.
   const cx = obs.x + obs.w / 2,
     cy = obs.y + obs.h / 2,
     r = Math.min(obs.w, obs.h) / 2;
@@ -1656,7 +1656,7 @@ export function drawGearSpike(ctx: Ctx, obs: Rect) {
 }
 
 export function drawFlameSpike(ctx: Ctx, obs: Obstacle, theme: Theme) {
-  // Fladdrande eldpelare (drak-/fenix-/vulkanteman)
+  // Flickering flame pillar (dragon/phoenix/volcano themes)
   const cx = obs.x + obs.w / 2;
   const baseY = obs.y + obs.h;
   const flick = Math.sin(performance.now() / 90 + obs.x * 0.1) * obs.h * 0.06;
@@ -1797,7 +1797,7 @@ export function drawObelisk(ctx: Ctx, obs: Obstacle, theme: Theme) {
 
 export function drawBrokenColumn(ctx: Ctx, obs: Obstacle, theme: Theme) {
   // Avbruten antik kolonn (rom). Mork kontur + skuggad sida - utan dem
-  // smalter den ljusa stenen ihop med Colosseums ljusa mark/bakgrund.
+  // blends the light stone into Colosseum's light ground/background.
   const x = obs.x + obs.w * 0.15;
   const w = obs.w * 0.7;
   ctx.save();
@@ -2337,7 +2337,7 @@ export function drawObstacle(ctx: Ctx, obs: Obstacle, theme: Theme) {
         break;
       }
       case "troll": {
-        // Trollklubba med dubbar
+        // Troll club with studs
         ctx.save();
         ctx.strokeStyle = "#241a10";
         ctx.lineWidth = 6.5;
@@ -2846,7 +2846,7 @@ export function drawObstacle(ctx: Ctx, obs: Obstacle, theme: Theme) {
         break;
       }
       case "carnival": {
-        // Taggig pinata-stjarna pa pinne
+        // Spiky piñata star on a stick
         ctx.save();
         ctx.strokeStyle = "#f0e8d0";
         ctx.lineWidth = 3;
