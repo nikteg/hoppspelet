@@ -131,7 +131,7 @@ export function update() {
   };
   for (const obs of game.obstacles) {
     if (obs.type === "platform") continue;
-    if (Minimotor.rectsOverlap(playerBox, obs)) {
+    if (Minimotor.Collision.rectsOverlap(playerBox, obs)) {
       die();
     }
   }
