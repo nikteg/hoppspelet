@@ -7,7 +7,8 @@ import * as Input from "./input.js";
 import * as Storage from "./storage.js";
 import * as Physics from "./physics.js";
 import * as Sprites from "./sprites.js";
-export { Engine, Audio, Input, Storage, Physics, Sprites };
+import * as Net from "./net.js";
+export { Engine, Audio, Input, Storage, Physics, Sprites, Net };
 const Collision = { rectsOverlap };
 export { Collision, rectsOverlap };
 export const Minimotor = {
@@ -17,6 +18,7 @@ export const Minimotor = {
     Storage,
     Physics,
     Sprites,
+    Net,
     Collision,
 };
 export default Minimotor;

@@ -60,7 +60,10 @@ export const Engine = {
         };
         window.addEventListener("resize", onResize);
         // iOS doesn't fire resize on 180° rotation between landscape orientations
-        const orient = () => { onResize(); setTimeout(onResize, 300); };
+        const orient = () => {
+            onResize();
+            setTimeout(onResize, 300);
+        };
         window.addEventListener("orientationchange", orient);
         if (screen.orientation?.addEventListener)
             screen.orientation.addEventListener("change", orient);
@@ -108,7 +111,9 @@ export const Engine = {
     },
     pauseOnPortrait() {
         const mq = window.matchMedia("(orientation: portrait) and (pointer: coarse)");
-        const apply = () => { this.paused = mq.matches; };
+        const apply = () => {
+            this.paused = mq.matches;
+        };
         mq.addEventListener?.("change", apply);
         apply();
     },
