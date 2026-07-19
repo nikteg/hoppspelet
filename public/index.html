@@ -61,20 +61,22 @@
 
 <!-- Laddas som vanliga skript (inte type="module") sa spelet aven funkar
      direkt fran file:// (dubbelklick pa index.html). Ordningen ar viktig. -->
-<!-- Motorn (Minimotor) ar en git-submodul (public/engine/) sa den kan
-     ateranvandas i andra projekt. engine.js kompileras fran src/engine.ts. -->
-<script src="engine/engine.js"></script>
-<script src="js/state.mjs"></script>
-<script src="js/themes.mjs"></script>
-<script src="js/world.mjs"></script>
-<script src="js/audio.mjs"></script>
-<script src="js/gameplay.mjs"></script>
-<script src="js/input.mjs"></script>
-<script src="js/update.mjs"></script>
-<script src="js/render-helpers.mjs"></script>
-<script src="js/scenery.mjs"></script>
-<script src="js/sprites.mjs"></script>
-<script src="js/main.mjs"></script>
+<!-- Motorn (Minimotor) ar en git-submodul (packages/minimotor/) sa den kan
+     ateranvandas i andra projekt. public/engine.js kompileras fran
+     packages/minimotor/src/engine.ts (pnpm run build:engine).
+     Spelet kompileras fran src/*.ts till public/js/ (pnpm run build). -->
+<script src="engine.js"></script>
+<script src="js/state.js"></script>
+<script src="js/themes.js"></script>
+<script src="js/world.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/gameplay.js"></script>
+<script src="js/input.js"></script>
+<script src="js/update.js"></script>
+<script src="js/render-helpers.js"></script>
+<script src="js/scenery.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/main.js"></script>
 <script>
   // PWA-delarna aktiveras bara nar spelet hostas (inte fran file://, dar
   // manifest-hamtning blockeras av CORS och service workers inte ar tillatna).

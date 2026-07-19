@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "env": {
+    "browser": true
+  },
+  "rules": {
+    // Spelets filer ar klassiska script utan modul-grans (laddas via
+    // <script>-taggar) - funktioner deklarerade i en fil anvands i en
+    // annan, sa no-unused-vars skulle flagga allt.
+    "no-unused-vars": "off"
+  },
+  "ignorePatterns": ["public/", "packages/"]
+}

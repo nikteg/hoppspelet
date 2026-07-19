@@ -1,7 +1,7 @@
 # Use the official Nginx image from Docker Hub
 FROM nginx:alpine
 
-# Custom server config: korrekt MIME-typ for .mjs och no-cache pa
+# Custom server config: no-cache pa
 # index.html/sw.js/manifest sa nya versioner alltid plockas upp.
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 

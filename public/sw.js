@@ -22,18 +22,18 @@ const PRECACHE = [
   "icons/icon-192-maskable.png",
   "icons/icon-512-maskable.png",
   "icons/apple-touch-icon.png",
-  "engine/engine.js",
-  "js/state.mjs",
-  "js/themes.mjs",
-  "js/world.mjs",
-  "js/audio.mjs",
-  "js/gameplay.mjs",
-  "js/input.mjs",
-  "js/update.mjs",
-  "js/render-helpers.mjs",
-  "js/scenery.mjs",
-  "js/sprites.mjs",
-  "js/main.mjs"
+  "engine.js",
+  "js/state.js",
+  "js/themes.js",
+  "js/world.js",
+  "js/audio.js",
+  "js/gameplay.js",
+  "js/input.js",
+  "js/update.js",
+  "js/render-helpers.js",
+  "js/scenery.js",
+  "js/sprites.js",
+  "js/main.js"
 ];
 
 self.addEventListener("install", (event) => {

@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "none",
+    "lib": ["es2020", "dom"],
+    "strict": true,
+    "outDir": "public/js",
+    "rootDir": "src",
+    "noEmitOnError": true
+  },
+  "include": ["src", "packages/minimotor/engine.d.ts"],
+  "exclude": ["node_modules"]
+}

@@ -49,7 +49,7 @@
         x: viewW * fromFx + i * spacing,
         y: GROUND_Y - above - Math.sin((i / (n - 1)) * Math.PI) * amp,
         r: 13,
-        phase: i
+        phase: i,
       });
     }
   }
@@ -61,7 +61,7 @@
         setBase("lava");
         obstacles.push(spike(0.55), spike(0.88));
         coinArc(0.58, 5, 46, 140, 60);
-      }
+      },
     },
     {
       file: "screen2.jpg",
@@ -72,7 +72,7 @@
         for (let i = 0; i < 4; i++) {
           coins.push({ x: viewW * 0.7 + 24 + i * 32, y: GROUND_Y - 139, r: 13, phase: i * 2 });
         }
-      }
+      },
     },
     {
       file: "screen3.jpg",
@@ -84,8 +84,8 @@
         player.rotation = 0.6;
         obstacles.push(spike(0.45), spike(0.8));
         coinArc(0.48, 5, 44, 150, 50);
-      }
-    }
+      },
+    },
   ];
 
   const frame = () => new Promise((r) => requestAnimationFrame(r));
@@ -107,7 +107,14 @@
     const stops = [...th.bg.matchAll(/(#[0-9a-fA-F]{6})\s+(\d+)%/g)];
     const at = th.bg.match(/at\s+50%\s+(\d+)%/);
     const cy = out.height * (at ? +at[1] / 100 : 0.5);
-    const grad = g.createRadialGradient(out.width / 2, cy, 0, out.width / 2, cy, Math.max(out.width, out.height));
+    const grad = g.createRadialGradient(
+      out.width / 2,
+      cy,
+      0,
+      out.width / 2,
+      cy,
+      Math.max(out.width, out.height),
+    );
     for (const s of stops) grad.addColorStop(+s[2] / 100, s[1]);
     g.fillStyle = grad;
     g.fillRect(0, 0, out.width, out.height);
