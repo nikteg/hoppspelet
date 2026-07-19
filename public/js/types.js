@@ -1,3 +1,3 @@
-// Delade typer för game. Motortyperna (Engine, Rect, rectsOverlap)
-// importeras direkt från "minimotor" där de behövs.
+// Shared types for the game. Engine types (Rect, EngineShape) and helpers
+// (Minimotor.Collision.rectsOverlap) are imported from "minimotor" where needed.
 export {};

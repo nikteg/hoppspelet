@@ -9,7 +9,7 @@ export function drawScenery(ctx, theme, t) {
             drawJaggedSilhouette(ctx, GROUND_Y - 30, 50, 140, 220, "rgba(20,6,8,0.9)", 0.05);
             const craterX = viewW * 0.75;
             const craterY = GROUND_Y - 175;
-            // Rök som stiger fran vulkanen
+            // Smoke rising from the volcano
             for (let i = 0; i < 4; i++) {
                 const cycle = 10;
                 const localT = (t * 0.6 + i * 2.5) % cycle;
@@ -22,7 +22,7 @@ export function drawScenery(ctx, theme, t) {
                 ctx.fill();
                 ctx.restore();
             }
-            // Glödande krater, med periodiskt utbrott
+            // Glowing crater, with periodic eruptions
             const eruptCycle = 24;
             const eruptPhase = (t % eruptCycle) / eruptCycle;
             const eruptBurst = eruptPhase < 0.08 ? 1 - eruptPhase / 0.08 : 0;
@@ -100,7 +100,7 @@ export function drawScenery(ctx, theme, t) {
                 }
                 ctx.restore();
             }
-            // Sjögräs som vaggar fran havsbotten
+            // Seaweed swaying from the seabed
             for (let i = 0; i < 4; i++) {
                 const gx = 100 + i * ((viewW - 200) / 4);
                 ctx.save();
@@ -295,7 +295,7 @@ export function drawScenery(ctx, theme, t) {
                 ctx.fill();
             }
             ctx.restore();
-            // Rullande ökentumlare
+            // Rolling desert tumbleweeds
             const tumbleX = viewW - ((t * 40) % (viewW + 60)) - 30;
             ctx.save();
             ctx.translate(tumbleX, GROUND_Y - 8);
@@ -2239,7 +2239,7 @@ export function drawScenery(ctx, theme, t) {
             break;
         }
         case "spring": {
-            // Blomsteräng, fjarilar, regnbage och drivande moln
+            // Flower meadow, butterflies, rainbow and drifting clouds
             drawDriftingClouds(ctx, t, "rgba(255,255,255,0.5)", 3, viewH * 0.2, 1, 5);
             drawRainbow(ctx, viewW * 0.72, viewH * 0.55, 80);
             const fcols = [
@@ -2366,7 +2366,7 @@ export function drawScenery(ctx, theme, t) {
         case "disco": {
             // Discokula med roterande ljusstralar + rutig dansgolv-glow
             const dx3 = viewW * 0.5, dy3 = viewH * 0.22, dr = 26;
-            // Strålar
+            // Rays
             for (let i = 0; i < 6; i++) {
                 const a = t * 0.8 + ((Math.PI * 2) / 6) * i;
                 ctx.save();

@@ -9,9 +9,8 @@
     "browser": true
   },
   "rules": {
-    // Spelets filer ar klassiska script utan modul-grans (laddas via
-    // <script>-taggar) - funktioner deklarerade i en fil anvands i en
-    // annan, sa no-unused-vars skulle flagga allt.
+    // Game uses ES modules now; no-unused-vars is kept off to avoid noisy
+    // warnings for internal helpers used only within their own file.
     "no-unused-vars": "off"
   },
   "ignorePatterns": ["public/", "packages/", "tools/"]

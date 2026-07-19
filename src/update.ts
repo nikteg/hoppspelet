@@ -13,11 +13,11 @@ const MAX_SPEED = 22;
 export function update() {
   if (game.state !== "playing") return;
 
-  // Öka difficulty sakta med tiden
+  // Increase difficulty slowly over time
   if (game.speed < MAX_SPEED) game.speed += 0.0015;
   game.distance += game.speed;
 
-  // Gravitation + collision mot plattformar (kan hoppas upp på, är annars solida)
+  // Gravity + collision against platforms (can jump onto, otherwise solid)
   const prevBottom = player.y + player.h;
   player.vy += GRAVITY;
   const tentativeY = player.y + player.vy;
@@ -34,7 +34,7 @@ export function update() {
     const overlapsX = player.x + player.w > obs.x && player.x < obs.x + obs.w;
     if (!overlapsX) continue;
     if (prevBottom <= obs.y + 1 && tentativeBottom >= obs.y) {
-      // Landar ovanpå plattformen
+      // Landing on top of platform
       if (obs.y < floor) floor = obs.y;
     } else if (
       tentativeBottom > obs.y + sideMargin &&
@@ -61,7 +61,7 @@ export function update() {
     player.onGround = false;
   }
 
-  // Rotera figuren lite i hoppet för känsla
+  // Rotate the character slightly in the air for feel
   if (!player.onGround) {
     player.rotation += 0.12;
   } else {
@@ -83,7 +83,7 @@ export function update() {
     if (game.nextSpawnAt < 35) game.nextSpawnAt = 35;
   }
 
-  // Flytta och samla in coins (ger extrapoäng, är aldrig farliga)
+  // Move and collect coins (give bonus points, never dangerous)
   for (const c of game.coins) {
     c.x -= game.speed;
   }
@@ -106,7 +106,7 @@ export function update() {
   }
   game.coins = game.coins.filter((c) => !c.collected && c.x > -30);
 
-  // Poängtext som flyter uppåt vid figuren och tonar bort
+  // Score text floating up from the character and fading out
   for (const ft of game.floatingTexts) {
     ft.y -= 1.3;
     ft.x -= game.speed * 0.3;
@@ -121,7 +121,7 @@ export function update() {
     game.coinNextSpawnAt = 70 + Math.random() * 80;
   }
 
-  // Kollisionskoll mot dödliga obstacle (spikar och takblock). Lite marginal för rättvis känsla.
+  // Collision check against deadly obstacles (spikes and ceiling blocks). Small margin for fair feel.
   const margin = 6;
   const playerBox = {
     x: player.x + margin,

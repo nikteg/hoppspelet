@@ -1314,12 +1314,12 @@ export function drawPlayer(ctx: Ctx) {
   ctx.fillStyle = "#2563eb";
   ctx.fillRect(-player.w / 2, -player.h / 2, player.w, player.h);
 
-  // ögon
+  // eyes
   ctx.fillStyle = "#1b1f2a";
   ctx.fillRect(4, -8, 5, 5);
   ctx.fillRect(-player.w / 2 + 6, -8, 5, 5);
 
-  // arga ögonbryn (vinklade linjer ovanför ögonen)
+  // angry eyebrows (angled lines above the eyes)
   ctx.strokeStyle = "#1b1f2a";
   ctx.lineWidth = 3;
   ctx.lineCap = "round";
@@ -1853,7 +1853,7 @@ export function drawObstacle(ctx: Ctx, obs: Obstacle, theme: Theme) {
   } else if (obs.type === "ceiling") {
     ctx.fillStyle = theme.ceiling;
     ctx.fillRect(obs.x, 0, obs.w, obs.h);
-    // hängande formationer längs underkanten (stalaktiter/istappar/vinrankor/klippor)
+    // hanging formations along the bottom edge (stalactites/icicles/vines/cliffs)
     ctx.fillStyle = theme.ceiling;
     const spikeCount = Math.max(2, Math.floor(obs.w / 20));
     const spikeW = obs.w / spikeCount;
@@ -3028,7 +3028,7 @@ export function drawObstacle(ctx: Ctx, obs: Obstacle, theme: Theme) {
         break;
       }
       case "fog": {
-        // Vålnadssten med dimslinga
+        // Ghost stone with a wisp of mist
         ctx.save();
         ctx.fillStyle = "#242e2a";
         ctx.strokeStyle = "#e0e8e8";

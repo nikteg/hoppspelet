@@ -12,18 +12,18 @@ export function drawGround(ctx, theme) {
     band.addColorStop(1, "rgba(0,0,0,0.32)");
     ctx.fillStyle = band;
     ctx.fillRect(0, GROUND_Y - bandH, viewW, bandH);
-    // Marken (sten/sand/is beroende på theme)
+    // Ground (stone/sand/ice depending on theme)
     ctx.fillStyle = theme.groundColor;
     ctx.fillRect(0, GROUND_Y, viewW, viewH - GROUND_Y);
-    // Textur i ground, rör sig med game för känsla av fart
+    // Texture in ground, scrolls with the game for a sense of speed
     ctx.fillStyle = theme.crackColor;
     const stripeWidth = 46;
     const offset = Math.floor(game.distance) % stripeWidth;
     for (let x = -offset; x < viewW; x += stripeWidth) {
         ctx.fillRect(x, GROUND_Y + 14, stripeWidth * 0.4, viewH - GROUND_Y - 14);
     }
-    // Glödande "hazard-remsa" rakt under ground - rent visuellt, påverkar inte game.
-    // Lava, bioluminescent rev, gyllene nektar, sprickande is eller alien-energi beroende på theme.
+    // Glowing "hazard strip" right below ground - purely visual, doesn't affect gameplay.
+    // Lava, bioluminescent reef, golden nectar, cracking ice or alien energy depending on theme.
     // Remsan med sin dyra shadowBlur-glow forrenderas till en offscreen-canvas
     // per theme/width; per frame ar det bara tva drawImage-anrop.
     const hazardH = 12;
@@ -38,7 +38,7 @@ export function drawGround(ctx, theme) {
     ctx.globalAlpha = glow * 0.4;
     ctx.drawImage(strip, 0, GROUND_Y - 2 - HAZARD_PAD, viewW, stripH);
     ctx.restore();
-    // Glödande particles i remsan. Sin-seedas med varldskoordinaten (inte
+    // Glowing particles in the strip. Sin-seeded with world coordinate (not
     // skarmpositionen), annars hoppar guppet varje gang offseten slar runt.
     ctx.fillStyle = theme.hazard.dot;
     const dotSpacing = 90;
@@ -50,7 +50,7 @@ export function drawGround(ctx, theme) {
         ctx.arc(x, GROUND_Y + 2 + bob, 3, 0, Math.PI * 2);
         ctx.fill();
     }
-    // Glödande kristaller inbäddade i berget, för lite färgpop mot stenen
+    // Glowing crystals embedded in the rock, for a bit of color pop against the stone
     if (theme.crystalColor) {
         const crystalSpacing = 150;
         const crScroll = Math.floor(game.distance * 0.7);
@@ -133,7 +133,7 @@ export function drawAmbientParticles(ctx, theme, t) {
                 p.y += Math.cos(t * 0.5 + p.phase) * 0.4 * fs;
                 break;
             case "stars":
-                // Stjärnorna står stilla och blinkar bara
+                // Stars stay still and just twinkle
                 break;
         }
         if (p.x < -10)

@@ -66,8 +66,8 @@ export interface AmbientParticle {
 
 export type GameState = "ready" | "playing" | "gameover";
 
-// Offscreen-canvas för förrenderade coins: logisk storlek i CSS-pixlar vid
-// sidan av backing storens fysiska resolution (DPR-skalad).
+// Offscreen canvas for pre-rendered coins: logical size in CSS pixels alongside
+// the backing store's physical resolution (DPR-scaled).
 export interface SpriteCanvas extends HTMLCanvasElement {
   logicalSize: number;
 }

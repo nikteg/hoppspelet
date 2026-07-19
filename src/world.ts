@@ -1,18 +1,18 @@
-// ---------- Världen ----------
-// Temaval och nivåprogression (var 1000:e points byts värld), plus
-// resetGame som nollställer rundans tillstånd. Temadatan bor i themes.ts,
-// particles och skärmstorlek i stage.ts.
+// ---------- World ----------
+// Theme selection and level progression (every 1000 points the world changes), plus
+// resetGame which resets the round state. Theme data lives in themes.ts,
+// particles and screen size in stage.ts.
 
 import { THEMES } from "./themes.js";
 import { game, getScore, player, PLAYER_SIZE } from "./state.js";
 import { GROUND_Y } from "./stage.js";
 
 export const level = {
-  offset: 0, // vilken nivå den aktuella omgången starts på
-  pending: 0, // nivå som nästa omgång ska start på (sätts vid död)
-  debugOverride: null as number | null, // sätts av pil-knapparna för att bläddra fritt bland themes
-  appliedIndex: -1, // theme som för närvarande är applicerat (bakgrund m.m.)
-  announceUntil: 0, // tidpunkt (ms) då temanamnet slutar visas
+  offset: 0, // which level the current round starts on
+  pending: 0, // level for next round to start on (set on death)
+  debugOverride: null as number | null, // set by arrow buttons to browse themes freely
+  appliedIndex: -1, // theme currently applied (background etc.)
+  announceUntil: 0, // timestamp (ms) when the theme name stops showing
 };
 
 export function currentThemeIndex() {
@@ -43,9 +43,9 @@ export function resetGame() {
   game.nextSpawnAt = 60 + Math.random() * 40;
   level.appliedIndex = -1;
   level.announceUntil = 0;
-  // Har man valt en nivå med pil-knapparna starts omgången där - så att
-  // man kan prova en specifik nivå. Annars startas på nivån man senast dog
-  // på. Overriden släpps sedan så att nivån fortsätter bytas per 1000 points.
+  // If you selected a level with the arrow buttons, start the round there - so
+  // you can try a specific level. Otherwise start on the level you last died
+  // on. The override is then released so the level continues to change every 1000 points.
   if (level.debugOverride !== null) {
     level.offset = level.debugOverride;
   } else {

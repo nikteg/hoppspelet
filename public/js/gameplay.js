@@ -42,7 +42,7 @@ export function spawnObstacle() {
     // rakt in i en fara som dok upp efter att coins placerades.
     if (hasCoinNear(spawnX, spawnX + 150))
         return;
-    // Slumpa typ: spik (hoppa över), plattform (hoppa upp på) eller takblock (måste gå under)
+    // Random type: spike (jump over), platform (jump onto) or ceiling block (must go under)
     let r = Math.random();
     if (r >= 0.8) {
         // Takblock kraver att man springer LAGT. Ett obstacle tatt FORE ett

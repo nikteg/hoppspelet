@@ -1,7 +1,7 @@
-// ---------- Scenen (canvas, resolution, orientering) ----------
-// Äger canvas-elementet och allt som rör skärmen: DPR-skalning, safe
-// area-insets, ground och pausen i porträttläge. Spellogiken importerar
-// måtten härifrån i stället för att räkna ut dem själv.
+// ---------- Stage (canvas, resolution, orientation) ----------
+// Owns the canvas element and everything screen-related: DPR scaling, safe
+// area insets, ground line and the pause in portrait mode. Game logic
+// imports dimensions from here instead of computing them itself.
 
 import { Minimotor } from "minimotor";
 import { game, player } from "./state.js";
@@ -10,43 +10,43 @@ import type { AmbientParticle } from "./types.js";
 export const canvas = document.getElementById("game") as HTMLCanvasElement;
 Minimotor.Engine.init(canvas);
 
-// Logisk spelyta i CSS-pixlar. Canvasens backing store är DPR gånger
-// större (sätts i resizeCanvas) så game blir skarpt på mobil-/retina-
-// skärmar - all spellogik och rendering räknar i viewW/viewH.
+// Logical play area in CSS pixels. The canvas backing store is DPR times
+// larger (set in resizeCanvas) so the game is sharp on mobile/retina
+// displays - all game logic and rendering count in viewW/viewH.
 export let viewW = 0;
 export let viewH = 0;
 export let DPR = 1;
-// Safe area-insets i CSS-pixlar (iPhone-notch m.m.), lästa i resizeCanvas.
+// Safe area insets in CSS pixels (iPhone notch etc.), read in resizeCanvas.
 export let safeLeft = 0;
 export let safeTop = 0;
-// Marklinjens y-koordinat (mellanslaget ovanför ground strip).
+// Ground line y-coordinate (the gap above the ground strip).
 export let GROUND_Y = 0;
 
 export function resizeCanvas() {
   const prevGroundY = GROUND_Y;
   viewW = window.innerWidth;
   viewH = window.innerHeight;
-  // Backing store i fysiska pixlar, logiken i CSS-pixlar. Utan DPR-skalning
-  // renderas game i tredjedels resolution på t.ex. iPhone (DPR 3) och
-  // blir suddigt. Cap på 2 - skillnaden 2->3 syns knappt men kostar ~2x
-  // fill-rate. CSS:en (width/height 100%) skalar ner till skärmstorlek.
+  // Backing store in physical pixels, logic in CSS pixels. Without DPR scaling
+  // the game renders at one-third resolution on e.g. iPhone (DPR 3) and
+  // becomes blurry. Capped at 2 - the difference 2->3 is barely visible but
+  // costs ~2x fill-rate. CSS (width/height 100%) scales down to screen size.
   DPR = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = Math.round(viewW * DPR);
   canvas.height = Math.round(viewH * DPR);
-  // Resize nollställer canvas-tillståndet, så transformen sätts om här.
+  // Resize resets canvas state, so the transform is set again here.
   Minimotor.Engine.ctx!.setTransform(DPR, 0, 0, DPR, 0, 0);
-  // Markremsan är 80px på stora skärmar men krymper på låga (mobil i
-  // liggande läge) så den inte äter upp spelytan.
+  // Ground strip is 80px on large screens but shrinks on short ones (mobile
+  // in landscape) so it doesn't eat up the play area.
   GROUND_Y = viewH - Math.min(80, Math.max(40, Math.round(viewH * 0.12)));
-  // Safe area-insets (notch etc.) - CSS-variablerna sätts från env() i
-  // styles.css; canvasritad HUD kan inte läsa env() direkt.
+  // Safe area insets (notch etc.) - CSS variables are set from env() in
+  // styles.css; canvas-drawn HUD can't read env() directly.
   const rootStyle = getComputedStyle(document.documentElement);
   safeLeft = parseFloat(rootStyle.getPropertyValue("--sai-left")) || 0;
   safeTop = parseFloat(rootStyle.getPropertyValue("--sai-top")) || 0;
-  // iPhone ger samma inset på BÅDA sidor i liggande läge, så utan att veta
-  // åt vilket håll mobilen är vriden indenteras både HUD:en (vänster) och
-  // knappraden (höger) i onödan. window.orientation lever kvar på iOS:
-  // 90 = notch till vänster, -90 = notch till höger.
+  // iPhone gives the same inset on BOTH sides in landscape, so without knowing
+  // which way the phone is rotated, both the HUD (left) and the button row
+  // (right) would be indented unnecessarily. window.orientation lives on iOS:
+  // 90 = notch on left, -90 = notch on right.
   if (/iPhone/.test(navigator.userAgent)) {
     let angle: number | null = null;
     const win = window as unknown as { orientation?: number };
@@ -56,14 +56,14 @@ export function resizeCanvas() {
     let notch = "none";
     if (angle === 90) notch = "left";
     else if (angle === -90 || angle === 270) notch = "right";
-    if (notch === "right") safeLeft = 0; // HUD:en till vänster går fri
-    // Knappraden till höger viker undan via CSS (html[data-notch="right"]).
+    if (notch === "right") safeLeft = 0; // left-side HUD goes free
+    // Right-side button row makes room via CSS (html[data-notch="right"]).
     document.documentElement.dataset.notch = notch;
   }
-  // Levande objekt har koordinater räknade från den gamla ground. Flytta
-  // med dem vid resize, annars svävar spikar i luften och takblockens lucka
-  // ändrar storlek (kunde bli opasserbar). Takblock hänger från taket, så
-  // där är det höjden (avståndet ner till luckan) som följer ground.
+  // Live objects have coordinates relative to the old ground line. Move
+  // them on resize, otherwise spikes float in the air and the ceiling gap
+  // changes size (could become impassable). Ceiling blocks hang from the
+  // top, so their height (distance down to the gap) follows the ground.
   const dy = GROUND_Y - prevGroundY;
   if (dy !== 0 && prevGroundY !== 0) {
     for (const obs of game.obstacles) {
@@ -83,9 +83,9 @@ export function resizeCanvas() {
   initParticles();
 }
 
-// Bakgrundspartiklar (snö, eldar, stjärnor...) som drivs om vid resize.
-// Konst-arrayen fylls på nytt i stället för att bytas ut, så att
-// importerande moduler alltid ser samma instans.
+// Background particles (snow, embers, stars...) that are recreated on resize.
+// The const array is refilled instead of replaced, so that
+// importing modules always see the same instance.
 export const ambientParticles: AmbientParticle[] = [];
 
 export function initParticles() {
@@ -104,10 +104,10 @@ export function initParticles() {
 
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
-// iOS skickar ingen resize när mobilen vänds 180 grader mellan de två
-// liggande lägena (måtten är oförändrade) - men notchen byter sida. Lyssna
-// därför också på orientationchange. Kör en extra gång strax efteråt
-// eftersom env()-värdena ibland uppdateras först efter händelsen.
+// iOS doesn't fire resize when the phone is rotated 180 degrees between the
+// two landscape orientations (dimensions are unchanged) - but the notch
+// changes side. So also listen on orientationchange. Run once more shortly
+// after because env() values sometimes update only after the event.
 window.addEventListener("orientationchange", function () {
   resizeCanvas();
   setTimeout(resizeCanvas, 300);
@@ -119,9 +119,9 @@ if (screen.orientation && typeof screen.orientation.addEventListener === "functi
   });
 }
 
-// ---------- Pausa i porträttläge på mobil ----------
-// Samma media query som visar #rotateHint i styles.css. Spelet pausas så
-// att man inte hinner dö bakom rotera-överlagret.
+// ---------- Pause in portrait mode on mobile ----------
+// Same media query that shows #rotateHint in styles.css. The game is paused
+// so you don't die behind the rotation overlay.
 const portraitBlock = window.matchMedia("(orientation: portrait) and (pointer: coarse)");
 function applyOrientationPause() {
   Minimotor.Engine.paused = portraitBlock.matches;

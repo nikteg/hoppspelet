@@ -22,7 +22,7 @@ canvas.addEventListener(
 // mousedown med preventDefault hindrar knapparna fran att ta emot fokus, sa att
 // MELLANSLAG for att hoppa fortsatter fungera som vanligt efter ett klick.
 // Touch hanteras separat och direkt i touchstart eftersom preventDefault dar
-// stoppar webblasaren fran att nagonsin skicka den efterföljande click-handelsen
+// stops the browser from ever sending the subsequent click event
 // (annars gjorde knapparna ingenting pa iPad).
 // Returnerar elementet (eller null om det saknas i HTML:en - da hoppas
 // knappen bara over i stallet for att krascha resten av inputkopplingen).

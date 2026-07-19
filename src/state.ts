@@ -1,8 +1,8 @@
-// ---------- Speltillstånd ----------
-// Canvas och allt skärmrelaterat bor i stage.ts; här bor bara rundans
-// tillstånd. Allt föränderligt ligger i `game`-objektet: ES-modulers
-// imports är read-only-bindningar, men egenskaper på ett exporterat objekt
-// får gärna muteras från andra moduler.
+// ---------- Game state ----------
+// Canvas and everything screen-related lives in stage.ts; here lives only
+// the round state. All mutable state is in the `game` object: ES module
+// imports are read-only bindings, but properties on an exported object
+// may be mutated from other modules.
 
 import type { GameState, Obstacle, Coin, FloatingText } from "./types.js";
 
