@@ -1,28 +1,7 @@
 // World: storm
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { drawDriftingClouds, drawFallingStreaks, drawJaggedSilhouette } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   drawJaggedSilhouette(ctx, GROUND_Y - 15, 60, 160, 220, "rgba(10,15,25,0.7)", 0.045);
@@ -51,8 +30,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   }
   drawFallingStreaks(ctx, t, viewW, viewH, 40, "rgba(200,220,255,0.4)", 70, 24);
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawLightningCoin } from "../coins/lightning.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

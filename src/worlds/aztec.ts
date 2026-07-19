@@ -1,28 +1,7 @@
 // World: aztec
 import type { Ctx } from "../types.js";
-import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { viewW, GROUND_Y } from "../stage.js";
+import { drawSwayingTree } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   // Step pyramid + surrounding jungle + fire bowls

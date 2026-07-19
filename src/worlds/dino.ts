@@ -1,28 +1,7 @@
 // World: dino
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { drawBird, drawJaggedSilhouette } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   drawJaggedSilhouette(ctx, GROUND_Y - 25, 70, 190, 230, "rgba(20,35,10,0.8)", 0.045);
@@ -62,8 +41,6 @@ export function drawScenery(ctx: Ctx, t: number) {
     ctx.restore();
   }
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawFossilCoin } from "../coins/fossil.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

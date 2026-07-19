@@ -2,29 +2,9 @@
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
 import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { drawTowerRow } from "../render-helpers.js";
 
-export function drawScenery(ctx: Ctx, t: number) {
+export function drawScenery(ctx: Ctx, _t: number) {
   // Two parallax layers of skyscrapers with lit windows + full moon
   ctx.save();
   ctx.fillStyle = "rgba(220,220,210,0.5)";
@@ -56,8 +36,6 @@ export function drawScenery(ctx: Ctx, t: number) {
     }
   }
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawLampCoin } from "../coins/lamp.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

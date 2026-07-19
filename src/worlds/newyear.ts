@@ -1,28 +1,7 @@
 // World: newyear
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { drawFallingStreaks, drawFirework, drawTowerRow } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   // City silhouette + fireworks + falling sparks
@@ -33,8 +12,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   drawFirework(ctx, viewW * 0.45, viewH * 0.15, t, 5, 1.2, "rgba(150,255,180,0.95)");
   drawFallingStreaks(ctx, t, viewW, viewH, 20, "rgba(255,220,150,0.5)", 18, 8);
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawSparklerCoin } from "../coins/sparkler.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

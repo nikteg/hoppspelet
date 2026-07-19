@@ -1,28 +1,7 @@
 // World: viking
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { drawBird, drawJaggedSilhouette } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   drawJaggedSilhouette(ctx, GROUND_Y - 20, 80, 200, 240, "rgba(20,40,50,0.7)", 0.045);
@@ -77,8 +56,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   ctx.closePath();
   ctx.fill();
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawRuneCoin } from "../coins/rune.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

@@ -1,6 +1,6 @@
 // Coin: unicornstar
 import type { Ctx } from "../types.js";
-import { drawStarShape, drawGearSpike } from "../sprites.js";
+import { drawStarShape } from "../sprites.js";
 
 export function drawUnicornStarCoin(ctx: Ctx, r: number) {
   // White star with pink inner outline and pastel glow

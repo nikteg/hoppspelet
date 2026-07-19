@@ -1,30 +1,9 @@
 // World: troll
 import type { Ctx } from "../types.js";
-import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { viewW, GROUND_Y } from "../stage.js";
+import { drawJaggedSilhouette } from "../render-helpers.js";
 
-export function drawScenery(ctx: Ctx, t: number) {
+export function drawScenery(ctx: Ctx, _t: number) {
   drawJaggedSilhouette(ctx, GROUND_Y - 25, 110, 240, 260, "rgba(15,20,24,0.55)", 0.03);
   drawJaggedSilhouette(ctx, GROUND_Y - 25, 90, 220, 230, "rgba(20,25,28,0.7)", 0.045);
   // Stone bridge over a chasm
@@ -48,8 +27,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   ctx.arc(trx + 8, GROUND_Y - 26, 3, 0, Math.PI * 2);
   ctx.fill();
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawRunestoneCoin } from "../coins/runestone.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

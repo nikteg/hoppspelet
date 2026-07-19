@@ -363,7 +363,7 @@ export function drawFallingStreaks(
   canvasH: number,
   count: number,
   color: string,
-  speed: number,
+  _speed: number,
   streakLen: number,
 ) {
   ctx.save();
@@ -455,7 +455,7 @@ export function drawDriftingClouds(
   count: number,
   yBase: number,
   scale: number,
-  speed: number,
+  _speed: number,
 ) {
   for (let i = 0; i < count; i++) {
     const span = viewW + 300;

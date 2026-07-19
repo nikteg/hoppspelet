@@ -1,27 +1,12 @@
 // World: jungle
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
 import {
   drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
   drawFlutterfly,
   drawGroundProp,
   drawHangingVine,
-  drawIceberg,
   drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
 } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
@@ -69,8 +54,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   drawGroundProp(ctx, Math.max(380, viewW * 0.5), GROUND_Y, "flower", "rgba(255,120,160,0.7)");
   drawGroundProp(ctx, Math.max(460, viewW * 0.58), GROUND_Y, "flower", "rgba(255,220,80,0.7)");
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawBananaCoin } from "../coins/banana.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

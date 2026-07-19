@@ -1,28 +1,6 @@
 // World: toyroom
 import type { Ctx } from "../types.js";
-import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { viewW, GROUND_Y } from "../stage.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   // Building blocks, spinning top, bouncy ball and a teddy bear silhouette
@@ -55,8 +33,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   ctx.arc(ballx, bally, 12, 0, Math.PI * 2);
   ctx.fill();
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawDieCoin } from "../coins/diecoin.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

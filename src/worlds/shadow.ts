@@ -1,28 +1,7 @@
 // World: shadow
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { drawJaggedSilhouette, drawShootingStar } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   // Monochrome: layers of black silhouettes against white light + lone silhouette figure
@@ -47,8 +26,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   }
   drawShootingStar(ctx, t, 15, 2, "rgba(255,255,255,0.95)", viewH * 0.1, viewH * 0.4);
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawShadowCoin } from "../coins/shadowcoin.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

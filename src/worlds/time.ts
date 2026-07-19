@@ -1,28 +1,6 @@
 // World: time
 import type { Ctx } from "../types.js";
-import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { viewW, viewH } from "../stage.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   // Multiple floating clocks in different sizes + drifting roman numerals
@@ -62,8 +40,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   // (The spinning gear at the ground was removed: it drew attention
   // from real obstacles and could itself be mistaken for one.)
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawHourglassCoin } from "../coins/hourglass.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

@@ -1,28 +1,7 @@
 // World: desert
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { drawJaggedSilhouette } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   drawJaggedSilhouette(ctx, GROUND_Y - 15, 40, 100, 260, "rgba(150,90,30,0.5)", 0.04);
@@ -81,8 +60,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   ctx.ellipse(oasisX + 10, GROUND_Y - 48, 12, 6, -0.3, 0, Math.PI * 2);
   ctx.fill();
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawPyramidCoin } from "../coins/pyramid.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

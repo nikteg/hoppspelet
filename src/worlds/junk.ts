@@ -1,28 +1,6 @@
 // World: junk
 import type { Ctx } from "../types.js";
-import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { viewW, viewH } from "../stage.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   // Drifting wreckage + a large broken spaceship
@@ -47,8 +25,6 @@ export function drawScenery(ctx: Ctx, t: number) {
     ctx.restore();
   }
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawNutCoin } from "../coins/nut.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

@@ -1,30 +1,9 @@
 // World: steppe
 import type { Ctx } from "../types.js";
-import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { viewW, GROUND_Y } from "../stage.js";
+import { drawJaggedSilhouette } from "../render-helpers.js";
 
-export function drawScenery(ctx: Ctx, t: number) {
+export function drawScenery(ctx: Ctx, _t: number) {
   drawJaggedSilhouette(ctx, GROUND_Y - 15, 40, 110, 240, "rgba(80,90,90,0.45)", 0.03);
   drawJaggedSilhouette(ctx, GROUND_Y - 15, 30, 70, 200, "rgba(60,70,70,0.5)", 0.05);
   // Woolly mammoth
@@ -53,8 +32,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   ctx.quadraticCurveTo(mx - 58, GROUND_Y - 6, mx - 40, GROUND_Y - 2);
   ctx.stroke();
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawAmberCoin } from "../coins/amber.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

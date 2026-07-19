@@ -1,28 +1,6 @@
 // World: westtown
 import type { Ctx } from "../types.js";
-import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { viewW, GROUND_Y } from "../stage.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   // Row of saloon facades + cacti + tumbleweed
@@ -66,8 +44,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   }
   ctx.restore();
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawSheriffStarCoin } from "../coins/sheriffstar.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

@@ -1,6 +1,6 @@
 // Coin: sparkler
 import type { Ctx } from "../types.js";
-import { drawStarShape, drawGearSpike } from "../sprites.js";
+import { drawStarShape } from "../sprites.js";
 
 export function drawSparklerCoin(ctx: Ctx, r: number) {
   // Sparkler star with pink sparks

@@ -1,28 +1,7 @@
 // World: haunted
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { drawBird, drawGroundProp } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   ctx.save();
@@ -73,8 +52,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   }
   ctx.restore();
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawGhostCoin } from "../coins/ghost.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

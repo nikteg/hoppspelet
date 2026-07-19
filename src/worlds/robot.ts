@@ -1,28 +1,7 @@
 // World: robot
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { drawGearSpike } from "../sprites.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   const fx = Math.max(340, viewW * 0.65);
@@ -80,8 +59,6 @@ export function drawScenery(ctx: Ctx, t: number) {
     ctx.restore();
   }
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawGearCoin } from "../coins/gearcoin.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

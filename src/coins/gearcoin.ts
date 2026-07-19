@@ -1,6 +1,6 @@
 // Coin: gearcoin
 import type { Ctx } from "../types.js";
-import { drawStarShape, drawGearSpike } from "../sprites.js";
+import { drawGearSpike } from "../sprites.js";
 
 export function drawGearCoin(ctx: Ctx, r: number) {
   ctx.save();

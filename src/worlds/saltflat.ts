@@ -2,27 +2,7 @@
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
 import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { drawDriftingClouds, drawJaggedSilhouette } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   drawJaggedSilhouette(ctx, GROUND_Y - 5, 10, 25, 260, "rgba(150,170,170,0.35)", 0.03);
@@ -57,8 +37,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   ctx.restore();
   drawDriftingClouds(ctx, t, "rgba(255,255,255,0.4)", 3, viewH * 0.18, 0.9, 6);
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawSaltCrystalCoin } from "../coins/saltcrystal.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

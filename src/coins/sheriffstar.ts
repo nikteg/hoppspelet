@@ -1,6 +1,6 @@
 // Coin: sheriffstar
 import type { Ctx } from "../types.js";
-import { drawStarShape, drawGearSpike } from "../sprites.js";
+import { drawStarShape } from "../sprites.js";
 
 export function drawSheriffStarCoin(ctx: Ctx, r: number) {
   // Sheriff's star

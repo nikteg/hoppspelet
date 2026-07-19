@@ -1,28 +1,7 @@
 // World: icecream
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { drawFallingStreaks } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   // Ice cream cones and a big ice cream machine + sprinkles
@@ -46,8 +25,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   // Spotlight sprinkles
   drawFallingStreaks(ctx, t, viewW, viewH, 22, "rgba(255,160,200,0.5)", 22, 6);
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawIceCreamCoin } from "../coins/icecreamcoin.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

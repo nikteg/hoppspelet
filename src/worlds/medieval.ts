@@ -1,28 +1,7 @@
 // World: medieval
 import type { Ctx } from "../types.js";
-import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { viewW, GROUND_Y } from "../stage.js";
+import { drawWavingBanner } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   // Castle with multiple towers + waving banners
@@ -47,8 +26,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   ctx.closePath();
   ctx.fill();
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawShieldCoin } from "../coins/shield.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

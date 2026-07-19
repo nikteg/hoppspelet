@@ -1,30 +1,8 @@
 // World: egypt
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
 
-export function drawScenery(ctx: Ctx, t: number) {
+export function drawScenery(ctx: Ctx, _t: number) {
   // Three pyramids in depth + sphinx + scorching sun
   ctx.save();
   ctx.shadowColor = "rgba(255,230,160,0.8)";
@@ -63,8 +41,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   ctx.fillRect(sfx - 30, GROUND_Y - 24, 60, 24);
   ctx.fillRect(sfx + 20, GROUND_Y - 44, 20, 24);
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawAnkhCoin } from "../coins/ankh.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

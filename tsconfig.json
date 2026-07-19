@@ -5,7 +5,10 @@
     "moduleResolution": "bundler",
     "lib": ["es2020", "dom"],
     "strict": true,
-    "outDir": "public/js",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "declaration": true,
+    "outDir": "./build",
     "rootDir": "src",
     "noEmitOnError": true
   },

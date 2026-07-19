@@ -1,28 +1,7 @@
 // World: dream
 import type { Ctx } from "../types.js";
-import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { viewW, viewH } from "../stage.js";
+import { drawDriftingClouds, drawFloatingIsland } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   // Floating islands, drifting clouds, sleeping moon and stardust
@@ -70,8 +49,6 @@ export function drawScenery(ctx: Ctx, t: number) {
     ctx.restore();
   }
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawCrescentCoin } from "../coins/crescent.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

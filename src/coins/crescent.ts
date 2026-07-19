@@ -1,6 +1,6 @@
 // Coin: crescent
 import type { Ctx } from "../types.js";
-import { drawStarShape, drawGearSpike } from "../sprites.js";
+import { drawStarShape } from "../sprites.js";
 
 export function drawCrescentCoin(ctx: Ctx, r: number) {
   // Crescent moon with a small star (destination-out is safe here -

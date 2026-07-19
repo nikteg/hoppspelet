@@ -27,7 +27,9 @@ export function die() {
   game.best = Math.max(game.best, getScore());
   try {
     localStorage.setItem("hoppspelet_best", String(game.best));
-  } catch (e) {}
+  } catch {
+    /* localStorage may throw */
+  }
   playDeathSound();
 }
 

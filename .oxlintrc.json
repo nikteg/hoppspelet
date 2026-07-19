@@ -9,9 +9,7 @@
     "browser": true
   },
   "rules": {
-    // Game uses ES modules now; no-unused-vars is kept off to avoid noisy
-    // warnings for internal helpers used only within their own file.
-    "no-unused-vars": "off"
+    "no-unused-vars": "error"
   },
   "ignorePatterns": ["public/", "packages/", "tools/"]
 }

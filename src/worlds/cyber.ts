@@ -2,27 +2,7 @@
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
 import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
+import { drawFallingStreaks, drawShootingStar, drawTowerRow } from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   // Grid + neon city silhouette + raining data streams
@@ -60,8 +40,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   drawFallingStreaks(ctx, t, viewW, viewH, 28, "rgba(0,255,200,0.25)", 45, 20);
   drawShootingStar(ctx, t, 14, 0, "rgba(0,255,200,0.9)", viewH * 0.1, viewH * 0.5);
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawChipCoin } from "../coins/chip.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {

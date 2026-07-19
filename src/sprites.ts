@@ -1,5 +1,5 @@
 "use strict";
-import { DPR, GROUND_Y } from "./stage.js";
+import { DPR } from "./stage.js";
 import { player, game } from "./state.js";
 import { WORLDS } from "./worlds/index.js";
 import type { Ctx, Theme, Coin, Obstacle, SpriteCanvas } from "./types.js";

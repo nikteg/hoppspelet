@@ -1,28 +1,6 @@
 // World: ufo
 import type { Ctx } from "../types.js";
 import { viewW, viewH, GROUND_Y } from "../stage.js";
-import { game } from "../state.js";
-import {
-  drawBird,
-  drawDriftingClouds,
-  drawFallingStreaks,
-  drawFirework,
-  drawFish,
-  drawFloatingIsland,
-  drawFlutterfly,
-  drawGroundProp,
-  drawHangingVine,
-  drawIceberg,
-  drawJaggedSilhouette,
-  drawLantern,
-  drawPillar,
-  drawRainbow,
-  drawShootingStar,
-  drawSwayingTree,
-  drawTowerRow,
-  drawWavingBanner,
-  drawBalloon,
-} from "../render-helpers.js";
 
 export function drawScenery(ctx: Ctx, t: number) {
   // Multiple UFOs, one with a tractor beam toward the ground
@@ -70,8 +48,6 @@ export function drawScenery(ctx: Ctx, t: number) {
   ctx.stroke();
   ctx.restore();
 }
-
-import { drawStarShape, drawGearSpike } from "../sprites.js";
 
 import { drawSaucerCoin } from "../coins/saucer.js";
 export function drawCoinDesign(ctx: Ctx, r: number) {
