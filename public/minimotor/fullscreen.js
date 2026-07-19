@@ -1,7 +1,6 @@
 // ---------- Fullscreen styling ----------
 // CSS that makes the canvas fill the viewport without scrollbars,
 // handles safe-area insets, and prevents touch/overscroll interference.
-
 /** Minimal CSS string to include in a <style> tag or inline. */
 export const fullscreenCSS = `
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -22,14 +21,14 @@ export const fullscreenCSS = `
     bottom: env(safe-area-inset-bottom, 0px);
   }
 `;
-
 /** Inject fullscreen styles into the document <head>.
  *  Safe to call multiple times (idempotent). */
-export function applyFullscreen(): void {
-  const id = "minimotor-fullscreen";
-  if (document.getElementById(id)) return;
-  const style = document.createElement("style");
-  style.id = id;
-  style.textContent = fullscreenCSS;
-  document.head.appendChild(style);
+export function applyFullscreen() {
+    const id = "minimotor-fullscreen";
+    if (document.getElementById(id))
+        return;
+    const style = document.createElement("style");
+    style.id = id;
+    style.textContent = fullscreenCSS;
+    document.head.appendChild(style);
 }

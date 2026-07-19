@@ -11,7 +11,8 @@ import * as Net from "./net.js";
 import * as Perf from "./perf.js";
 import * as Camera from "./camera.js";
 import * as Game from "./game.js";
-export { Engine, Audio, Input, Storage, Physics, Sprites, Net, Perf, Camera, Game };
+import * as Fullscreen from "./fullscreen.js";
+export { Engine, Audio, Input, Storage, Physics, Sprites, Net, Perf, Camera, Game, Fullscreen };
 const Collision = { rectsOverlap };
 export { Collision, rectsOverlap };
 export const Minimotor = {
@@ -25,6 +26,7 @@ export const Minimotor = {
     Perf,
     Camera,
     Game,
+    Fullscreen,
     Collision,
 };
 export default Minimotor;
