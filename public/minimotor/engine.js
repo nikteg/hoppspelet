@@ -45,11 +45,19 @@ export const Engine = {
     frameScale: 1,
     STEP_MS: 1000 / 60,
     paused: false,
+    plugins: [],
+    use(plugin) {
+        this.plugins.push(plugin);
+        if (this.viewport && plugin.onInit)
+            plugin.onInit(this.viewport);
+    },
     initCanvas(selector) {
         const canvas = document.getElementById(selector);
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
         this.viewport = readViewport(canvas);
+        for (const p of this.plugins)
+            p.onInit?.(this.viewport);
         window.addEventListener("keydown", (e) => {
             if (e.code === "Space")
                 e.preventDefault();
@@ -59,6 +67,8 @@ export const Engine = {
         const onResize = () => {
             this.viewport = readViewport(canvas);
             this.onResize?.(this.viewport);
+            for (const p of this.plugins)
+                p.onResize?.(this.viewport);
         };
         window.addEventListener("resize", onResize);
         // iOS doesn't fire resize on 180° rotation between landscape orientations
@@ -94,7 +104,11 @@ export const Engine = {
             this.lastTime = time;
             this.accumulator = 0;
             this.frameScale = 0;
+            for (const p of this.plugins)
+                p.beforeDraw?.(this.ctx);
             this.onDraw();
+            for (const p of this.plugins)
+                p.afterDraw?.(this.ctx);
             requestAnimationFrame(this.loop);
             return;
         }
@@ -104,11 +118,19 @@ export const Engine = {
             elapsed = 250;
         this.frameScale = elapsed / this.STEP_MS;
         this.accumulator += elapsed;
+        for (const p of this.plugins)
+            p.beforeUpdate?.(elapsed);
         while (this.accumulator >= this.STEP_MS) {
             this.onUpdate();
             this.accumulator -= this.STEP_MS;
         }
+        for (const p of this.plugins)
+            p.afterUpdate?.(elapsed);
+        for (const p of this.plugins)
+            p.beforeDraw?.(this.ctx);
         this.onDraw();
+        for (const p of this.plugins)
+            p.afterDraw?.(this.ctx);
         requestAnimationFrame(this.loop);
     },
     pauseOnPortrait() {
