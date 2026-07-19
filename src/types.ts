@@ -66,12 +66,6 @@ export interface AmbientParticle {
 
 export type GameState = "ready" | "playing" | "gameover";
 
-// Offscreen canvas for pre-rendered coins: logical size in CSS pixels alongside
-// the backing store's physical resolution (DPR-scaled).
-export interface SpriteCanvas extends HTMLCanvasElement {
-  logicalSize: number;
-}
-
 // An 8-bar section in the procedural background music (see audio.ts).
 export interface SongSection {
   mel: (number | null)[];

@@ -3,12 +3,20 @@
 // individual exports are also available for selective imports.
 import { Engine, rectsOverlap } from "./engine.js";
 import * as Audio from "./audio.js";
-export { Engine, Audio };
+import * as Input from "./input.js";
+import * as Storage from "./storage.js";
+import * as Physics from "./physics.js";
+import * as Sprites from "./sprites.js";
+export { Engine, Audio, Input, Storage, Physics, Sprites };
 const Collision = { rectsOverlap };
-export { Collision };
+export { Collision, rectsOverlap };
 export const Minimotor = {
     Engine,
     Audio,
+    Input,
+    Storage,
+    Physics,
+    Sprites,
     Collision,
 };
 export default Minimotor;

@@ -4,10 +4,11 @@
 // imports are read-only bindings, but properties on an exported object
 // may be mutated from other modules.
 
+import { Minimotor } from "minimotor";
 import type { GameState, Obstacle, Coin, FloatingText } from "./types.js";
 
-export const GRAVITY = 0.7;
-export const JUMP_FORCE = -13.5;
+export const GRAVITY = Minimotor.Physics.GRAVITY;
+export const JUMP_FORCE = Minimotor.Physics.JUMP_FORCE;
 export const PLAYER_X = 150;
 export const PLAYER_SIZE = 36;
 
@@ -15,7 +16,7 @@ export const game = {
   state: "ready" as GameState, // ready | playing | gameover
   speed: 6,
   distance: 0,
-  best: 0,
+  best: Minimotor.Storage.load("hoppspelet_best", 0),
   spawnTimer: 0,
   nextSpawnAt: 0,
   coinScore: 0,
@@ -25,12 +26,6 @@ export const game = {
   coins: [] as Coin[],
   floatingTexts: [] as FloatingText[],
 };
-
-try {
-  game.best = parseInt(localStorage.getItem("hoppspelet_best") || "0", 10) || 0;
-} catch {
-  /* localStorage may be unavailable (private mode etc.) - best stays 0 */
-}
 
 export const player = {
   x: PLAYER_X,

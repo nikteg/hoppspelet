@@ -3,6 +3,7 @@ import { game, player, JUMP_FORCE, PLAYER_SIZE, getScore } from "./state.js";
 import { viewW, GROUND_Y } from "./stage.js";
 import { currentThemeIndex, level, resetGame } from "./world.js";
 import { playJumpSound, playDeathSound, startMusic } from "./audio.js";
+import { Minimotor } from "minimotor";
 
 function jump() {
   if (player.onGround) {
@@ -25,11 +26,7 @@ export function die() {
   game.state = "gameover";
   diedAt = performance.now();
   game.best = Math.max(game.best, getScore());
-  try {
-    localStorage.setItem("hoppspelet_best", String(game.best));
-  } catch {
-    /* localStorage may throw */
-  }
+  Minimotor.Storage.save("hoppspelet_best", game.best);
   playDeathSound();
 }
 

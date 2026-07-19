@@ -2,8 +2,9 @@
 import { DPR } from "./stage.js";
 import { player, game } from "./state.js";
 import { WORLDS } from "./worlds/index.js";
-import type { Ctx, Theme, Coin, Obstacle, SpriteCanvas } from "./types.js";
+import type { Ctx, Theme, Coin, Obstacle } from "./types.js";
 import type { Rect } from "minimotor";
+import { Minimotor } from "minimotor";
 
 export function drawStarShape(ctx: Ctx, cx: number, cy: number, outerR: number, innerR: number) {
   const spikes = 5;
@@ -24,29 +25,12 @@ export function drawStarShape(ctx: Ctx, cx: number, cy: number, outerR: number, 
   ctx.closePath();
 }
 
-// Coins are pre-rendered to an offscreen-canvas per theme (the designs are static
-// - the spin is just an x-scale at draw time). That way we pay for shadowBlur and
-// gradients ONCE per theme instead of per coin and frame, so we can
-// afford detailed designs.
-const coinSpriteCache = new Map<string, SpriteCanvas>();
-
 export function getCoinSprite(theme: Theme, r: number) {
   const key = theme.key + ":" + r + ":" + DPR;
-  let sprite = coinSpriteCache.get(key);
-  if (!sprite) {
-    sprite = document.createElement("canvas") as SpriteCanvas;
-    const size = Math.ceil(r * 5); // room for glow and shapes outside the radius
-    // Baked at DPR resolution, otherwise coins become blurry on retina screens.
-    sprite.width = Math.ceil(size * DPR);
-    sprite.height = Math.ceil(size * DPR);
-    sprite.logicalSize = size;
-    const octx = sprite.getContext("2d")!;
-    octx.scale(DPR, DPR);
-    octx.translate(size / 2, size / 2);
+  const size = Math.ceil(r * 5);
+  return Minimotor.Sprites.getSprite(key, size, DPR, (octx) => {
     drawCoinDesign(octx, r, theme);
-    coinSpriteCache.set(key, sprite);
-  }
-  return sprite;
+  });
 }
 
 export function drawCoin(ctx: Ctx, coin: Coin, theme: Theme, t: number) {
