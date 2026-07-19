@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Hoppspelet</title>
-<meta name="description" content="Hoppa över hinder, samla mynt och upplev nya världar var 1000:e poäng!">
+<meta name="description" content="Jump over obstacles, collect coins and experience new worlds every 1000 points!">
 <meta name="theme-color" content="#0a0710">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -20,66 +20,66 @@
     <img src="assets/logo.svg" alt="Hoppspelet">
   </div>
   <div id="topButtons">
-    <button id="debugPrevTheme" type="button" tabindex="-1" aria-label="Föregående tema">◀</button>
-    <button id="debugNextTheme" type="button" tabindex="-1" aria-label="Nästa tema">▶</button>
-    <button id="musicMute" type="button" tabindex="-1" aria-label="Ljud på/av">🔊</button>
+    <button id="debugPrevTheme" type="button" tabindex="-1" aria-label="Previous theme">◀</button>
+    <button id="debugNextTheme" type="button" tabindex="-1" aria-label="Next theme">▶</button>
+    <button id="musicMute" type="button" tabindex="-1" aria-label="Toggle sound">🔊</button>
   </div>
 </div>
 
-<!-- Visas pa mobiler i portrattlage: spelet ar gjort for liggande skarm.
-     Overlagret styrs helt av CSS (media query); JS pausar bara spelet. -->
+<!-- Shown on phones in portrait mode: the game is designed for landscape.
+     The overlay is entirely CSS-controlled (media query); JS only pauses the game. -->
 <div id="rotateHint" aria-hidden="true">
   <div class="rotate-inner">
     <div class="rotate-icon">📱</div>
-    <p><strong>Vänd på mobilen!</strong><br>Spelet spelas i liggande läge.</p>
+    <p><strong>Rotate your phone!</strong><br>The game is played in landscape mode.</p>
   </div>
 </div>
 
-<!-- Startsida: visas ovanpa spelet tills man trycker Spela (eller mellanslag). -->
+<!-- Landing page: shown on top of the game until Play (or space) is pressed. -->
 <div id="landing">
   <div class="landing-inner">
     <img class="landing-logo" src="assets/logo.svg" alt="Hoppspelet">
-    <p class="landing-byline">Skapat av Ida &amp; Niklas</p>
+    <p class="landing-byline">Created by Ida &amp; Niklas</p>
     <div class="landing-shots">
-      <img src="assets/screens/screen1.jpg" alt="Lavagrottan – hoppa över glödande spikar">
-      <img src="assets/screens/screen2.jpg" alt="Enhörningsdalen – plattformar och stjärnmynt">
-      <img src="assets/screens/screen3.jpg" alt="Storstadsnatten – hoppa i neonljuset">
+      <img src="assets/screens/screen1.jpg" alt="Lavagrottan – jump over glowing spikes">
+      <img src="assets/screens/screen2.jpg" alt="Enhörningsdalen – platforms and star coins">
+      <img src="assets/screens/screen3.jpg" alt="Storstadsnatten – jump in neon light">
     </div>
     <div class="landing-how">
-      <h2>Så funkar spelet</h2>
+      <h2>How to play</h2>
       <ul>
-        <li>🕹️ Hoppa med <strong>MELLANSLAG</strong> – eller tryck var som helst på skärmen.</li>
-        <li>⚠️ Hoppa över hindren och kläm dig under de hängande blocken. Nuddar du något är rundan över!</li>
-        <li>🪙 Samla mynt – varje mynt ger 10 poäng, och du får poäng för hur långt du springer.</li>
-        <li>🌍 Var 1000:e poäng hamnar du i en ny värld – det finns 65 olika!</li>
-        <li>💨 Farten ökar ju längre du kommer. Hur långt klarar du dig?</li>
+        <li>🕹️ Jump with <strong>SPACEBAR</strong> – or tap anywhere on the screen.</li>
+        <li>⚠️ Jump over obstacles and squeeze under hanging blocks. Touching anything ends the round!</li>
+        <li>🪙 Collect coins – each coin gives 10 points, and you earn points for how far you run.</li>
+        <li>🌍 Every 1000 points you enter a new world – there are 65 different ones!</li>
+        <li>💨 Speed increases the further you go. How far can you make it?</li>
       </ul>
     </div>
-    <button id="playBtn" type="button">Spela</button>
+    <button id="playBtn" type="button">Play</button>
   </div>
 </div>
 
-<!-- Laddas som vanliga skript (inte type="module") sa spelet aven funkar
-     direkt fran file:// (dubbelklick pa index.html). Ordningen ar viktig. -->
-<!-- Import map: bare specifier "minimotor" pekar pa den kompilerade
-     motorn i public/minimotor/. Bade motorn och spelet ar ES-moduler. -->
+<!-- Loaded as regular scripts (not type="module") so the game also works
+     directly from file:// (double-click index.html). Order matters. -->
+<!-- Import map: bare specifier "minimotor" points to the compiled
+     engine in public/minimotor/. Both the engine and game are ES modules. -->
 <script type="importmap">
 { "imports": { "minimotor": "./minimotor/index.js" } }
 </script>
-<!-- Laddas som ES-modul: ordningen pa filerna spelar ingen roll nar de
-     importerar varandra explicit - det gor main.js. file:// stods inte
-     av ES-moduler, sa spelet maste serveras (t.ex. pnpm dlx serve public). -->
+<!-- Loaded as ES module: file order doesn't matter when they
+     import each other explicitly - main.js does that. file:// is not supported
+     by ES modules, so the game must be served (e.g. pnpm dlx serve public). -->
 <script type="module" src="js/main.js"></script>
 <script>
-  // PWA-delarna aktiveras bara nar spelet hostas (inte fran file://, dar
-  // manifest-hamtning blockeras av CORS och service workers inte ar tillatna).
+  // PWA parts only activate when the game is hosted (not from file://, where
+  // manifest fetching is blocked by CORS and service workers are not allowed).
   if (location.protocol !== "file:") {
     var manifestLink = document.createElement("link");
     manifestLink.rel = "manifest";
     manifestLink.href = "manifest.webmanifest";
     document.head.appendChild(manifestLink);
 
-    // Service worker kraver dessutom en saker kontext (https eller localhost).
+    // Service worker additionally requires a secure context (https or localhost).
     if ("serviceWorker" in navigator && window.isSecureContext) {
       window.addEventListener("load", function () {
         navigator.serviceWorker.register("sw.js").catch(function () {});

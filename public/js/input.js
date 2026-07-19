@@ -12,14 +12,14 @@ canvas.addEventListener("touchstart", function (e) {
     e.preventDefault();
     handleAction();
 }, { passive: false });
-// ---------- Knapp-koppling ----------
-// mousedown med preventDefault hindrar knapparna fran att ta emot fokus, sa att
-// MELLANSLAG for att hoppa fortsatter fungera som vanligt efter ett klick.
-// Touch hanteras separat och direkt i touchstart eftersom preventDefault dar
+// ---------- Button wiring ----------
+// mousedown with preventDefault keeps buttons from grabbing focus, so
+// SPACE to jump continues working normally after a click.
+// Touch is handled separately and directly in touchstart since preventDefault there
 // stops the browser from ever sending the subsequent click event
-// (annars gjorde knapparna ingenting pa iPad).
-// Returnerar elementet (eller null om det saknas i HTML:en - da hoppas
-// knappen bara over i stallet for att krascha resten av inputkopplingen).
+// (otherwise the buttons did nothing on iPad).
+// Returns the element (or null if missing from the HTML - then the
+// button is just skipped instead of crashing the rest of the input wiring).
 function wireButton(id, action) {
     const btn = document.getElementById(id);
     if (!btn)
@@ -44,10 +44,10 @@ wireButton("debugPrevTheme", function () {
 wireButton("debugNextTheme", function () {
     debugGoToTheme(1);
 });
-// ---------- Startsidans Spela-knapp ----------
-// handleAction gommer startsidan och starts rundan direkt (game.state "ready").
+// ---------- Landing page Play button ----------
+// handleAction hides the landing page and starts the round directly (game.state "ready").
 wireButton("playBtn", handleAction);
-// ---------- Mute-knapp for music ----------
+// ---------- Mute button for music ----------
 function toggleMusic() {
     startMusic(); // ensure music is started (and audio unlocked by the gesture)
     setMusicOn(!isMusicOn());

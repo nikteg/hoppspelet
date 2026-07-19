@@ -10,8 +10,8 @@ import { drawObstacle, drawCoin, drawPlayer, drawFloatingTexts } from "./sprites
 import { update } from "./update.js";
 import "./input.js";
 function drawUI(ctx, theme) {
-    // HUD:en skjuts in innanfor safe area (iPhone-notchen sitter till
-    // vanster/uppe beroende pa hur mobilen halls).
+    // HUD is inset within the safe area (the iPhone notch is on the
+    // left/top depending on how the phone is held).
     const hx = 16 + safeLeft;
     const hy = safeTop;
     ctx.save();
@@ -26,14 +26,14 @@ function drawUI(ctx, theme) {
     ctx.fillText("#" + (currentThemeIndex() + 1) + " " + theme.name, hx, hy + 70);
     ctx.restore();
     if (game.state === "ready") {
-        overlayText(ctx, "Tryck MELLANSLAG eller skärmen", "för att start");
+        overlayText(ctx, "Press SPACE or tap screen", "to start");
     }
     else if (game.state === "gameover") {
-        overlayText(ctx, "Du dog! Points: " + getScore(), "Mellanslag/skärm för att start om");
+        overlayText(ctx, "You died! Points: " + getScore(), "Space/tap to restart");
     }
-    // Tidsbaserad (inte frame-raknad) sa annonsen visas lika lange pa alla
-    // skarmar. Ligger en bit upp pa skarmen sa den inte skymmer player
-    // och obstacles mitt i bild.
+    // Time-based (not frame-counted) so the announcement shows equally long
+    // on all screens. Positioned high enough not to block the player
+    // and obstacles mid-screen.
     const announceLeft = level.announceUntil - performance.now();
     if (announceLeft > 0) {
         const announceY = Math.max(safeTop + 90, viewH * 0.24);
@@ -86,7 +86,7 @@ function draw() {
     drawPlayer(ctx);
     drawFloatingTexts(ctx);
     drawUI(ctx, theme);
-    // Loggan visas bara pa startskarmen
+    // Logo only shows on the start screen
     const showLogo = game.state === "ready";
     if (showLogo !== logoVisible) {
         logoVisible = showLogo;

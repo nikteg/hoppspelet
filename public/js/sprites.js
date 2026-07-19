@@ -1,6 +1,7 @@
 "use strict";
 import { DPR } from "./stage.js";
 import { player, game } from "./state.js";
+import { WORLDS } from "./worlds/index.js";
 export function drawStarShape(ctx, cx, cy, outerR, innerR) {
     const spikes = 5;
     let rot = -Math.PI / 2;
@@ -19,18 +20,18 @@ export function drawStarShape(ctx, cx, cy, outerR, innerR) {
     }
     ctx.closePath();
 }
-// Mynten forrenderas till en offscreen-canvas per theme (motiven ar statiska
-// - snurret ar bara en x-skalning vid ritning). Da betalar vi shadowBlur och
-// gradienter EN gang per theme i stallet for per coins och frame, och kan
-// darfor kosta pa oss detaljerade motiv.
+// Coins are pre-rendered to an offscreen-canvas per theme (the designs are static
+// - the spin is just an x-scale at draw time). That way we pay for shadowBlur and
+// gradients ONCE per theme instead of per coin and frame, so we can
+// afford detailed designs.
 const coinSpriteCache = new Map();
 export function getCoinSprite(theme, r) {
     const key = theme.key + ":" + r + ":" + DPR;
     let sprite = coinSpriteCache.get(key);
     if (!sprite) {
         sprite = document.createElement("canvas");
-        const size = Math.ceil(r * 5); // plats for glow och former utanfor radien
-        // Bakas i DPR-upplosning, annars blir coins suddiga pa retinaskarmar.
+        const size = Math.ceil(r * 5); // room for glow and shapes outside the radius
+        // Baked at DPR resolution, otherwise coins become blurry on retina screens.
         sprite.width = Math.ceil(size * DPR);
         sprite.height = Math.ceil(size * DPR);
         sprite.logicalSize = size;
@@ -52,1236 +53,11 @@ export function drawCoin(ctx, coin, theme, t) {
     ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
     ctx.restore();
 }
-// Ritar sjalva myntmotivet centrerat kring (0,0). Kors ENDAST mot
-// offscreen-canvasen i getCoinSprite, sa composite-tricks (t.ex.
-// destination-out for manskaran) ar sakra har.
+// Draws the actual coin design centered at (0,0). Called ONLY against
+// the offscreen-canvas in getCoinSprite, so composite tricks (e.g.
+// destination-out for the crescent moon) are safe here.
 export function drawCoinDesign(ctx, r, theme) {
-    switch (theme.key) {
-        case "ocean":
-            ctx.save();
-            ctx.shadowColor = "rgba(255,255,255,0.7)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = "rgba(150,220,210,0.55)";
-            ctx.beginPath();
-            ctx.ellipse(0, r * 0.3, r * 1.3, r * 0.6, 0, 0, Math.PI);
-            ctx.fill();
-            ctx.fillStyle = "#eafdf6";
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.7, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        case "jungle": {
-            ctx.save();
-            ctx.shadowColor = "rgba(255,220,80,0.8)";
-            ctx.shadowBlur = 10;
-            const bananaGrad = ctx.createLinearGradient(-r, -r, r, r);
-            bananaGrad.addColorStop(0, "#fff2a8");
-            bananaGrad.addColorStop(0.5, "#ffd93d");
-            bananaGrad.addColorStop(1, "#e2a92b");
-            // Skarformad kropp: ytterbage + flackare innerbage - tjock pa mitten
-            // och avsmalnande mot tipparna, som en riktig banan.
-            ctx.fillStyle = bananaGrad;
-            ctx.beginPath();
-            ctx.moveTo(-r * 1.15, r * 0.55);
-            ctx.quadraticCurveTo(0, -r * 1.55, r * 1.1, -r * 0.5);
-            ctx.lineTo(r * 1.0, -r * 0.32);
-            ctx.quadraticCurveTo(0, -r * 0.35, -r * 1.02, r * 0.4);
-            ctx.closePath();
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = "rgba(140,90,10,0.8)";
-            ctx.lineWidth = 1.2;
-            ctx.stroke();
-            // Ridge-linje langs mitten for lite djup
-            ctx.strokeStyle = "rgba(150,100,10,0.5)";
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.9, r * 0.32);
-            ctx.quadraticCurveTo(0, -r * 0.95, r * 0.9, -r * 0.36);
-            ctx.stroke();
-            // Ljus glans langs ovansidan
-            ctx.strokeStyle = "rgba(255,255,255,0.55)";
-            ctx.lineWidth = r * 0.12;
-            ctx.lineCap = "round";
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.45, -r * 0.35);
-            ctx.quadraticCurveTo(-r * 0.05, -r * 0.75, r * 0.45, -r * 0.65);
-            ctx.stroke();
-            // Stjalk i ena anden, brun tipp i andra
-            ctx.strokeStyle = "#6b4a1f";
-            ctx.lineWidth = r * 0.16;
-            ctx.lineCap = "round";
-            ctx.beginPath();
-            ctx.moveTo(-r * 1.08, r * 0.46);
-            ctx.lineTo(-r * 1.28, r * 0.6);
-            ctx.stroke();
-            ctx.fillStyle = "#6b4a1f";
-            ctx.beginPath();
-            ctx.arc(r * 1.08, -r * 0.5, r * 0.13, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "ice":
-            ctx.save();
-            ctx.shadowColor = "rgba(150,220,255,0.9)";
-            ctx.shadowBlur = 12;
-            ctx.fillStyle = "#cdefff";
-            ctx.beginPath();
-            ctx.moveTo(0, -r);
-            ctx.lineTo(r * 0.7, 0);
-            ctx.lineTo(0, r);
-            ctx.lineTo(-r * 0.7, 0);
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
-            break;
-        case "space":
-            ctx.save();
-            ctx.shadowColor = "rgba(255,255,200,0.9)";
-            ctx.shadowBlur = 12;
-            ctx.fillStyle = "#fff6c8";
-            drawStarShape(ctx, 0, 0, r, r * 0.45);
-            ctx.fill();
-            ctx.restore();
-            break;
-        case "desert":
-            ctx.save();
-            ctx.shadowColor = "rgba(255,220,120,0.9)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = "#e8c26a";
-            ctx.beginPath();
-            ctx.moveTo(0, -r);
-            ctx.lineTo(r * 0.9, r * 0.7);
-            ctx.lineTo(-r * 0.9, r * 0.7);
-            ctx.closePath();
-            ctx.fill();
-            ctx.strokeStyle = "rgba(140,90,20,0.6)";
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(0, -r);
-            ctx.lineTo(0, r * 0.7);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        case "sky":
-            ctx.save();
-            ctx.shadowColor = "rgba(255,255,255,0.9)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = "#ffffff";
-            ctx.beginPath();
-            ctx.arc(-r * 0.4, r * 0.15, r * 0.55, 0, Math.PI * 2);
-            ctx.arc(r * 0.3, r * 0.1, r * 0.65, 0, Math.PI * 2);
-            ctx.arc(0, -r * 0.3, r * 0.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        case "neon":
-            ctx.save();
-            ctx.shadowColor = "rgba(0,255,255,0.9)";
-            ctx.shadowBlur = 14;
-            ctx.fillStyle = "#0ff0fc";
-            ctx.beginPath();
-            ctx.moveTo(0, -r);
-            ctx.lineTo(r * 0.75, 0);
-            ctx.lineTo(0, r);
-            ctx.lineTo(-r * 0.75, 0);
-            ctx.closePath();
-            ctx.fill();
-            ctx.strokeStyle = "#ff2fb0";
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.restore();
-            break;
-        case "haunted":
-            ctx.save();
-            ctx.shadowColor = "rgba(140,255,170,0.9)";
-            ctx.shadowBlur = 12;
-            ctx.fillStyle = "rgba(210,255,220,0.85)";
-            ctx.beginPath();
-            ctx.arc(0, -r * 0.2, r * 0.75, Math.PI, 0, false);
-            ctx.lineTo(r * 0.75, r * 0.6);
-            ctx.lineTo(r * 0.35, r * 0.3);
-            ctx.lineTo(0, r * 0.6);
-            ctx.lineTo(-r * 0.35, r * 0.3);
-            ctx.lineTo(-r * 0.75, r * 0.6);
-            ctx.closePath();
-            ctx.fill();
-            ctx.fillStyle = "#1a1a22";
-            ctx.beginPath();
-            ctx.arc(-r * 0.25, -r * 0.2, r * 0.12, 0, Math.PI * 2);
-            ctx.arc(r * 0.25, -r * 0.2, r * 0.12, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        case "viking":
-            ctx.save();
-            ctx.shadowColor = "rgba(200,230,255,0.8)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = "#8a95a0";
-            ctx.beginPath();
-            ctx.ellipse(0, 0, r * 0.85, r, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = "#e8eef2";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, -r * 0.6);
-            ctx.lineTo(0, r * 0.6);
-            ctx.moveTo(-r * 0.4, -r * 0.3);
-            ctx.lineTo(r * 0.4, r * 0.3);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        case "dino":
-            ctx.save();
-            ctx.shadowColor = "rgba(200,255,140,0.8)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = "#e9dfae";
-            ctx.beginPath();
-            ctx.ellipse(0, 0, r * 0.75, r, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "rgba(120,150,60,0.6)";
-            ctx.beginPath();
-            ctx.ellipse(-r * 0.2, -r * 0.3, r * 0.12, r * 0.18, 0.3, 0, Math.PI * 2);
-            ctx.ellipse(r * 0.25, r * 0.1, r * 0.1, r * 0.15, -0.2, 0, Math.PI * 2);
-            ctx.ellipse(-r * 0.1, r * 0.4, r * 0.1, r * 0.14, 0.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        case "candy":
-            ctx.save();
-            ctx.shadowColor = "rgba(255,150,200,0.9)";
-            ctx.shadowBlur = 10;
-            for (let i = 0; i < 3; i++) {
-                ctx.strokeStyle = i % 2 === 0 ? "#e0325c" : "#ffffff";
-                ctx.lineWidth = r * 0.4;
-                ctx.beginPath();
-                ctx.arc(0, 0, r * (1 - i * 0.32), 0, Math.PI * 1.5);
-                ctx.stroke();
-            }
-            ctx.restore();
-            break;
-        case "robot":
-            ctx.save();
-            ctx.shadowColor = "rgba(255,190,60,0.9)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = "#e8b840";
-            drawGearSpike(ctx, { x: -r, y: -r, w: r * 2, h: r * 2 });
-            ctx.restore();
-            break;
-        case "autumn":
-            ctx.save();
-            ctx.shadowColor = "rgba(230,150,60,0.8)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = "#8a5a2a";
-            ctx.beginPath();
-            ctx.ellipse(0, -r * 0.55, r * 0.6, r * 0.3, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "#c98a4a";
-            ctx.beginPath();
-            ctx.ellipse(0, r * 0.15, r * 0.6, r * 0.75, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        case "lava":
-        case "volcanoisland": {
-            // Glodande magmaklump med mork, sprucken skorpa
-            ctx.save();
-            ctx.shadowColor = "rgba(255,140,40,0.9)";
-            ctx.shadowBlur = 14;
-            const g = ctx.createRadialGradient(0, 0, 1, 0, 0, r);
-            g.addColorStop(0, "#fff1b8");
-            g.addColorStop(0.55, theme.key === "lava" ? "#ff9a3a" : "#ff8a4a");
-            g.addColorStop(1, "#7a2410");
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = "rgba(40,10,5,0.7)";
-            ctx.lineWidth = 1.6;
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.5, -r * 0.3);
-            ctx.lineTo(-r * 0.05, -r * 0.05);
-            ctx.lineTo(-r * 0.3, r * 0.45);
-            ctx.moveTo(r * 0.15, -r * 0.55);
-            ctx.lineTo(r * 0.3, 0);
-            ctx.lineTo(r * 0.6, r * 0.2);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "pirate":
-        case "atlantis": {
-            // Dublon - blank hos piraterna, argad/patinerad i det sjunkna Atlantis
-            const gold = theme.key === "pirate";
-            ctx.save();
-            ctx.shadowColor = gold ? "rgba(255,210,80,0.9)" : "rgba(90,220,230,0.8)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = gold ? "#d9a92f" : "#3fae9a";
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.9, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = gold ? "#8a641a" : "#1f6a5a";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.62, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(0, -r * 0.42);
-            ctx.lineTo(0, r * 0.42);
-            ctx.moveTo(-r * 0.42, 0);
-            ctx.lineTo(r * 0.42, 0);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "savanna":
-        case "aztec": {
-            // Solskiva med stralar; aztek-varianten far ett praglat ansikte
-            const az = theme.key === "aztec";
-            ctx.save();
-            ctx.shadowColor = "rgba(255,220,90,0.9)";
-            ctx.shadowBlur = 12;
-            ctx.fillStyle = az ? "#ffd85a" : "#ffc44a";
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.6, 0, Math.PI * 2);
-            ctx.fill();
-            for (let i = 0; i < 8; i++) {
-                const a = (Math.PI * 2 * i) / 8;
-                ctx.beginPath();
-                ctx.moveTo(Math.cos(a - 0.18) * r * 0.62, Math.sin(a - 0.18) * r * 0.62);
-                ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-                ctx.lineTo(Math.cos(a + 0.18) * r * 0.62, Math.sin(a + 0.18) * r * 0.62);
-                ctx.closePath();
-                ctx.fill();
-            }
-            if (az) {
-                ctx.fillStyle = "rgba(90,50,10,0.8)";
-                ctx.beginPath();
-                ctx.arc(-r * 0.18, -r * 0.1, r * 0.08, 0, Math.PI * 2);
-                ctx.arc(r * 0.18, -r * 0.1, r * 0.08, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillRect(-r * 0.14, r * 0.14, r * 0.28, r * 0.08);
-            }
-            ctx.restore();
-            break;
-        }
-        case "crystal":
-        case "fairy": {
-            // Slipad adelsten med vita facettlinjer
-            const col = theme.key === "crystal" ? "#5ff2e0" : "#ffe08a";
-            ctx.save();
-            ctx.shadowColor = col;
-            ctx.shadowBlur = 14;
-            ctx.fillStyle = col;
-            ctx.beginPath();
-            ctx.moveTo(0, -r);
-            ctx.lineTo(r * 0.6, -r * 0.2);
-            ctx.lineTo(r * 0.35, r);
-            ctx.lineTo(-r * 0.35, r);
-            ctx.lineTo(-r * 0.6, -r * 0.2);
-            ctx.closePath();
-            ctx.fill();
-            ctx.strokeStyle = "rgba(255,255,255,0.7)";
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.moveTo(0, -r);
-            ctx.lineTo(-r * 0.15, r * 0.2);
-            ctx.moveTo(r * 0.6, -r * 0.2);
-            ctx.lineTo(-r * 0.15, r * 0.2);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "bog":
-        case "mangrove":
-        case "fog": {
-            // Irrbloss - sjalvlysande klot med liten svans
-            const col = theme.key === "fog" ? "rgba(220,235,225,0.95)" : "rgba(170,255,140,0.95)";
-            ctx.save();
-            ctx.shadowColor = col;
-            ctx.shadowBlur = 16;
-            const g = ctx.createRadialGradient(0, 0, 1, 0, 0, r * 0.9);
-            g.addColorStop(0, "rgba(255,255,255,0.95)");
-            g.addColorStop(0.5, col);
-            g.addColorStop(1, "rgba(140,200,140,0)");
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.9, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = col;
-            ctx.beginPath();
-            ctx.ellipse(r * 0.3, r * 0.55, r * 0.16, r * 0.32, 0.6, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "bamboo":
-        case "canopy": {
-            // Blad med mittnerv
-            ctx.save();
-            ctx.shadowColor = "rgba(200,255,150,0.8)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = theme.key === "bamboo" ? "#a9d98a" : "#8aca5a";
-            ctx.beginPath();
-            ctx.moveTo(0, -r);
-            ctx.quadraticCurveTo(r * 0.9, -r * 0.2, 0, r);
-            ctx.quadraticCurveTo(-r * 0.9, -r * 0.2, 0, -r);
-            ctx.fill();
-            ctx.strokeStyle = "rgba(40,90,20,0.7)";
-            ctx.lineWidth = 1.4;
-            ctx.beginPath();
-            ctx.moveTo(0, -r * 0.85);
-            ctx.lineTo(0, r * 0.85);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "reef":
-        case "mermaid": {
-            // Snacka med rafflor
-            ctx.save();
-            ctx.shadowColor = "rgba(255,200,225,0.9)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = theme.key === "reef" ? "#ff9ab8" : "#ffb8e0";
-            ctx.beginPath();
-            ctx.arc(0, -r * 0.1, r * 0.8, Math.PI, 0);
-            ctx.lineTo(0, r * 0.85);
-            ctx.closePath();
-            ctx.fill();
-            ctx.strokeStyle = "rgba(255,255,255,0.8)";
-            ctx.lineWidth = 1.3;
-            for (let k = -2; k <= 2; k++) {
-                ctx.beginPath();
-                ctx.moveTo(0, r * 0.8);
-                ctx.lineTo(k * r * 0.35, -r * 0.5);
-                ctx.stroke();
-            }
-            ctx.restore();
-            break;
-        }
-        case "steppe": {
-            // Barnstenklump med urtidsinsekt
-            ctx.save();
-            ctx.shadowColor = "rgba(255,190,90,0.8)";
-            ctx.shadowBlur = 10;
-            const g = ctx.createRadialGradient(-r * 0.2, -r * 0.2, 1, 0, 0, r * 0.85);
-            g.addColorStop(0, "#ffd98a");
-            g.addColorStop(1, "#b86a1f");
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "rgba(60,30,10,0.75)";
-            ctx.beginPath();
-            ctx.ellipse(0, r * 0.05, r * 0.16, r * 0.24, 0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "saltflat": {
-            // Vita saltkristaller i tva facetter
-            ctx.save();
-            ctx.shadowColor = "rgba(255,255,255,0.9)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = "#ffffff";
-            ctx.save();
-            ctx.rotate(-0.2);
-            ctx.fillRect(-r * 0.5, -r * 0.7, r * 0.7, r * 1.3);
-            ctx.restore();
-            ctx.save();
-            ctx.rotate(0.35);
-            ctx.fillStyle = "#e4efec";
-            ctx.fillRect(-r * 0.15, -r * 0.55, r * 0.55, r * 1.1);
-            ctx.restore();
-            ctx.restore();
-            break;
-        }
-        case "dragon": {
-            // Eldslaga med het karna
-            ctx.save();
-            ctx.shadowColor = "rgba(255,110,40,0.9)";
-            ctx.shadowBlur = 14;
-            const g = ctx.createLinearGradient(0, r, 0, -r);
-            g.addColorStop(0, "#ff5a2a");
-            g.addColorStop(1, "#ffd94a");
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.moveTo(0, r * 0.9);
-            ctx.quadraticCurveTo(-r * 0.9, r * 0.1, 0, -r);
-            ctx.quadraticCurveTo(r * 0.5, -r * 0.1, r * 0.35, r * 0.3);
-            ctx.quadraticCurveTo(r * 0.6, r * 0.55, 0, r * 0.9);
-            ctx.fill();
-            ctx.fillStyle = "#fff2b0";
-            ctx.beginPath();
-            ctx.ellipse(0, r * 0.35, r * 0.22, r * 0.4, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "phoenix": {
-            // Glodande fenixfjader
-            ctx.save();
-            ctx.rotate(0.5);
-            ctx.shadowColor = "rgba(255,170,60,0.9)";
-            ctx.shadowBlur = 12;
-            const g = ctx.createLinearGradient(0, -r, 0, r);
-            g.addColorStop(0, "#ffcf6a");
-            g.addColorStop(1, "#ff6a3a");
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.moveTo(0, -r);
-            ctx.quadraticCurveTo(r * 0.7, -r * 0.2, 0, r);
-            ctx.quadraticCurveTo(-r * 0.7, -r * 0.2, 0, -r);
-            ctx.fill();
-            ctx.strokeStyle = "rgba(120,40,10,0.7)";
-            ctx.lineWidth = 1.3;
-            ctx.beginPath();
-            ctx.moveTo(0, -r * 0.85);
-            ctx.lineTo(0, r * 0.9);
-            for (let k = 1; k <= 3; k++) {
-                const yy = -r * 0.55 + k * r * 0.35;
-                ctx.moveTo(0, yy);
-                ctx.lineTo(-r * 0.4, yy + r * 0.18);
-                ctx.moveTo(0, yy);
-                ctx.lineTo(r * 0.4, yy + r * 0.18);
-            }
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "troll": {
-            // Runsten
-            ctx.save();
-            ctx.shadowColor = "rgba(180,220,220,0.7)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = "#8a9aa0";
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.6, r * 0.8);
-            ctx.lineTo(-r * 0.7, -r * 0.4);
-            ctx.lineTo(0, -r * 0.9);
-            ctx.lineTo(r * 0.65, -r * 0.35);
-            ctx.lineTo(r * 0.6, r * 0.8);
-            ctx.closePath();
-            ctx.fill();
-            ctx.strokeStyle = "#2c3a40";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, -r * 0.5);
-            ctx.lineTo(0, r * 0.45);
-            ctx.moveTo(0, -r * 0.15);
-            ctx.lineTo(r * 0.3, -r * 0.45);
-            ctx.moveTo(0, r * 0.05);
-            ctx.lineTo(r * 0.3, -r * 0.25);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "unicorn": {
-            // Vit stjarna med rosa inre kontur och pastellglow
-            ctx.save();
-            ctx.shadowColor = "rgba(255,190,230,0.95)";
-            ctx.shadowBlur = 14;
-            ctx.fillStyle = "#ffffff";
-            drawStarShape(ctx, 0, 0, r, r * 0.45);
-            ctx.fill();
-            ctx.strokeStyle = "#ff9ad0";
-            ctx.lineWidth = 1.6;
-            drawStarShape(ctx, 0, 0, r * 0.6, r * 0.27);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "witch": {
-            // Trolldrycksflaska med bubbla
-            ctx.save();
-            ctx.shadowColor = "rgba(140,230,90,0.9)";
-            ctx.shadowBlur = 12;
-            ctx.fillStyle = "rgba(60,180,80,0.9)";
-            ctx.beginPath();
-            ctx.arc(0, r * 0.25, r * 0.62, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "rgba(90,150,110,0.9)";
-            ctx.fillRect(-r * 0.16, -r * 0.85, r * 0.32, r * 0.55);
-            ctx.fillStyle = "#d9c9a0";
-            ctx.fillRect(-r * 0.22, -r * 0.98, r * 0.44, r * 0.2);
-            ctx.fillStyle = "rgba(220,255,190,0.8)";
-            ctx.beginPath();
-            ctx.arc(-r * 0.2, r * 0.1, r * 0.12, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "giant":
-        case "mars": {
-            // Kantig klump - guldnugget hos jatten, rod malmsten pa Mars
-            const gold = theme.key === "giant";
-            ctx.save();
-            ctx.shadowColor = gold ? "rgba(255,220,120,0.9)" : "rgba(255,150,90,0.8)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = gold ? "#e8b33a" : "#c05a2e";
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.8, r * 0.4);
-            ctx.lineTo(-r * 0.5, -r * 0.5);
-            ctx.lineTo(r * 0.15, -r * 0.8);
-            ctx.lineTo(r * 0.8, -r * 0.2);
-            ctx.lineTo(r * 0.6, r * 0.55);
-            ctx.lineTo(-r * 0.2, r * 0.75);
-            ctx.closePath();
-            ctx.fill();
-            ctx.fillStyle = gold ? "#fff0b0" : "rgba(60,20,10,0.5)";
-            ctx.beginPath();
-            ctx.arc(-r * 0.15, -r * 0.15, r * 0.16, 0, Math.PI * 2);
-            ctx.arc(r * 0.3, r * 0.15, r * 0.12, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "moonbase": {
-            // Fullmane med kratrar
-            ctx.save();
-            ctx.shadowColor = "rgba(220,230,255,0.8)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = "#dfe4ee";
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "rgba(120,130,150,0.6)";
-            ctx.beginPath();
-            ctx.arc(-r * 0.25, -r * 0.15, r * 0.2, 0, Math.PI * 2);
-            ctx.arc(r * 0.25, r * 0.3, r * 0.14, 0, Math.PI * 2);
-            ctx.arc(r * 0.2, -r * 0.4, r * 0.1, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "cyber": {
-            // Kretskortschip med ben och lysande karna
-            ctx.save();
-            ctx.shadowColor = "rgba(0,255,200,0.9)";
-            ctx.shadowBlur = 12;
-            ctx.fillStyle = "#0a2a2a";
-            ctx.fillRect(-r * 0.6, -r * 0.6, r * 1.2, r * 1.2);
-            ctx.strokeStyle = "#00ffcc";
-            ctx.lineWidth = 1.6;
-            ctx.strokeRect(-r * 0.6, -r * 0.6, r * 1.2, r * 1.2);
-            ctx.beginPath();
-            for (let k = -1; k <= 1; k++) {
-                ctx.moveTo(k * r * 0.35, -r * 0.6);
-                ctx.lineTo(k * r * 0.35, -r * 0.95);
-                ctx.moveTo(k * r * 0.35, r * 0.6);
-                ctx.lineTo(k * r * 0.35, r * 0.95);
-            }
-            ctx.stroke();
-            ctx.fillStyle = "#00ffcc";
-            ctx.fillRect(-r * 0.2, -r * 0.2, r * 0.4, r * 0.4);
-            ctx.restore();
-            break;
-        }
-        case "time": {
-            // Timglas med rinnande sand
-            ctx.save();
-            ctx.shadowColor = "rgba(255,220,150,0.9)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = "#8a6a3a";
-            ctx.fillRect(-r * 0.7, -r * 0.95, r * 1.4, r * 0.2);
-            ctx.fillRect(-r * 0.7, r * 0.75, r * 1.4, r * 0.2);
-            ctx.fillStyle = "rgba(255,240,200,0.35)";
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.55, -r * 0.75);
-            ctx.lineTo(r * 0.55, -r * 0.75);
-            ctx.lineTo(0, 0);
-            ctx.closePath();
-            ctx.moveTo(-r * 0.55, r * 0.75);
-            ctx.lineTo(r * 0.55, r * 0.75);
-            ctx.lineTo(0, 0);
-            ctx.closePath();
-            ctx.fill();
-            ctx.fillStyle = "#ffd98a";
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.3, -r * 0.75);
-            ctx.lineTo(r * 0.3, -r * 0.75);
-            ctx.lineTo(0, -r * 0.15);
-            ctx.closePath();
-            ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.4, r * 0.75);
-            ctx.lineTo(r * 0.4, r * 0.75);
-            ctx.lineTo(0, r * 0.2);
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "ufo": {
-            // Litet tefat med kupol och lampor
-            ctx.save();
-            ctx.shadowColor = "rgba(140,255,160,0.9)";
-            ctx.shadowBlur = 12;
-            ctx.fillStyle = "rgba(150,255,180,0.85)";
-            ctx.beginPath();
-            ctx.arc(0, -r * 0.15, r * 0.45, Math.PI, 0);
-            ctx.fill();
-            ctx.fillStyle = "#9aa8b0";
-            ctx.beginPath();
-            ctx.ellipse(0, 0, r * 0.95, r * 0.32, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "#7aff9a";
-            for (let k = -1; k <= 1; k++) {
-                ctx.beginPath();
-                ctx.arc(k * r * 0.5, r * 0.08, r * 0.09, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-            break;
-        }
-        case "junk": {
-            // Sexkantig mutter
-            ctx.save();
-            ctx.shadowColor = "rgba(240,210,170,0.7)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = "#a99a80";
-            ctx.beginPath();
-            for (let i = 0; i < 6; i++) {
-                const a = Math.PI / 6 + (i * Math.PI) / 3;
-                const x = Math.cos(a) * r * 0.85, y = Math.sin(a) * r * 0.85;
-                if (i === 0)
-                    ctx.moveTo(x, y);
-                else
-                    ctx.lineTo(x, y);
-            }
-            ctx.closePath();
-            ctx.fill();
-            ctx.fillStyle = "rgba(20,18,14,0.85)";
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.35, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "whalegrave": {
-            // Korslagt ben
-            ctx.save();
-            ctx.rotate(-0.6);
-            ctx.shadowColor = "rgba(200,230,255,0.6)";
-            ctx.shadowBlur = 8;
-            ctx.strokeStyle = "#e8e4d4";
-            ctx.lineWidth = r * 0.32;
-            ctx.lineCap = "round";
-            ctx.beginPath();
-            ctx.moveTo(0, -r * 0.55);
-            ctx.lineTo(0, r * 0.55);
-            ctx.stroke();
-            ctx.fillStyle = "#e8e4d4";
-            for (const e of [-1, 1]) {
-                for (const s of [-1, 1]) {
-                    ctx.beginPath();
-                    ctx.arc(s * r * 0.22, e * r * 0.62, r * 0.22, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-            ctx.restore();
-            break;
-        }
-        case "egypt": {
-            // Ankh i guld
-            ctx.save();
-            ctx.shadowColor = "rgba(255,220,120,0.9)";
-            ctx.shadowBlur = 10;
-            ctx.strokeStyle = "#ffd85a";
-            ctx.lineWidth = r * 0.22;
-            ctx.lineCap = "round";
-            ctx.beginPath();
-            ctx.ellipse(0, -r * 0.5, r * 0.3, r * 0.38, 0, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(0, -r * 0.1);
-            ctx.lineTo(0, r * 0.9);
-            ctx.moveTo(-r * 0.55, r * 0.05);
-            ctx.lineTo(r * 0.55, r * 0.05);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "sakura":
-        case "spring": {
-            // Blomma med fem kronblad
-            const petal = theme.key === "sakura" ? "#ffb0c8" : "#fff6e8";
-            const center = theme.key === "sakura" ? "#ff7a9a" : "#ffd94a";
-            ctx.save();
-            ctx.shadowColor = "rgba(255,220,235,0.9)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = petal;
-            for (let i = 0; i < 5; i++) {
-                const a = (Math.PI * 2 * i) / 5 - Math.PI / 2;
-                ctx.beginPath();
-                ctx.ellipse(Math.cos(a) * r * 0.5, Math.sin(a) * r * 0.5, r * 0.4, r * 0.28, a, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.fillStyle = center;
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.28, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "rome": {
-            // Denar med lagerkrans
-            ctx.save();
-            ctx.shadowColor = "rgba(240,230,210,0.8)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = "#d9d2c0";
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "#6a8a4a";
-            for (const s of [-1, 1]) {
-                for (let k = 0; k < 4; k++) {
-                    const a = Math.PI / 2 - s * (0.4 + k * 0.36);
-                    ctx.beginPath();
-                    ctx.ellipse(Math.cos(a) * r * 0.58, Math.sin(a) * r * 0.58, r * 0.16, r * 0.09, a + Math.PI / 2, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-            ctx.restore();
-            break;
-        }
-        case "medieval": {
-            // Riddarskold med kors
-            ctx.save();
-            ctx.shadowColor = "rgba(230,220,190,0.7)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = "#b83a3a";
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.7, -r * 0.7);
-            ctx.lineTo(r * 0.7, -r * 0.7);
-            ctx.lineTo(r * 0.7, r * 0.1);
-            ctx.quadraticCurveTo(r * 0.7, r * 0.6, 0, r * 0.95);
-            ctx.quadraticCurveTo(-r * 0.7, r * 0.6, -r * 0.7, r * 0.1);
-            ctx.closePath();
-            ctx.fill();
-            ctx.strokeStyle = "#f0e8d0";
-            ctx.lineWidth = r * 0.16;
-            ctx.beginPath();
-            ctx.moveTo(0, -r * 0.55);
-            ctx.lineTo(0, r * 0.7);
-            ctx.moveTo(-r * 0.55, -r * 0.15);
-            ctx.lineTo(r * 0.55, -r * 0.15);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "westtown": {
-            // Sheriffstjarna
-            ctx.save();
-            ctx.shadowColor = "rgba(255,210,130,0.9)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = "#d9a25a";
-            drawStarShape(ctx, 0, 0, r, r * 0.5);
-            ctx.fill();
-            ctx.strokeStyle = "#7a4a20";
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.38, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "citynight": {
-            // Varmt gatlyktesken med ljusflare
-            ctx.save();
-            ctx.shadowColor = "rgba(255,200,110,0.95)";
-            ctx.shadowBlur = 16;
-            const g = ctx.createRadialGradient(0, 0, 1, 0, 0, r * 0.8);
-            g.addColorStop(0, "#fff6d8");
-            g.addColorStop(1, "#ffb84a");
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = "rgba(255,230,170,0.8)";
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(0, -r);
-            ctx.lineTo(0, r);
-            ctx.moveTo(-r, 0);
-            ctx.lineTo(r, 0);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "carnival": {
-            // Rosa ballong med glans och snore
-            ctx.save();
-            ctx.shadowColor = "rgba(255,150,230,0.9)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = "#ff5ac0";
-            ctx.beginPath();
-            ctx.ellipse(0, -r * 0.15, r * 0.65, r * 0.8, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "rgba(255,255,255,0.5)";
-            ctx.beginPath();
-            ctx.ellipse(-r * 0.25, -r * 0.4, r * 0.16, r * 0.24, 0.4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = "rgba(255,255,255,0.7)";
-            ctx.lineWidth = 1.3;
-            ctx.beginPath();
-            ctx.moveTo(0, r * 0.65);
-            ctx.quadraticCurveTo(r * 0.2, r * 0.85, 0, r * 1.05);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "circus":
-        case "beach": {
-            // Randig boll (rod/vit pa cirkusen, flerfargars badboll pa stranden)
-            const cols = theme.key === "circus"
-                ? ["#e0325c", "#ffffff"]
-                : ["#ff5a5a", "#ffe24a", "#5ab4ff", "#ffffff"];
-            ctx.save();
-            ctx.shadowColor = "rgba(255,255,255,0.8)";
-            ctx.shadowBlur = 10;
-            for (let i = 0; i < 6; i++) {
-                ctx.fillStyle = cols[i % cols.length];
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.arc(0, 0, r * 0.85, (Math.PI * 2 * i) / 6, (Math.PI * 2 * (i + 1)) / 6);
-                ctx.closePath();
-                ctx.fill();
-            }
-            ctx.fillStyle = "#ffffff";
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "library": {
-            // Bok med guldtitel
-            ctx.save();
-            ctx.rotate(-0.15);
-            ctx.shadowColor = "rgba(230,210,160,0.7)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = "#7a3428";
-            ctx.fillRect(-r * 0.7, -r * 0.9, r * 1.4, r * 1.8);
-            ctx.fillStyle = "#a04a38";
-            ctx.fillRect(-r * 0.7, -r * 0.9, r * 0.3, r * 1.8);
-            ctx.strokeStyle = "#ffd98a";
-            ctx.lineWidth = 1.4;
-            ctx.strokeRect(-r * 0.25, -r * 0.6, r * 0.75, r * 0.5);
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.2, r * 0.3);
-            ctx.lineTo(r * 0.45, r * 0.3);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "toyroom": {
-            // Tarning
-            ctx.save();
-            ctx.rotate(0.2);
-            ctx.shadowColor = "rgba(255,255,255,0.8)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = "#ffffff";
-            const s = r * 0.72;
-            ctx.fillRect(-s, -s, s * 2, s * 2);
-            ctx.fillStyle = "#e0325c";
-            for (const p of [
-                [-0.45, -0.45],
-                [0.45, -0.45],
-                [0, 0],
-                [-0.45, 0.45],
-                [0.45, 0.45],
-            ]) {
-                ctx.beginPath();
-                ctx.arc(p[0] * s * 1.2, p[1] * s * 1.2, r * 0.11, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-            break;
-        }
-        case "storm": {
-            // Blixt
-            ctx.save();
-            ctx.shadowColor = "rgba(255,230,120,0.95)";
-            ctx.shadowBlur = 14;
-            ctx.fillStyle = "#ffe066";
-            ctx.beginPath();
-            ctx.moveTo(r * 0.25, -r);
-            ctx.lineTo(-r * 0.4, r * 0.15);
-            ctx.lineTo(-r * 0.02, r * 0.15);
-            ctx.lineTo(-r * 0.25, r);
-            ctx.lineTo(r * 0.45, -r * 0.1);
-            ctx.lineTo(r * 0.05, -r * 0.1);
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "tornado": {
-            // Fylld virveltratt med vindband och kringflygande skrap
-            ctx.save();
-            ctx.shadowColor = "rgba(230,225,170,0.8)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = "#e8e0b0";
-            ctx.strokeStyle = "#3a3520";
-            ctx.lineWidth = 1.4;
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.95, -r * 0.85);
-            ctx.quadraticCurveTo(0, -r * 1.15, r * 0.95, -r * 0.85);
-            ctx.quadraticCurveTo(r * 0.55, -r * 0.25, r * 0.3, r * 0.15);
-            ctx.quadraticCurveTo(r * 0.18, r * 0.6, r * 0.05, r * 1.0);
-            ctx.quadraticCurveTo(-r * 0.12, r * 0.5, -r * 0.28, r * 0.1);
-            ctx.quadraticCurveTo(-r * 0.6, -r * 0.3, -r * 0.95, -r * 0.85);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            // Vindband tvars over tratten
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = "rgba(90,82,40,0.55)";
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.62, -r * 0.5);
-            ctx.quadraticCurveTo(0, -r * 0.3, r * 0.6, -r * 0.52);
-            ctx.moveTo(-r * 0.32, 0);
-            ctx.quadraticCurveTo(0, r * 0.14, r * 0.32, -r * 0.02);
-            ctx.moveTo(-r * 0.14, r * 0.5);
-            ctx.quadraticCurveTo(0, r * 0.6, r * 0.15, r * 0.48);
-            ctx.stroke();
-            // Skrap som virvlar runt
-            ctx.fillStyle = "#6a4a20";
-            ctx.save();
-            ctx.translate(-r * 1.05, -r * 0.15);
-            ctx.rotate(0.5);
-            ctx.fillRect(-r * 0.18, -r * 0.07, r * 0.36, r * 0.14);
-            ctx.restore();
-            ctx.beginPath();
-            ctx.arc(r * 0.85, -r * 0.1, r * 0.09, 0, Math.PI * 2);
-            ctx.arc(r * 0.6, r * 0.55, r * 0.07, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "pizzeria": {
-            // Pizzaslice med salami
-            ctx.save();
-            ctx.rotate(0.3);
-            ctx.shadowColor = "rgba(255,180,90,0.8)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = "#f2c268";
-            ctx.beginPath();
-            ctx.moveTo(0, r);
-            ctx.lineTo(-r * 0.62, -r * 0.62);
-            ctx.quadraticCurveTo(0, -r * 0.95, r * 0.62, -r * 0.62);
-            ctx.closePath();
-            ctx.fill();
-            ctx.strokeStyle = "#c9622a";
-            ctx.lineWidth = r * 0.18;
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.62, -r * 0.62);
-            ctx.quadraticCurveTo(0, -r * 0.95, r * 0.62, -r * 0.62);
-            ctx.stroke();
-            ctx.fillStyle = "#c0392b";
-            for (const p of [
-                [-0.15, -0.35],
-                [0.2, -0.1],
-                [-0.05, 0.3],
-            ]) {
-                ctx.beginPath();
-                ctx.arc(p[0] * r, p[1] * r, r * 0.13, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-            break;
-        }
-        case "orchard": {
-            // Rott apple med blad
-            ctx.save();
-            ctx.shadowColor = "rgba(255,140,140,0.8)";
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = "#e0483a";
-            ctx.beginPath();
-            ctx.arc(-r * 0.25, r * 0.1, r * 0.55, 0, Math.PI * 2);
-            ctx.arc(r * 0.25, r * 0.1, r * 0.55, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = "#6a4a28";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, -r * 0.35);
-            ctx.lineTo(0, -r * 0.8);
-            ctx.stroke();
-            ctx.fillStyle = "#5a8a2a";
-            ctx.beginPath();
-            ctx.ellipse(r * 0.25, -r * 0.7, r * 0.28, r * 0.14, 0.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "icecream": {
-            // Glasstrut med jordgubbskula
-            ctx.save();
-            ctx.shadowColor = "rgba(255,200,225,0.8)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = "#e8b56a";
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.5, -r * 0.05);
-            ctx.lineTo(r * 0.5, -r * 0.05);
-            ctx.lineTo(0, r);
-            ctx.closePath();
-            ctx.fill();
-            ctx.strokeStyle = "rgba(120,70,20,0.4)";
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(-r * 0.3, r * 0.25);
-            ctx.lineTo(r * 0.1, -r * 0.02);
-            ctx.moveTo(-r * 0.05, r * 0.6);
-            ctx.lineTo(r * 0.32, r * 0.12);
-            ctx.stroke();
-            ctx.fillStyle = "#ffb0d0";
-            ctx.beginPath();
-            ctx.arc(0, -r * 0.4, r * 0.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "#fff0f8";
-            ctx.beginPath();
-            ctx.arc(-r * 0.15, -r * 0.55, r * 0.15, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        case "newyear": {
-            // Tomtebloss-stjarna med rosa gnistor
-            ctx.save();
-            ctx.shadowColor = "rgba(255,220,120,0.95)";
-            ctx.shadowBlur = 14;
-            ctx.fillStyle = "#ffe066";
-            drawStarShape(ctx, 0, 0, r * 0.7, r * 0.32);
-            ctx.fill();
-            ctx.strokeStyle = "rgba(255,150,180,0.9)";
-            ctx.lineWidth = 1.4;
-            for (let i = 0; i < 8; i++) {
-                const a = (Math.PI * 2 * i) / 8 + 0.4;
-                ctx.beginPath();
-                ctx.moveTo(Math.cos(a) * r * 0.75, Math.sin(a) * r * 0.75);
-                ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-                ctx.stroke();
-            }
-            ctx.restore();
-            break;
-        }
-        case "artgallery": {
-            // Malarpalett med fargklickar
-            ctx.save();
-            ctx.shadowColor = "rgba(200,100,255,0.7)";
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = "#c9a072";
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "rgba(0,0,0,0.35)";
-            ctx.beginPath();
-            ctx.arc(r * 0.35, r * 0.3, r * 0.2, 0, Math.PI * 2);
-            ctx.fill();
-            const dabs = [
-                ["#ff5a5a", -0.4, -0.35],
-                ["#5ab4ff", 0.05, -0.5],
-                ["#ffe066", 0.45, -0.15],
-                ["#6fce7a", -0.5, 0.15],
-            ];
-            for (const d of dabs) {
-                ctx.fillStyle = d[0];
-                ctx.beginPath();
-                ctx.arc(d[1] * r, d[2] * r, r * 0.15, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-            break;
-        }
-        case "disco": {
-            // Discokula med speglande rutor
-            ctx.save();
-            ctx.shadowColor = "rgba(255,255,255,0.95)";
-            ctx.shadowBlur = 14;
-            ctx.fillStyle = "#cfd6e0";
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.8, 0, Math.PI * 2);
-            ctx.clip();
-            ctx.strokeStyle = "rgba(60,70,90,0.6)";
-            ctx.lineWidth = 1;
-            for (let k = -2; k <= 2; k++) {
-                ctx.beginPath();
-                ctx.moveTo(k * r * 0.32, -r * 0.8);
-                ctx.lineTo(k * r * 0.32, r * 0.8);
-                ctx.moveTo(-r * 0.8, k * r * 0.32);
-                ctx.lineTo(r * 0.8, k * r * 0.32);
-                ctx.stroke();
-            }
-            ctx.fillStyle = "rgba(255,255,255,0.95)";
-            ctx.fillRect(-r * 0.32, -r * 0.32, r * 0.3, r * 0.3);
-            ctx.fillRect(r * 0.05, r * 0.05, r * 0.25, r * 0.25);
-            ctx.restore();
-            ctx.restore();
-            break;
-        }
-        case "shadow": {
-            // Morkt coins med skarp vit kontur - passar den svartvita varlden
-            ctx.save();
-            ctx.shadowColor = "rgba(255,255,255,0.95)";
-            ctx.shadowBlur = 12;
-            ctx.fillStyle = "#000000";
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = "#ffffff";
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.8, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-            break;
-        }
-        case "dream": {
-            // Manskara med liten stjarna (destination-out ar sakert har -
-            // designen ritas alltid mot sin egen offscreen-canvas)
-            ctx.save();
-            ctx.shadowColor = "rgba(255,240,255,0.9)";
-            ctx.shadowBlur = 12;
-            ctx.fillStyle = "#fff0d8";
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.75, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalCompositeOperation = "destination-out";
-            ctx.beginPath();
-            ctx.arc(r * 0.35, -r * 0.2, r * 0.6, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalCompositeOperation = "source-over";
-            ctx.fillStyle = "#fff0d8";
-            drawStarShape(ctx, r * 0.45, -r * 0.35, r * 0.22, r * 0.1);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-        default: {
-            ctx.save();
-            ctx.shadowColor = "rgba(255,210,80,0.9)";
-            ctx.shadowBlur = 12;
-            const g = ctx.createRadialGradient(0, 0, 1, 0, 0, r);
-            g.addColorStop(0, "#fff6c8");
-            g.addColorStop(0.5, "#ffd54a");
-            g.addColorStop(1, "#c98b1f");
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(0, 0, r, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            break;
-        }
-    }
+    WORLDS[theme.key]?.drawCoinDesign(ctx, r);
 }
 export function drawPlayer(ctx) {
     ctx.save();
@@ -1339,13 +115,13 @@ export function drawSeaUrchin(ctx, obs) {
 export function drawVenusTrap(ctx, obs) {
     const cx = obs.x + obs.w / 2;
     const groundY = obs.y + obs.h;
-    const headY = obs.y + obs.h * 0.42; // dar de gapande kaftarna sitter
+    const headY = obs.y + obs.h * 0.42; // where the gaping jaws sit
     const lobeR = obs.w * 0.52;
     const gape = 0.42; // hur mycket munnen gapar (radianer fran mittlinjen)
-    // Latt "andning"/tuggning sa vaxten kanns levande
+    // Gentle "breathing"/chewing so the plant feels alive
     const chew = Math.sin(performance.now() / 220 + obs.x * 0.05) * 0.12;
     const openAngle = gape + Math.max(0, chew);
-    // ---- Stjalk med ett par blad ----
+    // ---- Stem with a couple of leaves ----
     ctx.save();
     ctx.strokeStyle = "#2f6b22";
     ctx.lineWidth = obs.w * 0.16;
@@ -1362,7 +138,7 @@ export function drawVenusTrap(ctx, obs) {
         ctx.fill();
     }
     ctx.restore();
-    // ---- Tva gapande kaftlober ----
+    // ---- Two gaping jaw lobes ----
     // Varje lob ar en halvellips som roterats ut fran mittlinjen (uppat).
     for (const side of [-1, 1]) {
         ctx.save();
@@ -1407,14 +183,14 @@ export function drawVenusTrap(ctx, obs) {
         }
         ctx.restore();
     }
-    // Liten glodande "lockbete"-droppe i mitten av munnen
+    // Small glowing "lure" droplet in the middle of the mouth
     ctx.fillStyle = "rgba(255,240,150,0.8)";
     ctx.beginPath();
     ctx.arc(cx, headY - lobeR * 0.35, obs.w * 0.06, 0, Math.PI * 2);
     ctx.fill();
 }
 export function drawIcicleCluster(ctx, obs) {
-    // Morkbla kontur - istapparna ar nastan vita, precis som isens mark
+    // Dark blue outline - the icicles are almost white, just like the ice ground
     ctx.save();
     ctx.strokeStyle = "#1f4a6a";
     ctx.lineWidth = 1.8;
@@ -1434,7 +210,7 @@ export function drawIcicleCluster(ctx, obs) {
     ctx.restore();
 }
 export function drawAsteroidChunk(ctx, obs) {
-    // Ljus kontur + kratrar - stenen ar nastan lika mork som rymdmarken
+    // Light outline + craters - the rock is almost as dark as the space ground
     ctx.save();
     ctx.strokeStyle = "#b8b8cf";
     ctx.lineWidth = 1.8;
@@ -1456,8 +232,8 @@ export function drawAsteroidChunk(ctx, obs) {
     ctx.restore();
 }
 export function drawCactus(ctx, obs) {
-    // Saguarokaktus: rundade armar (tjocka streck med runda andar), ribbor,
-    // taggar och en blomma pa toppen. Mork kontur ger tydlighet mot sanden.
+    // Saguaro cactus: rounded arms (thick lines with round ends), ribs,
+    // spines and a flower on top. Dark outline gives clarity against the sand.
     const cx = obs.x + obs.w / 2;
     const bot = obs.y + obs.h;
     ctx.save();
@@ -1504,7 +280,7 @@ export function drawCactus(ctx, obs) {
     ctx.moveTo(cx + 2, bot - 2);
     ctx.lineTo(cx + 2, obs.y + 12);
     ctx.stroke();
-    // Taggar
+    // Spines
     ctx.strokeStyle = "#ffdf9b";
     ctx.lineWidth = 1.3;
     ctx.beginPath();
@@ -1534,7 +310,7 @@ export function drawCactus(ctx, obs) {
     ctx.restore();
 }
 export function drawLollipop(ctx, obs) {
-    // Stor snurrklubba pa pinne (candy)
+    // Big swirly lollipop on a stick (candy)
     const cx = obs.x + obs.w / 2;
     const R = obs.w * 0.48;
     const cy = obs.y + R + 2;
@@ -1574,8 +350,8 @@ export function drawLollipop(ctx, obs) {
     ctx.restore();
 }
 export function drawGearSpike(ctx, obs) {
-    // Kugghjul med varmgul kant och navring - stalgratt smalter annars in
-    // i fabrikens morka mark.
+    // Gear with warm-yellow edge and hub ring - steel gray otherwise blends
+    // into the factory's dark ground.
     const cx = obs.x + obs.w / 2, cy = obs.y + obs.h / 2, r = Math.min(obs.w, obs.h) / 2;
     const teeth = 8;
     ctx.save();
@@ -1607,7 +383,7 @@ export function drawGearSpike(ctx, obs) {
     ctx.restore();
 }
 export function drawFlameSpike(ctx, obs, theme) {
-    // Fladdrande eldpelare (drak-/fenix-/vulkanteman)
+    // Flickering flame pillar (dragon/phoenix/volcano themes)
     const cx = obs.x + obs.w / 2;
     const baseY = obs.y + obs.h;
     const flick = Math.sin(performance.now() / 90 + obs.x * 0.1) * obs.h * 0.06;
@@ -1744,7 +520,7 @@ export function drawObelisk(ctx, obs, theme) {
 }
 export function drawBrokenColumn(ctx, obs, theme) {
     // Avbruten antik kolonn (rom). Mork kontur + skuggad sida - utan dem
-    // smalter den ljusa stenen ihop med Colosseums ljusa mark/bakgrund.
+    // blends the light stone into Colosseum's light ground/background.
     const x = obs.x + obs.w * 0.15;
     const w = obs.w * 0.7;
     ctx.save();
@@ -2281,7 +1057,7 @@ export function drawObstacle(ctx, obs, theme) {
                 break;
             }
             case "troll": {
-                // Trollklubba med dubbar
+                // Troll club with studs
                 ctx.save();
                 ctx.strokeStyle = "#241a10";
                 ctx.lineWidth = 6.5;
@@ -2790,7 +1566,7 @@ export function drawObstacle(ctx, obs, theme) {
                 break;
             }
             case "carnival": {
-                // Taggig pinata-stjarna pa pinne
+                // Spiky piñata star on a stick
                 ctx.save();
                 ctx.strokeStyle = "#f0e8d0";
                 ctx.lineWidth = 3;

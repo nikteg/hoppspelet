@@ -2,18 +2,18 @@
       <defs>
         <mask id="heroMask">
           <rect x="0" y="0" width="96" height="96" rx="16" fill="#fff"/>
-          <!-- arga ögonbryn (negativa slitsar) -->
+          <!-- angry eyebrows (negative slits) -->
           <path d="M14 32 L46 44" stroke="#000" stroke-width="8" stroke-linecap="round"/>
           <path d="M82 32 L50 44" stroke="#000" stroke-width="8" stroke-linecap="round"/>
-          <!-- ögon -->
+          <!-- eyes -->
           <circle cx="34" cy="56" r="7" fill="#000"/>
           <circle cx="62" cy="56" r="7" fill="#000"/>
-          <!-- sammanbitna tänder -->
+          <!-- clenched teeth -->
           <path d="M28 76 L36 71 L44 76 L52 71 L60 76 L68 71" stroke="#000" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
         </mask>
       </defs>
 
-      <!-- strålande stjärnburst bakom figuren -->
+      <!-- radiant starburst behind the character -->
       <g stroke="#ffffff" stroke-width="2" opacity="0.14">
         <g transform="translate(310,96)">
           <line x1="0" y1="-92" x2="0" y2="-64"/>
@@ -35,7 +35,7 @@
         </g>
       </g>
 
-      <!-- hoppbåge -->
+      <!-- jump arc -->
       <path d="M110 168 Q 310 30 510 168" stroke="#ffffff" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round" opacity="0.5"/>
 
       <!-- fartlinjer bakom figuren -->
@@ -45,18 +45,18 @@
         <line x1="198" y1="118" x2="238" y2="116" stroke-width="4"/>
       </g>
 
-      <!-- figuren (arg, blå fyrkant – men vit) mitt i hoppet -->
+      <!-- the character (angry, blue-ish square - but white) mid-jump -->
       <g transform="translate(262,48) rotate(-13 48 48)">
         <rect x="0" y="0" width="96" height="96" rx="16" fill="#ffffff" mask="url(#heroMask)"/>
         <rect x="4" y="4" width="88" height="88" rx="13" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.45"/>
         <!-- facett-glansstreck -->
         <path d="M12 84 L84 12" stroke="#ffffff" stroke-width="2.5" opacity="0.25"/>
         <path d="M26 90 L90 26" stroke="#ffffff" stroke-width="1.6" opacity="0.16"/>
-        <!-- liten glansprick uppe till vänster -->
+        <!-- small highlight dot top left -->
         <circle cx="20" cy="20" r="4" fill="#ffffff" opacity="0.6"/>
       </g>
 
-      <!-- gnistor / stjärnor -->
+      <!-- sparks / stars -->
       <g fill="#ffffff">
         <path d="M168 60 l5 14 14 5 -14 5 -5 14 -5 -14 -14 -5 14 -5 z" opacity="0.9"/>
         <path d="M470 52 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4 z" opacity="0.75"/>
@@ -65,7 +65,7 @@
         <circle cx="486" cy="120" r="3.5" opacity="0.55"/>
       </g>
 
-      <!-- spikrad under bågen -->
+      <!-- spike row under the arc -->
       <g fill="#ffffff" opacity="0.85">
         <path d="M150 170 l11 -22 11 22 z"/>
         <path d="M178 170 l11 -22 11 22 z"/>
@@ -82,7 +82,7 @@
       </g>
       <line x1="140" y1="170" x2="480" y2="170" stroke="#ffffff" stroke-width="3" opacity="0.7"/>
 
-      <!-- ordmärke -->
+      <!-- wordmark -->
       <g transform="translate(310,246)">
         <g transform="skewX(-8)">
           <text x="3" y="4" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-weight="900" font-size="60" letter-spacing="1" fill="#ffffff" opacity="0.22">HOPPSPELET</text>

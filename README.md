@@ -1,94 +1,94 @@
 # Hoppspelet
 
-Ett litet canvas-baserat hoppspel. Hoppa över hinder, samla mynt — var 1000:e
-poäng byter banan tema (60+ teman).
+A small canvas-based platform jumper. Jump over obstacles, collect coins — every 1000
+points the track changes theme (60+ themes).
 
-## Spela lokalt
+## Play locally
 
-Spelet använder ES-moduler med en importmap, så du måste servera
-filerna — `file://` fungerar inte. Enklast:
+The game uses ES modules with an importmap, so you need to serve
+the files — `file://` won't work. Simplest way:
 
 ```bash
 pnpm dlx serve public
 ```
 
-Öppna `http://localhost:3000` i webbläsaren.
+Open `http://localhost:3000` in your browser.
 
-## Utveckla
+## Develop
 
-Repot är ett pnpm-workspace. Spelet ligger i roten och spelmotorn
-(Minimotor) är en git-submodul i `packages/minimotor/` som länkas in som
-workspace-paket.
+The repo is a pnpm workspace. The game lives at the root and the game engine
+(Minimotor) is a git submodule in `packages/minimotor/` linked in as
+a workspace package.
 
 ```bash
-pnpm install        # hämtar typescript, oxlint, oxfmt + länkar minimotor
-pnpm run build      # kompilerar motorn -> public/minimotor/, spelet -> public/js/
-pnpm run dev:all    # watch-läge för både motor och spel
-pnpm run dev        # watch-läge för bara spelet (tsc --watch)
-pnpm run verify     # tsc --noEmit + oxlint + oxfmt --check parallellt
+pnpm install        # fetches typescript, oxlint, oxfmt + links minimotor
+pnpm run build      # compiles engine -> public/minimotor/, game -> public/js/
+pnpm run dev:all    # watch mode for both engine and game
+pnpm run dev        # watch mode for just the game (tsc --watch)
+pnpm run verify     # tsc --noEmit + oxlint + oxfmt --check in parallel
 pnpm run format     # oxfmt .
 ```
 
-De kompilerade filerna (`public/minimotor/*.js`, `public/js/*.js`) checkas in,
-så att Docker-bygget (som bara kopierar `public/`) fungerar utan node/pnpm.
-Kör alltså `pnpm run build` innan deploy.
+The compiled files (`public/minimotor/*.js`, `public/js/*.js`) are checked in,
+so the Docker build (which only copies `public/`) works without node/pnpm.
+Run `pnpm run build` before deploying.
 
-## Hosta med Docker (Portainer)
+## Host with Docker (Portainer)
 
 ```bash
 docker compose up -d --build
 ```
 
-I Portainer: skapa en stack från repot med `docker-compose.yml` +
-`docker-compose.portainer.yml` (lägger containern i det externa
-`nginx`-nätverket för reverse proxy, samma upplägg som niklas.tegnander.nu).
+In Portainer: create a stack from the repo using `docker-compose.yml` +
+`docker-compose.portainer.yml` (places the container on the external
+`nginx` network for reverse proxy, same setup as niklas.tegnander.nu).
 
-Containern svarar både på `/` och under `/hoppspelet/`, så en custom
-location `/hoppspelet` i Nginx Proxy Manager fungerar rakt av — hela
-sökvägen får skickas vidare oförändrad till containern.
+The container responds both on `/` and under `/hoppspelet/`, so a custom
+location `/hoppspelet` in Nginx Proxy Manager works straight away — the
+full path is forwarded unchanged to the container.
 
 ## PWA
 
-Spelet är installerbart som PWA (manifest + service worker) och fungerar
-offline efter första besöket. Service workern registreras bara över
-https/localhost. Cacheversionen stämplas automatiskt med byggtidpunkten
-när Docker-imagen byggs (`__BUILD_STAMP__` i `public/sw.js` byts ut i
-Dockerfilen), så en ny deploy invaliderar gamla klienters cache utan
-manuell versionsbump. Hostas filerna på annat sätt än via Docker-imagen:
-byt ut stämpeln manuellt vid deploy.
+The game is installable as a PWA (manifest + service worker) and works
+offline after the first visit. The service worker is only registered over
+https/localhost. The cache version is automatically stamped with the build
+timestamp when the Docker image is built (`__BUILD_STAMP__` in `public/sw.js`
+is replaced in the Dockerfile), so a new deploy invalidates old client caches
+without manual version bumps. If hosting files outside the Docker image:
+replace the stamp manually on deploy.
 
-Ikonerna i `public/icons/` är genererade från `public/favicon.svg`
+The icons in `public/icons/` are generated from `public/favicon.svg`
 (macOS: `qlmanage -t -s 512 -o public/icons public/favicon.svg`).
-Skärmbilderna på startsidan (`public/assets/screens/`) är riktiga
-spelbilder. Regenerera dem med `tools/capture-screens.js` — klistra in
-filen i webbläsarkonsolen på spelsidan, så iscensätts scenerna och tre
-jpg-filer laddas ner (instruktioner i filens huvud).
+The screenshots on the landing page (`public/assets/screens/`) are real
+game captures. Regenerate them with `tools/capture-screens.js` — paste
+the file into the browser console on the game page; it will stage the
+scenes and download three jpg files (instructions in the file header).
 
-## Filstruktur
+## File structure
 
 ```
-src/                  TypeScript-källan till spelet (kompileras till public/js/)
-  types.d.ts          Delade globala typer (Theme, Obstacle, Coin, ...)
-  state.ts            Konstanter, spelarens/rundans tillstånd
-  themes.ts           Temadata (färger/partiklar per tema)
-  world.ts            Temaval, partiklar, resize, resetGame
-  audio.ts            WebAudio: musik + ljudeffekter
-  gameplay.ts         Hopp/död, hinder- och myntspawning
-  input.ts            Tangentbord, touch, debug-/mute-knappar
-  update.ts           Fysik, kollisioner, poäng (per frame)
-  render-helpers.ts   Rityhjälpare (mark, moln, träd, ...)
-  scenery.ts          Bakgrundsscener per tema
-  sprites.ts          Spelare, mynt, hinder, UI-texter
-  main.ts             drawUI/draw + uppstart
+src/                  TypeScript source for the game (compiled to public/js/)
+  types.d.ts          Shared global types (Theme, Obstacle, Coin, ...)
+  state.ts            Constants, player/round state
+  themes.ts           Theme data (colors/particles per theme)
+  world.ts            Theme selection, particles, resize, resetGame
+  audio.ts            WebAudio: music + sound effects
+  gameplay.ts         Jump/death, obstacle and coin spawning
+  input.ts            Keyboard, touch, debug/mute buttons
+  update.ts           Physics, collisions, scoring (per frame)
+  render-helpers.ts   Drawing helpers (ground, clouds, trees, ...)
+  scenery.ts          Background scenes per theme
+  sprites.ts          Player, coins, obstacles, UI texts
+  main.ts             drawUI/draw + startup
 packages/
-  minimotor/          Git-submodul: Minimotor, spelmotorn (återanvänds i andra projekt)
-    src/engine.ts     TypeScript-källkod (minimal game loop + kollisionshjälp)
+  minimotor/          Git submodule: Minimotor, the game engine (reused in other projects)
+    src/engine.ts     TypeScript source (minimal game loop + collision helpers)
 public/
-  index.html          Skal + startsida + skriptordning + SW-registrering
+  index.html          Shell + landing page + script ordering + SW registration
   styles.css          All CSS
-  minimotor/          Kompilerad Minimotor (byggs från packages/minimotor)
-  js/                 Kompilerat spel (byggs från src/)
+  minimotor/          Compiled Minimotor (built from packages/minimotor)
+  js/                 Compiled game (built from src/)
   sw.js               Service worker (cache-first offline)
   manifest.webmanifest
-  importmap            `type="importmap"` i index.html pekar på minimotor/index.js
+  importmap            `type="importmap"` in index.html points to minimotor/index.js
 ```

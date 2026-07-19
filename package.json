@@ -6,9 +6,9 @@
   "scripts": {
     "build": "pnpm run build:engine && pnpm run build:game",
     "build:engine": "tsc -p packages/minimotor --outDir public/minimotor",
-    "build:game": "tsc",
-    "dev": "tsc --watch",
-    "dev:game": "tsc --watch",
+    "build:game": "tsc && rsync -a build/ public/js/",
+    "dev": "tsc --outDir public/js --watch",
+    "dev:game": "tsc --outDir public/js --watch",
     "dev:engine": "tsc -p packages/minimotor --outDir public/minimotor --watch",
     "dev:all": "pnpm -r --parallel --include-workspace-root run \"/^dev:(game|engine)$/\"",
     "lint": "oxlint",
