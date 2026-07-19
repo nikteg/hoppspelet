@@ -1,6 +1,6 @@
 // ---------- Input helpers ----------
 // Wire DOM buttons with touch+click support while keeping
-// the keyboard usable (no focus steal).
+// the keyboard usable (no focus steal), plus a keyboard state tracker.
 /** Binds a button element to an action with touch+click+mousedown handling.
  *  mousedown+preventDefault stops the button from grabbing focus
  *  so the spacebar continues working after a click.
@@ -25,4 +25,13 @@ export function wireButton(id, action) {
  *  focus from keyboard input. Call this once after canvas setup. */
 export function preventTouchFocus(canvas) {
     canvas.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+}
+/** Keyboard state tracker — returns a live object where `keys["ArrowLeft"]`
+ *  is `true` while that key is held. Independent of the Engine; safe to
+ *  call anywhere. */
+export function trackKeys() {
+    const keys = {};
+    window.addEventListener("keydown", (e) => { keys[e.code] = true; });
+    window.addEventListener("keyup", (e) => { keys[e.code] = false; });
+    return keys;
 }

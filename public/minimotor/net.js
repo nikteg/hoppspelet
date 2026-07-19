@@ -39,10 +39,11 @@ export function connect(config) {
         },
         close() {
             intentionalClose = true;
+            state = "closed";
             if (reconnectTimer)
                 clearTimeout(reconnectTimer);
             if (ws) {
-                ws.onclose = null; // prevent reconnect
+                ws.onclose = null;
                 ws.close();
             }
         },

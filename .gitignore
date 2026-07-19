@@ -1,5 +1,6 @@
 node_modules/
 build/
+.pi/
 # The engine is built from packages/minimotor by pnpm prepare in workspace.
 # .js files are checked in so Docker works without node/pnpm.
 public/minimotor/*.d.ts
